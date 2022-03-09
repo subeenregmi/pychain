@@ -34,5 +34,4 @@ we also need to assign a difficult nonce so therefore its not easy to hack
 
 
 '''
-
-# we are first going to setup address's
+ we are first going to setup address's
