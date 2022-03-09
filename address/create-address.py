@@ -20,7 +20,7 @@ the wallet need the ability to be able to spend the tokens
 --> a transfer of coins is only a movement of permission to spend coins
 
 '''
-import math
+
 import hashlib
 import random
 
