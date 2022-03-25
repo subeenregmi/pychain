@@ -36,3 +36,4 @@ validation = False
 metaData = ""'''
 
 def createTX(toAddress, fromAddress, amount, metadata):
+    pass
