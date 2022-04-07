@@ -1,0 +1,17 @@
+Pychain
+
+A decentralized peer-to-peer network built on python with the support of multiple blockchains in one.
+The idea is to create a simple and easy to use sandbox blockchain that any user can connect to and make transactions. Furthermore, this blockchain will also allow nodes to create their own chain to meet their specific needs. 
+
+What language am I going to use?
+Python, this is to make the blockchain and the command line interface to connect and use Pychain.
+
+What programming techniques am I going to use?
+•	Object orientated programming
+•	Hashing 
+•	Linked listing
+•	List operations
+•	Peer-to-peer infrastructure built using socket
+
+What is the problem I am trying to solve?
+I am trying to find a way to allow interaction of two parties without the need for a trusted third party – therefore creating a decentralized network allowing anyone to connect and that is run by the people for the people. 
