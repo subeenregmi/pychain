@@ -21,10 +21,9 @@ the wallet need the ability to be able to spend the tokens
 
 '''
 
-import hashlib
-import random
 
 
+'''
 def createAddress():
 
     private_key = random.randint(0, 2 ** 256)
@@ -50,4 +49,21 @@ def createAddress():
 
 createAddress()
 
+
+
+'''
+
+
+'''
+
+the first step is to randomly generate a number between 1 - 2 ^ 256 
+
+
+'''
+
+import random
+
+private_key = random.getrandbits(256)
+
+print(private_key)
 
