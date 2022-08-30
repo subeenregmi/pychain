@@ -1,0 +1,3 @@
+got stuck on problem with double float decimal use //= when dividing big numbers
+
+use of decimal.decimal and precising to deal with big numbers 
