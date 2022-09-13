@@ -13,9 +13,7 @@ HashOfMessage = 8603211231910161104617697182809366963777285627277345929732379714
 def ECadd(x1, x2, y1, y2):
 
     lam = ((y2 - y1) * pow((x2 - x1), -1, Pcurve)) % Pcurve
-
     x3 = (lam*lam - x1 - x2) % Pcurve
-
     y3 = (lam *(x1 - x3) - y1) % Pcurve
 
     return (x3, y3)
@@ -23,9 +21,7 @@ def ECadd(x1, x2, y1, y2):
 def ECdouble(x1, y1):
 
     lamD = ((3*(x1*x1)+0) * pow((2*y1), -1, Pcurve)) % Pcurve
-
     x3 = ((lamD*lamD) - (2*x1)) % Pcurve
-
     y3 = (lamD * (x1 - x3) - y1) % Pcurve
 
     return(x3, y3)
@@ -48,11 +44,8 @@ def ECmultiplication(Scalar, GenX, GenY):
 def signatureGeneration(privateKey, randomNumber, hashedMessage):
 
     x, y = ECmultiplication(randomNumber, Gx, Gy)
-
     r = x % n
-    
     s = (pow(randomNumber, -1, n) * (hashedMessage + r*privateKey)) % n
-
     return (r, s)
 
 def verifySig(r1, s1, hashedMessage, publicKey):
@@ -73,6 +66,12 @@ def verifySig(r1, s1, hashedMessage, publicKey):
     else:
         return False
 
+def createAddress(publickey):
+    pubkeyStr = str(publickey[0]) + str(publickey[1])
+    hash1 = hashlib.sha256(pubkeyStr.encode('utf-8')).hexdigest()
+    hash2 = hashlib.sha256(hash1.encode('utf-8')).hexdigest()
+    address = "69" + str(hash2)
+    return address
 
 
 print("--------------------Private Key--------------------")
@@ -83,6 +82,9 @@ print(pubKey)
 print("--------------------Uncompressed Public Key--------------------")
 print("04 " + str(hex(pubKey[0])[2:]) + " " + str(hex(pubKey[1]))[2:])
 r, s = signatureGeneration(privKey, randNumber, HashOfMessage)
+print("--------------------PyChain Address--------------------")
+pyaddress = createAddress(pubKey)
+print(pyaddress)
 print("--------------------Signature Generation--------------------")
 print((r, s))
 print("--------------------Signature Verification--------------------")
