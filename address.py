@@ -1,5 +1,4 @@
 import hashlib
-from random import random
 
 Pcurve = 2 ** 256 - 2 ** 32 - 2 ** 9 - 2 ** 8 - 2 ** 7 - 2 ** 6 - 2 ** 4 - 1
 n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
@@ -61,7 +60,7 @@ def verifySig(r1, s1, hashedMessage, publicKey):
 
     x, y = ECadd(xu1, xu2, yu1, yu2)
 
-    if (r1== x%n):
+    if (r1 == x%n):
         return True
     else:
         return False
