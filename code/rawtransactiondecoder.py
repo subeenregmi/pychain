@@ -92,22 +92,16 @@ def decodeRawTx(RawTx):
     locktime = rawtx[end: end + 8]
 
     print("-----------------------------------")
-
     print(f"Version = {Version}")
     print(f"Input Count = {InputCount}")
     for key, value in inputs.items():
         print(key + ":" + value)
-
     print("-----------------------------------")
-
     print(f"Output Count = {OutputCount}")
     for key, value in outputs.items():
         print(key + ":" + value)
-
     print("-----------------------------------")
-
     print(f"Locktime = {locktime}")
-
     print("-----------------------------------")
 
     return Version, InputCount, inputs, OutputCount, outputs, locktime
