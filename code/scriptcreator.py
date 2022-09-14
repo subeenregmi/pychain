@@ -56,12 +56,28 @@ def createPayToMultiSig(pk1, pk2, pk3=None):
 
 
 
+def main():
 
-rawp2pk = createPayToPubKey(pubKey)
-print(rawp2pk)
-rawp2pkh = createPayToPubKeyHash(pubKey)
-print(rawp2pkh)
-rawp2ms = createPayToMultiSig(pubKey, pubKey2, pubKey3)
-print(rawp2ms)
-rawp2ms2 = createPayToMultiSig(pubKey, pubKey2)
-print(rawp2ms2)
+    print("--------------------PayToPubKeyCreated--------------------")
+    print(f"Public Key = {pubKey}")
+    rawp2pk = createPayToPubKey(pubKey)
+    print(f"Code = {rawp2pk}")
+
+    print("--------------------PayToPubKeyHashCreated--------------------")
+    print(f"Public Key = {pubKey}")
+    rawp2pkh = createPayToPubKeyHash(pubKey)
+    print(f"Code = {rawp2pkh}")
+
+    print("--------------------PayToMultSig (3) Created--------------------")
+    print(f"Public Key 1 = {pubKey}\nPublic Key 2 = {pubKey2}\nPublic Key 3 = {pubKey3}")
+    rawp2ms = createPayToMultiSig(pubKey, pubKey2, pubKey3)
+    print(f"Code = {rawp2ms}")
+
+    print("--------------------PayToMultSig (2) Created--------------------")
+    print(f"Public Key 1 = {pubKey}\nPublic Key 2 = {pubKey2}")
+    rawp2ms2 = createPayToMultiSig(pubKey, pubKey2)
+    print(f"Code = {rawp2ms2}")
+    print("----------------------------------------------------------------")
+    
+if __name__ == "__main__":
+    main()
