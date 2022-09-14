@@ -35,88 +35,72 @@ Version  IC                         TXID of input                            VOU
 
 """
 
+from ensurepip import version
+from tkinter.tix import TixWidget
+
+
 rawtx = "0101fc9e4f9c334d55c1dc535bd691a1c159b0f7314c54745522257a905e18a567790001006a47304402206a2eb16b7b92051d0fa38c133e67684ed064effada1d7f925c842da401d4f22702201f196b10e6e4b4a9fff948e5c5d71ec5da53e90529c8dbd122bff2b1d21dc8a90121039b7bcd0824b9a9164f7ba098408e63e5b7e3cf90835cceb19868f54f8961a82501000000000021af4b001976a914db4d1141d0048b1ed15839d0b7a4c488cd368b0e88ac00000000"
 
 def decodeRawTx(RawTx):
 
-    inputs = {}
-    outputs = {}
+    dectxid = {}
     
     end = 2
     Version = RawTx[0:end]
+    dectxid["Version"] = Version
+
     end += 2
     InputCount = RawTx[2:end]
+    dectxid["InputCount"] = InputCount
     
     for i in range(int(InputCount, 16)):
 
         txid = rawtx[end:end + 64]
-        inputs[f"txid{i}"] = txid
+        dectxid[f"txid{i}"] = txid
         end += 64
 
         vout = rawtx[end:end + 4]
-        inputs[f"vout{i}"] = vout
+        dectxid[f"vout{i}"] = vout
         end += 4
 
-        size = rawtx[end:end+4]
-        inputs[f"size{i}"] = size
+        sizeSig = rawtx[end:end+4]
+        dectxid[f"sizeSig{i}"] = sizeSig
         end +=4
 
-        size = int(size, 16)
-        size *= 2
+        sizeSig = int(sizeSig, 16)
+        sizeSig *= 2
 
-        scriptSig = rawtx[end:end + size]
-        inputs[f"scriptSig{i}"] = scriptSig
-        end += size
+        scriptSig = rawtx[end:end + sizeSig]
+        dectxid[f"scriptSig{i}"] = scriptSig
+        end += sizeSig
     
     OutputCount = rawtx[end:end+2]
+    dectxid["OutputCount"] = OutputCount
     end += 2
 
-    for i in range(int(InputCount, 16)):
+    for i in range(int(OutputCount, 16)):
 
         value = rawtx[end: end + 16]
-        outputs[f"value{i}"] = value
+        dectxid[f"value{i}"] = value
         end += 16
 
-        size = rawtx[end: end+4]
-        outputs[f"size{i}"] = size
+        sizePk = rawtx[end: end+4]
+        dectxid[f"sizePk{i}"] = sizePk
         end += 4
 
-        size = int(size, 16)
-        size *= 2
+        sizePk = int(sizePk, 16)
+        sizePk *= 2
 
-        scriptPubKey = rawtx[end : end + size]
-        outputs[f"scriptPubKey{i}"] = scriptPubKey
-        end += size
+        scriptPubKey = rawtx[end : end + sizePk]
+        dectxid[f"scriptPubKey{i}"] = scriptPubKey
+        end += sizePk
 
 
     locktime = rawtx[end: end + 8]
+    dectxid["locktime"] = locktime
 
-    print("-----------------------------------")
-    print(f"Version = {Version}")
-    print(f"Input Count = {InputCount}")
-    for key, value in inputs.items():
-        print(key + ":" + value)
-    print("-----------------------------------")
-    print(f"Output Count = {OutputCount}")
-    for key, value in outputs.items():
-        print(key + ":" + value)
-    print("-----------------------------------")
-    print(f"Locktime = {locktime}")
-    print("-----------------------------------")
-
-    return Version, InputCount, inputs, OutputCount, outputs, locktime
-
-
-
-
-
-
-
-
-
-
-    
+    return dectxid
         
 
-
-decodeRawTx(rawtx)
+decodedTxid = decodeRawTx(rawtx)
+print(decodedTxid)
