@@ -6,11 +6,27 @@ Version  IC                         TXID of input                            VOU
 """
 
 
+from ast import Raise
+
+
 def createTxFromUser():
    rawtx = ""
    version = int(input("Version : "))
    if version == 1:
-      rawtx += hex(version)[2:]
+      rawtx += "{0:02x}".format(version)
+      inputcounter = int(input("Inputs : "))
+      if inputcounter > 99:
+         print("Inputs have to be in the range (0 - 99)")
+         createTxFromUser()
+      rawtx += "{0:02d}".format(inputcounter)
+      for i in range(inputcounter):
+         txid = str(input(f"Txid{i}"))
+         vout = 
+         rawtx += txid
+         scriptsig = str(input(f"Script Sig : "))
+         size = hex(len(scriptsig)//2)
+         rawtx += size + scriptsig
+
 
    else:
       print("Only Version 1 transactions are supported")
