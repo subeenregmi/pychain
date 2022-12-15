@@ -1,5 +1,9 @@
 from address import createAddress
 
+"""
+14/12/2022 - Pretty sure this is completed, still need to add the opcodes into the opcodefunction.py
+
+"""
 OPCodeDict = {
     "ac" : "OP_CHECKSIG", 
     "76" : "OP_DUP", #done

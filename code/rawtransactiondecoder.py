@@ -1,3 +1,7 @@
+'''
+14/12/2022 - pretty sure this is done and can be used
+'''
+
 """
 01 - Version (1 Bytes)
 01 - Input Count (1 Byte)
@@ -35,11 +39,7 @@ Version  IC                         TXID of input                            VOU
 
 """
 
-from ensurepip import version
-from tkinter.tix import TixWidget
-
-
-rawtx = "0101fc9e4f9c334d55c1dc535bd691a1c159b0f7314c54745522257a905e18a567790001006a47304402206a2eb16b7b92051d0fa38c133e67684ed064effada1d7f925c842da401d4f22702201f196b10e6e4b4a9fff948e5c5d71ec5da53e90529c8dbd122bff2b1d21dc8a90121039b7bcd0824b9a9164f7ba098408e63e5b7e3cf90835cceb19868f54f8961a82501000000000021af4b001976a914db4d1141d0048b1ed15839d0b7a4c488cd368b0e88ac00000000"
+rawtx = "0101fc9e4f9c334d55c1dc535bd691a1c159b0f7314c54745522257a905e18a567790001002220ee920b0b5a37047165a0ceac5b57ff163524dfc6200e52a5ebea88c0345f01d320010000000004277dc9001976a914db4d1141d0048b1ed15839d0b7a4c488cd368b0e88ac00000000"
 
 def decodeRawTx(RawTx):
 
@@ -102,5 +102,9 @@ def decodeRawTx(RawTx):
     return dectxid
         
 
-decodedTxid = decodeRawTx(rawtx)
-print(decodedTxid)
+def main():
+    decodedTxid = decodeRawTx(rawtx)
+    print(decodedTxid)
+
+if __name__ == "__main__":
+    main()

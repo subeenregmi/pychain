@@ -1,13 +1,35 @@
 import hashlib
+"""
 
+14/12/2022 - pretty sure all this is done and can be implemented
+
+This is the Eleptic Curve Digital Signature Algorithms which allows us to create cryptographically secure key pairs.
+
+I used the secp256k1 curve as it is the most adopted and well documented in the blockchain space. Using an eleptical curve to generate keys
+allows us to optimise the time efficiency of the key generation and digital signature verification, it does this by using mathematical functions
+that propegate between points on the curve.
+
+"""
+
+'''
+To intially setup the secp256k1 curve, we have to initialize some parameters, these are the recommended parameters from:
+
+#https://www.secg.org/sec2-v2.pdf
+
+Pcurve - is the domain of the curve, what is is defined from
+n - represents the number of points that are number of points on the curve that can be used
+Gx and Gy - are the generator points (the starting co-ordinates)
+
+'''
 Pcurve = 2 ** 256 - 2 ** 32 - 2 ** 9 - 2 ** 8 - 2 ** 7 - 2 ** 6 - 2 ** 4 - 1
 n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
 Gx = 55066263022277343669578718895168534326250603453777594175500187360389116729240
 Gy = 32670510020758816978083085130507043184471273380659243275938904335757337482424
 
-privKey = 752635187075981849879163780219396735860556147319575075929044388517875423956 
-randNumber = 28695618543805844332113829720373285210420739438570883203839696518176414791234 
-HashOfMessage = 86032112319101611046176971828093669637772856272773459297323797145286374828050 
+
+privKey = 300000000 #user will input all of this
+randNumber = 286956185438058443321138297203732852104207394385708832038396965181764147
+HashOfMessage = 8603211231910161104617697182809366963777285627277345929732379714528637482
 
 def ECadd(x1, x2, y1, y2):
 

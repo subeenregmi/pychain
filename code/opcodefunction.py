@@ -1,4 +1,9 @@
 import hashlib
+from address import signatureGeneration, verifySig
+
+'''
+UPDATE - 14/12/2022 checksig needs to get hash from scriptsigcalculator
+'''
 
 script = ["a", "b", "b"]
 
@@ -42,16 +47,10 @@ def EQUALVERIFY(stack):
  - Function that checks the signature and public key and verfies that it is true
  """
 
+stack = ["20ee920b0b5a37047165a0ceac5b57ff163524dfc6200e52a5ebea88c0345f01d320",  ]
+
 def OPCHECKSIG(stack):
-    publicKey = stack.pop()
-    signature = stack.pop()
     
 
 
-
-
-
-print(script)
-script = EQUALVERIFY(script)
-print(script)
 
