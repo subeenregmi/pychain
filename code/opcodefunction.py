@@ -3,9 +3,33 @@ from address import signatureGeneration, verifySig
 
 '''
 UPDATE - 14/12/2022 checksig needs to get hash from scriptsigcalculator
+UPDATE - 15/12/2022 Should be complete, maybe hash function needs to be looked at
 '''
 
-script = ["a", "b", "b"]
+script2 = ["20ee920b0b5a37047165a0ceac5b57ff163524dfc6200e52a5ebea88c0345f01d320d86a3605edc878dc2472cfb1e8b823f4bd6f9edfbbd48725597c2af3a18afe07", (63903915208591347724822146685237875155546454145184102584121905894531049006320, 110503086526727362077439996637761199487973715182762248869328538836131925568226)]
+
+def updateScript(stack):
+
+    address = stack.pop()
+    sig = stack.pop()
+    size1 = int(sig[0:2], 16) * 2
+    print(size1)
+    sigx = sig[2:2+size1]
+    print(sigx)
+    size2 = int(sig[2+size1:4+size1], 16) *2
+    print(size2)
+    sigy = sig[4+size1:4+size1+size2]
+    print(sigy)
+
+    sigx = int(sigx, 16)
+    sigy = int(sigy, 16)
+
+    stack.append((sigx, sigy))
+    stack.append(address)
+
+    return stack
+
+
 
 """
 OP_DUP
@@ -47,10 +71,22 @@ def EQUALVERIFY(stack):
  - Function that checks the signature and public key and verfies that it is true
  """
 
-stack = ["20ee920b0b5a37047165a0ceac5b57ff163524dfc6200e52a5ebea88c0345f01d320",  ]
+rawtx = 95138051470213852759051785283334535143817064313784315739465689276908210910353
+
 
 def OPCHECKSIG(stack):
-    
+    public_address = stack.pop()
+    signature = stack.pop()
+    result = verifySig(signature[0], signature[1], rawtx, public_address)
+    if result == True:
+        stack.append(1)
+    else:
+        stack.append(0)
+
+    print(stack)
 
 
+script1 = updateScript(script2)
+print(script1)
+OPCHECKSIG(script1)
 
