@@ -53,20 +53,15 @@ def generate_pychain_address():
     print(py_address.get())
     py_chain_address_label.configure(text = py_address.get())
     
-def create_digital_signature():# function is broken, something between the calling of signature generation from here to there confused asf 
-    privatekey = private_key_store.get()
-    randomint = 3232323232323232323232323
+def create_digital_signature():
     data2hash = hash_input.get()
-    print(data2hash)
-    print(privatekey)
-    print(randomint)
     hashed_data = hashlib.sha256(data2hash.encode('utf-8')).hexdigest()
     hashed_data = int(hashed_data, 16)
-    print(hashed_data)
-    print(signatureGeneration(privKey, randomint, hashed_data)) #this breaks for some reason and doesnt give correct 
+    r, s = signatureGeneration(private_key_store.get(), random.randint(1, n), hashed_data)  
     digital_signature_x.set(r)
     digital_signature_y.set(s)
     digital_signature_label.config(text=(digital_signature_x.get(), digital_signature_y.get()))
+
 
 
 #button to create private key 
@@ -106,7 +101,7 @@ py_chain_address_label = tk.Label(text="")
 py_chain_address_label.place(x=200, y=200)
 
 #digital signature out
-digital_signature_label = tk.Label(text="marge")
+digital_signature_label = tk.Label(text="")
 digital_signature_label.place(x=200, y=275)
 
 #enter data for digital signature
