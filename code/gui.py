@@ -21,8 +21,8 @@ digital_signature_y = tk.IntVar()
 window_title = tk.Label(text="pyChain", foreground="Black", background="#E7E7E7", font=("", 24))
 window_title.pack()    
 
+#function to do all key functions 
 def createall():
-    
     generate_private_key()
     create_public_key()
     generate_pychain_address()
@@ -35,24 +35,24 @@ def generate_private_key():
     print(private_key_store.get)
     privatekey_label.config(text = str(private_key))
 
+#function to generate the public key
 def create_public_key():
     p = private_key_store.get()
-    #print(p)
     public_key = ECmultiplication(p, Gx, Gy)
-    print(public_key)
     public_key_store_x.set(public_key[0])
     public_key_store_y.set(public_key[1])
     publickey_label.config(text=(public_key_store_x.get(), public_key_store_y.get()))
     publickey_hash_label.config(text = (hex(public_key_store_x.get())[2:], hex(public_key_store_y.get())[2:]))
 
-
+#function to generate the pychain address
 def generate_pychain_address():
     public_key = (public_key_store_x.get(), public_key_store_y.get())
     paddy = createAddress(public_key)
     py_address.set(paddy)
     print(py_address.get())
     py_chain_address_label.configure(text = py_address.get())
-    
+
+#function to generate the a digital signature    
 def create_digital_signature():
     data2hash = hash_input.get()
     hashed_data = hashlib.sha256(data2hash.encode('utf-8')).hexdigest()
@@ -62,7 +62,12 @@ def create_digital_signature():
     digital_signature_y.set(s)
     digital_signature_label.config(text=(digital_signature_x.get(), digital_signature_y.get()))
 
-
+#function to verify a signature given the signature and the data used for the signature
+def verify_signature():
+    if digital_signature_input.get() == "":
+        print("empty")
+    else:
+        print("stuff")
 
 #button to create private key 
 generate_key_button = tk.Button(text="Generate Key", command=generate_private_key)
@@ -84,6 +89,10 @@ create_all_button.place(x=50, y=20)
 create_digital_signature_button = tk.Button(text="Create digital signature", command=create_digital_signature)
 create_digital_signature_button.place(x=0, y=250)
 
+#button to verify signature
+verify_signature_button = tk.Button(text="Verify Signature", command=verify_signature)
+verify_signature_button.place(x=0, y=375)
+
 #label for private key 
 privatekey_label = tk.Label(text="", state="active")
 privatekey_label.place(x = 200, y = 100)
@@ -100,13 +109,25 @@ publickey_hash_label.place(x=200, y=175)
 py_chain_address_label = tk.Label(text="")
 py_chain_address_label.place(x=200, y=200)
 
-#digital signature out
+#label digital signature out
 digital_signature_label = tk.Label(text="")
 digital_signature_label.place(x=200, y=275)
 
 #enter data for digital signature
 hash_input = tk.Entry(window, width=100)
 hash_input.place(x=200, y=250)
+
+#enter data for digital signature verification
+digital_signature_input = tk.Entry(window, width=100)
+digital_signature_input.place(x=200, y=350)
+
+#enter data for digital signature verification
+data_input = tk.Entry(window, width=100)
+data_input.place(x=200, y=375)
+
+#enter data for public address if empty use what is stored
+public_address_input = tk.Entry(window, width=100)
+public_address_input.place(x=200, y=400)
 
 
 
