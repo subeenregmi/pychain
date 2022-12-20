@@ -84,18 +84,10 @@ def createTxFromDict(tx2):
 
 def main():
 
-   #rawtxs = createTxFromUser()
-   #print(rawtxs)
+   tx1 = {'Version': '01', 'InputCount': '01', 'txid0': 'fb06ef2e5858ee85d4a65ba4811adf6da8d6a0b3d3390740b6592263b90f40d1', 'vout0': '0001', 'sizeSig0': '0020', 'scriptSig0': 'a60a52382d7077712def2a69eda3ba309b19598944aa459ce418ae53b7fb5d58', 'OutputCount': '01', 'value0': '0000000000000064', 'sizePk0': '0026', 'scriptPubKey0': '76a9216957e946669918c2235f7d82fb35b4d41273f3793536434ea19c6dfeda8f2c05ff88ac', 'locktime': '00000000'}
+   print(createTxFromDict(tx1))
+   
 
-   prevtx = {'Version': '01', 'InputCount': '01', 'txid0': 'fc9e4f9c334d55c1dc535bd691a1c159b0f7314c54745522257a905e18a56779', 'vout0': '0000', 'sizeSig0': '0000', 'scriptSig0': '', 'OutputCount': '01', 'value0': '000000000021af4b', 'sizePk0': '0019', 'scriptPubKey0': '76a914db4d1141d0048b1ed15839d0b7a4c488cd368b0e88ac', 'locktime': '00000000'}
-   rawtx = createTxFromDict(prevtx)
-   print(rawtx)
-
-   rawemptytx = EmptyRawTxFromUser()
-   print(rawemptytx)
-
-   rawtx_dict = createTxFromDict({'Version': '01', 'InputCount': '01', 'txid0': 'fc00000c334d55c1dc53...5e18a56779', 'vout0': '0000', 'sizeSig0': '0019', 'scriptSig0': '76a914db4d1141d0048b...368b0e88ac', 'OutputCount': '01', 'value0': '00000000002dc6c0', 'sizePk0': '0019', 'scriptPubKey0': '76a914db4d1141d0048b...368b0e88ac', 'locktime': '00000000'})
-   print(rawtx_dict)
    
 if __name__ == "__main__":
    main()
