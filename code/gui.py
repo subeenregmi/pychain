@@ -27,7 +27,6 @@ def createall():
     create_public_key()
     generate_pychain_address()
 
-
 #function to generate key
 def generate_private_key():
     private_key = random.randint(1, n)
@@ -86,15 +85,13 @@ def verify_signature():
     hashed_data = int(hashed_data, 16)
     result = verifySig(digital_sig_x, digital_sig_y, hashed_data, (publickey_x ,publickey_y))
     
-    digital_signature_input_x.insert(0, f"{digital_sig_x}")
-    digital_signature_input_y.insert(0, f"{digital_sig_y}")
-    public_address_input_x.insert(0, f"{publickey_x}")
-    public_address_input_y.insert(0, f"{publickey_y}")
+    #digital_signature_input_x.insert(0, f"{digital_sig_x}")
+    #digital_signature_input_y.insert(0, f"{digital_sig_y}")
+    #public_address_input_x.insert(0, f"{publickey_x}")
+    #public_address_input_y.insert(0, f"{publickey_y}")
     verification_result.config(text=f"{result}")
 
-    
-
-
+#function to clear all of data inputted for sig verification
 def clear():
     digital_signature_input_x.delete(0, tk.END)
     digital_signature_input_y.delete(0, tk.END)
@@ -102,7 +99,6 @@ def clear():
     public_address_input_y.delete(0, tk.END)
     verification_result.config(text="")
     
-
 
 #button to create private key 
 generate_key_button = tk.Button(text="Generate Key", command=generate_private_key)

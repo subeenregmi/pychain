@@ -1,33 +1,12 @@
 import hashlib
-"""
+import random
 
-14/12/2022 - pretty sure all this is done and can be implemented
-
-This is the Eleptic Curve Digital Signature Algorithms which allows us to create cryptographically secure key pairs.
-
-I used the secp256k1 curve as it is the most adopted and well documented in the blockchain space. Using an eleptical curve to generate keys
-allows us to optimise the time efficiency of the key generation and digital signature verification, it does this by using mathematical functions
-that propegate between points on the curve.
-
-"""
-
-'''
-To intially setup the secp256k1 curve, we have to initialize some parameters, these are the recommended parameters from:
-
-#https://www.secg.org/sec2-v2.pdf
-
-Pcurve - is the domain of the curve, what is is defined from
-n - represents the number of points that are number of points on the curve that can be used
-Gx and Gy - are the generator points (the starting co-ordinates)
-
-'''
 Pcurve = 2 ** 256 - 2 ** 32 - 2 ** 9 - 2 ** 8 - 2 ** 7 - 2 ** 6 - 2 ** 4 - 1
 n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
 Gx = 55066263022277343669578718895168534326250603453777594175500187360389116729240
 Gy = 32670510020758816978083085130507043184471273380659243275938904335757337482424
 
-
-privKey = 24334151515340809858948038540023029919352053707818829575967278044609530694272  #user will input all of this
+privKey = 42069 #user will input all of this
 randNumber = 11133343434344344341
 HashOfMessage = 108837615545477071373664658521271175003261457687736552303871501944711637865620 
 
@@ -88,11 +67,14 @@ def verifySig(r1, s1, hashedMessage, publicKey):
         return False
 
 def createAddress(publickey):
+
     pubkeyStr = str(publickey[0]) + str(publickey[1])
     hash1 = hashlib.sha256(pubkeyStr.encode('utf-8')).hexdigest()
     hash2 = hashlib.sha256(hash1.encode('utf-8')).hexdigest()
     address = "69" + str(hash2)
+
     return address
+
 
 def main():
 

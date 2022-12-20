@@ -1,3 +1,4 @@
+
 def createTxFromUser():
 
    rawtx = ""
@@ -37,6 +38,7 @@ def createTxFromUser():
    return rawtx
 
 def EmptyRawTxFromUser():
+   
    rawtx = ""
    version = int(input("Version : "))
    
@@ -73,8 +75,6 @@ def EmptyRawTxFromUser():
    rawtx += "00000000"
    return rawtx
 
-
-
 def createTxFromDict(tx2):
    rawtx = ""
    for item in tx2.items():
@@ -83,11 +83,7 @@ def createTxFromDict(tx2):
    return rawtx
 
 def main():
-
-   tx1 = {'Version': '01', 'InputCount': '01', 'txid0': 'fb06ef2e5858ee85d4a65ba4811adf6da8d6a0b3d3390740b6592263b90f40d1', 'vout0': '0001', 'sizeSig0': '0020', 'scriptSig0': 'a60a52382d7077712def2a69eda3ba309b19598944aa459ce418ae53b7fb5d58', 'OutputCount': '01', 'value0': '0000000000000064', 'sizePk0': '0026', 'scriptPubKey0': '76a9216957e946669918c2235f7d82fb35b4d41273f3793536434ea19c6dfeda8f2c05ff88ac', 'locktime': '00000000'}
-   print(createTxFromDict(tx1))
-   
-
-   
+   pass
+ 
 if __name__ == "__main__":
    main()
