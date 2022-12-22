@@ -1,3 +1,4 @@
+import hashlib
 
 def createTxFromUser():
 
@@ -82,8 +83,37 @@ def createTxFromDict(tx2):
 
    return rawtx
 
+def createTXID(rawtx):
+   rawtx1 = hashlib.sha256(rawtx.encode('utf-8')).hexdigest()
+   txid = hashlib.sha256(rawtx1.encode('utf-8')).hexdigest()
+   return txid
+
 def main():
-   pass
- 
+
+   print("tx from dict")
+   dict = {
+   "Version":"01",
+   "InputCount":"02",
+   "txid0":"ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d60",
+   "vout0":"0001",
+   "sizeSig0":"0020",
+   "scriptSig0":"46b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c314494",
+   "txid1":"8732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e",
+   "vout1":"0001",
+   "sizeSig1":"0020",
+   "scriptSig1":"c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a8689465",
+   "OutputCount":"01",
+   "value0":"00000000000001f4",
+   "sizePk0":"0026",
+   "scriptPubKey0":"76a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac",
+   "locktime":"00000000"   
+   }
+
+   rawtx = createTxFromDict(dict)
+   print(rawtx)
+
+
+
+
 if __name__ == "__main__":
    main()

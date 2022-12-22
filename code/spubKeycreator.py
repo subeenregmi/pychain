@@ -49,7 +49,8 @@ def createPayToMultiSig(pk1, pk2, pk3=None):
         return raw
 
 def main():
-    pass
-
+    p2pkh = createPayToPubKeyHash((72637518149302534895883528839198140450896220179635145799437492111429299572771, 21761414993162206534579511402895261968267636926631858754956076130937446436903))
+    print(p2pkh)
+    
 if __name__ == "__main__":
     main()
