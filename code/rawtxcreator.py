@@ -93,15 +93,11 @@ def main():
    print("tx from dict")
    dict = {
    "Version":"01",
-   "InputCount":"02",
+   "InputCount":"01",
    "txid0":"ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d60",
    "vout0":"0001",
    "sizeSig0":"0020",
    "scriptSig0":"46b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c314494",
-   "txid1":"8732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e",
-   "vout1":"0001",
-   "sizeSig1":"0020",
-   "scriptSig1":"c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a8689465",
    "OutputCount":"01",
    "value0":"00000000000001f4",
    "sizePk0":"0026",
