@@ -1,6 +1,7 @@
 import customtkinter
 import tkinter
 import json
+import time
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -35,18 +36,52 @@ class App(customtkinter.CTk):
         self.LoginButton.grid(row=1, column=0, padx=0, pady=0, sticky="s")
        
         #Settings for the create account button
-        self.CreateButton = customtkinter.CTkButton(master=self, width=180, height=50, text="Create New Account", font=customtkinter.CTkFont(size=15, weight="bold"), fg_color="#533FD3", hover_color="#2c1346", anchor="center")
+        self.CreateButton = customtkinter.CTkButton(master=self, width=180, height=50, text="Create New Account", font=customtkinter.CTkFont(size=15, weight="bold"), fg_color="#533FD3", hover_color="#2c1346", anchor="center", command=self.CreateNewAccount)
         self.CreateButton.grid(row=2, column=0, padx=0, pady=(0))
 
         #Settings for the bottom tile
         self.bottomTitle = customtkinter.CTkLabel(master=self, height=14, anchor="s", corner_radius=0, text="By Subeen Regmi", text_color="grey")
         self.bottomTitle.grid(row=3)
+        
 
     def Login(self):
-        f = open("/Users/krishnaregmi/Desktop/code/pychain-2/code/gui/keys.json")
-        data = json.load(f)
-        print(data["0"])
-        f.close()
+        try:
+            f = open("keys.json")
+            data = json.load(f)
+            #Do something here, e.g: send to next menu.
+            f.close()
+        except:
+            #settings for window that pops up when the user does not have any keys stored in 'keys.json'
+            window = customtkinter.CTkToplevel(self)
+            window.geometry("200x100")
+            window.resizable(False, False)
+
+            #label inside the window
+            label = customtkinter.CTkLabel(master=window, text="No account found!\n\nCreate a new account", anchor="center")
+            label.pack(padx=20, pady=20)
+
+            #greying out the login button after login fails
+            self.LoginButton.configure(state="disabled", fg_color="grey")
+
+    def CreateNewAccount(self):
+
+        #hide the previous window
+        self.iconify()
+
+        #create new window
+        window = customtkinter.CTkToplevel(self)
+        window.title("Pycharm")
+        window.geometry("700x700")
+        window.resizable(False, False)
+
+        #protocol if window is closed
+        window.protocol("WM_DELETE_WINDOW", self.deiconify())
+
+
+
+
+
+
 
 if __name__ == "__main__":
     app = App()
