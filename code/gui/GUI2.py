@@ -49,6 +49,7 @@ class App(customtkinter.CTk):
             f = open("keys.json")
             data = json.load(f)
             #Do something here, e.g: send to next menu.
+            print("LOADED")
             f.close()
         except:
             #settings for window that pops up when the user does not have any keys stored in 'keys.json'
@@ -65,14 +66,89 @@ class App(customtkinter.CTk):
 
     def CreateNewAccount(self):
 
-        #hide the previous window
+        #hide the previous window // seems to only work on OSX well
         self.iconify()
 
         #create new window
         window = customtkinter.CTkToplevel(self)
         window.title("Pycharm")
-        window.geometry("700x700")
+        window.geometry("1200x800")
         window.resizable(False, False)
+
+        #creating a 3 row gui, one for the title, one for the addressing, and the last one for passwords and saving
+        window.grid_rowconfigure(0, weight=1)
+        window.grid_rowconfigure(1, weight=3)
+        window.grid_rowconfigure(2, weight=1)
+        window.grid_columnconfigure(0, weight=1)
+
+        #frame for the top row to seperate the title on the left to the description on the right
+        frameTitle = customtkinter.CTkFrame(master=window, border_color="grey")
+        frameTitle.grid(row=0, padx=10, pady=10, sticky="nsew")
+        
+        #setting up the 2 columns required for the title frame
+        frameTitle.grid_columnconfigure(0, weight=1)
+        frameTitle.grid_columnconfigure(1, weight=1)
+        frameTitle.grid_rowconfigure(0, weight=1)
+
+        #title at the top of the window, and the description on the right
+        Label = customtkinter.CTkLabel(master=frameTitle, anchor="center")
+        Label.grid(row=0, column=0)
+        Label2 = customtkinter.CTkLabel(master=frameTitle)
+        Label2.grid(row=0, column=1)
+
+        #frame for the next section requires, the private address view, the public address view, the pychain address view
+        #and the randomly generated image, these need to be in a 3x2, with more weight on the left column and the right column to
+        #be spanned to one column
+
+        frameAddress = customtkinter.CTkFrame(master=window, border_color="grey")
+        frameAddress.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
+
+        # grid configurement stated previously
+        frameAddress.grid_rowconfigure((0, 1, 2), weight=1)
+        frameAddress.grid_columnconfigure(0, weight=4)
+        frameAddress.grid_columnconfigure(1, weight=1)
+
+        # Adding three frames, one for each row on the first column
+        frame1 = customtkinter.CTkFrame(master=frameAddress, border_color="grey")
+        frame1.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        frame1.grid_rowconfigure(0, weight=1)
+        frame1.grid_columnconfigure(0, weight=1)
+        frame1.grid_columnconfigure(1, weight=3)
+                
+        frame2 = customtkinter.CTkFrame(master=frameAddress, border_color="grey")
+        frame2.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        frame2.grid_rowconfigure(0, weight=1)
+        frame2.grid_columnconfigure(0, weight=1)
+        frame2.grid_columnconfigure(1, weight=3)
+
+        frame3 = customtkinter.CTkFrame(master=frameAddress, border_color="grey")
+        frame3.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
+        frame3.grid_rowconfigure(0, weight=1)
+        frame3.grid_columnconfigure(0, weight=1)
+        frame3.grid_columnconfigure(1, weight=3)
+
+        # texts to go in each frame
+        text1 = customtkinter.CTkLabel(master=frame1, text="Private Key :")
+        text1.grid(row=0, column=0, sticky="nsew")
+        text1 = customtkinter.CTkLabel(master=frame1, text="Key", bg_color="grey")
+        text1.grid(row=0, column=1, sticky="nsew",)
+
+        text2 = customtkinter.CTkLabel(master=frame2, text="Public Key :", )
+        text2.grid(row=0, column=0, sticky="nsew")
+        text2 = customtkinter.CTkLabel(master=frame2, text="Key", bg_color="grey")
+        text2.grid(row=0, column=1, sticky="nsew")
+                
+        text3 = customtkinter.CTkLabel(master=frame3, text="Pychain Address :")
+        text3.grid(row=0, column=0, sticky="nsew")
+        text3 = customtkinter.CTkLabel(master=frame3, text="Key", bg_color="grey")
+        text3.grid(row=0, column=1, sticky="nsew")
+
+        #Frame that stores entry for password and the save to json button
+
+        frame4 = customtkinter.CTkFrame(master=window, border_color="grey")
+        frame4.grid(row=2, column=0, sticky="nesw", padx=10, pady=(0,10))
+
+
 
         #protocol if window is closed
         window.protocol("WM_DELETE_WINDOW", self.deiconify())
