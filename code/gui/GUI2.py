@@ -2,6 +2,7 @@ import customtkinter
 import tkinter
 import json
 import time
+import threading
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -66,6 +67,9 @@ class App(customtkinter.CTk):
 
     def CreateNewAccount(self):
 
+        # need a bool value to terminate the mouse calculation methods
+        saved = False
+
         #hide the previous window // seems to only work on OSX well
         self.iconify()
 
@@ -91,9 +95,9 @@ class App(customtkinter.CTk):
         frameTitle.grid_rowconfigure(0, weight=1)
 
         #title at the top of the window, and the description on the right
-        Label = customtkinter.CTkLabel(master=frameTitle, anchor="center", text="Pycharm")
+        Label = customtkinter.CTkLabel(master=frameTitle, anchor="center", text="Pychain Wallet Creator", font=customtkinter.CTkFont(size=20, weight="bold"))
         Label.grid(row=0, column=0, padx=10, pady=10)
-        Label2 = customtkinter.CTkLabel(master=frameTitle, text="How to use:")
+        Label2 = customtkinter.CTkLabel(master=frameTitle, text="How to use:\nMove the mouse around to generate a psuedorandom address,\ntype a password and then click save to store your private keys locally.")
         Label2.grid(row=0, column=1, padx=10, pady=10)
 
         #frame for the next section requires, the private address view, the public address view, the pychain address view
@@ -128,20 +132,20 @@ class App(customtkinter.CTk):
         frame3.grid_columnconfigure(1, weight=3)
 
         # texts to go in each frame
-        text1 = customtkinter.CTkLabel(master=frame1, text="Private Key :")
+        text1 = customtkinter.CTkLabel(master=frame1, text="Private Key :", font=customtkinter.CTkFont(size=15, weight="bold"))
         text1.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        text1 = customtkinter.CTkLabel(master=frame1, text="Key")
-        text1.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        text1k = customtkinter.CTkLabel(master=frame1, text="Key")
+        text1k.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
-        text2 = customtkinter.CTkLabel(master=frame2, text="Public Key :")
+        text2 = customtkinter.CTkLabel(master=frame2, text="Public Key :", font=customtkinter.CTkFont(size=15, weight="bold"))
         text2.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        text2 = customtkinter.CTkLabel(master=frame2, text="Key")
-        text2.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        text2k = customtkinter.CTkLabel(master=frame2, text="Key")
+        text2k.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
                 
-        text3 = customtkinter.CTkLabel(master=frame3, text="Pychain Address :")
+        text3 = customtkinter.CTkLabel(master=frame3, text="Pychain Address :", font=customtkinter.CTkFont(size=15, weight="bold"))
         text3.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        text3 = customtkinter.CTkLabel(master=frame3, text="Key")
-        text3.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        text3k = customtkinter.CTkLabel(master=frame3, text="Key")
+        text3k.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
         #Frame that stores entry for password and the save to json button
         frame4 = customtkinter.CTkFrame(master=window, border_color="grey")
@@ -154,19 +158,31 @@ class App(customtkinter.CTk):
         frame4.grid_columnconfigure(1, weight=4)
 
         # Label for password 
-        Label3 = customtkinter.CTkLabel(master=frame4, bg_color="#533FD3", text="Password :")
+        Label3 = customtkinter.CTkLabel(master=frame4, bg_color="#533FD3", text="Password :", font=customtkinter.CTkFont(size=20))
         Label3.grid(row=0, column=0, sticky="nesw", padx=10, pady=10)
 
         # Entry for password 
         passwordEntry = customtkinter.CTkEntry(master=frame4, font=customtkinter.CTkFont(size=20))
         passwordEntry.grid(row=0, column=1, sticky="nsew", padx=(0, 10), pady=10)
 
-        # Butto
+        # Button to save the current key stored.
         passwordButton = customtkinter.CTkButton(master=frame4, anchor="center", text="Save and Quit", fg_color="#533FD3", hover_color="#2c1346")
         passwordButton.grid(row=1, column=0, columnspan=2, ipadx=10, ipady=10)
 
-        #protocol if window is closed
+        # need to make the a call a function that grabs the current mouse coordinates, then uses those values, adds them,
+        # after getting to the limit of address inputs then mods them with the next set of coordinates, thus providing a level of
+        # more randomness whilst not overloading the cpu.
+
+        thread1 = threading.Thread(target=self.addOne(window))
+        thread1.start()
+
+        #protocols if window is closed
         window.protocol("WM_DELETE_WINDOW", self.deiconify())
+        window.protocol("WM_DELETE_WINDOW", thread1.join())
+
+
+    def addOne(self, window):
+        print(tkinter.Toplevel.winfo_exists(window))
 
 
 
