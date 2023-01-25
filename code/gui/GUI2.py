@@ -1,8 +1,6 @@
 import customtkinter
 import tkinter
 import json
-import time
-import threading
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -11,6 +9,10 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
+        # we call a method as users may want to go back
+        self.start()
+
+    def start(self):
         #Settings for the window
         self.title("Pychain")
         self.geometry("225x350")
@@ -67,26 +69,23 @@ class App(customtkinter.CTk):
 
     def CreateNewAccount(self):
 
-        # need a bool value to terminate the mouse calculation methods
-        saved = False
-
-        #hide the previous window // seems to only work on OSX well
-        self.iconify()
+        # destroys all previous widgets to clear the screen
+        for widget in self.winfo_children():
+            widget.destroy()
 
         #create new window
-        window = customtkinter.CTkToplevel(self)
-        window.title("Pycharm")
-        window.geometry("1200x700")
-        window.resizable(False, False)
+        self.title("Pycharm")
+        self.geometry("1200x700")
+        self.resizable(False, False)
 
         #creating a 3 row gui, one for the title, one for the addressing, and the last one for passwords and saving
-        window.grid_rowconfigure(0, weight=1)
-        window.grid_rowconfigure(1, weight=3)
-        window.grid_rowconfigure(2, weight=1)
-        window.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=3)
+        self.grid_rowconfigure(2, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
         #frame for the top row to seperate the title on the left to the description on the right
-        frameTitle = customtkinter.CTkFrame(master=window, border_width=3, border_color="#533FD3")
+        frameTitle = customtkinter.CTkFrame(master=self, border_width=3, border_color="#533FD3")
         frameTitle.grid(row=0, padx=10, pady=10, sticky="nsew")
         
         #setting up the 2 columns required for the title frame
@@ -104,7 +103,7 @@ class App(customtkinter.CTk):
         #and the randomly generated image, these need to be in a 3x2, with more weight on the left column and the right column to
         #be spanned to one column
 
-        frameAddress = customtkinter.CTkFrame(master=window, fg_color="transparent")
+        frameAddress = customtkinter.CTkFrame(master=self, fg_color="transparent")
         frameAddress.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
 
         # grid configurement stated previously
@@ -148,7 +147,7 @@ class App(customtkinter.CTk):
         text3k.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
         #Frame that stores entry for password and the save to json button
-        frame4 = customtkinter.CTkFrame(master=window, border_color="grey")
+        frame4 = customtkinter.CTkFrame(master=self, border_color="grey")
         frame4.grid(row=2, column=0, sticky="nesw", padx=10, pady=(0,10))
 
         # Frame Configuration
@@ -168,22 +167,6 @@ class App(customtkinter.CTk):
         # Button to save the current key stored.
         passwordButton = customtkinter.CTkButton(master=frame4, anchor="center", text="Save and Quit", fg_color="#533FD3", hover_color="#2c1346")
         passwordButton.grid(row=1, column=0, columnspan=2, ipadx=10, ipady=10)
-
-        # need to make the a call a function that grabs the current mouse coordinates, then uses those values, adds them,
-        # after getting to the limit of address inputs then mods them with the next set of coordinates, thus providing a level of
-        # more randomness whilst not overloading the cpu.
-
-        thread1 = threading.Thread(target=self.addOne(window))
-        thread1.start()
-
-        #protocols if window is closed
-        window.protocol("WM_DELETE_WINDOW", self.deiconify())
-        window.protocol("WM_DELETE_WINDOW", thread1.join())
-
-
-    def addOne(self, window):
-        print(tkinter.Toplevel.winfo_exists(window))
-
 
 
 if __name__ == "__main__":
