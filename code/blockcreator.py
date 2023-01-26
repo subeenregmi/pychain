@@ -99,11 +99,24 @@ class Block():
             difficultlyOfBlock = str(difficultlyOfBlock).zfill(96) 
             transactions = ""
             for x in self.transactions:
+                TxLength = str(hex(len(x))[2:]).zfill(8)
+                transactions += TxLength
                 transactions += x
             sizeTx = hex(len(transactions))[2:]
             sizeTx = sizeTx.zfill(10)
             raw = self.blockid + nonce + blocktime + blockheight + self.previousblockhash + difficultlyOfBlock + self.merkle + sizeTx + transactions
             self.raw = raw
+            print("----------------------")
+            print(f"BLOCK ID: {self.blockid}")
+            print(f"NONCE: {nonce}")
+            print(f"BLOCKTIME: {blocktime}")
+            print(f"BLOCK HEIGHT: {blockheight}")
+            print(f"PREVIOUS BLOCK ID/HASH : {self.previousblockhash}")
+            print(f"DIFFICULTY: {difficultlyOfBlock}")
+            print(f"MERKLE ROOT: {self.merkle}")
+            print(f"SIZE OF TXS : {sizeTx}")
+            print(f"TXS : {transactions}")
+            print("----------------------")
             self.addBlockToChain()
     
     def addBlockToChain(self):
@@ -117,28 +130,44 @@ class Block():
             print("Success")
     
     def createBlockFromRaw(self, raw):
-        self.nonce = raw[0:15]
-        self.blocktime = raw[16:28]
-        print(raw[16:28])
+        #Grabbing info from the raw block data
+
+        blockid = raw[0:64]
+        nonce = raw[64:80]
+        blocktime = raw[80:93]
+        blockheight = raw[93:103]
+        prevblockid = raw[103:167]
+        difficulty = raw[167:263]
+        merkle = raw[263:327]
+        sizeofTXs = int(raw[327:337], 16)
+
+        transactions = raw[337:337+sizeofTXs]
+
+        
+        #Correlating the current blocks attributes to these variables
+
+        self.blockid = blockid
+        self.nonce = int(nonce, 16)
+        self.blocktime = int(blocktime, 16)
+        self.height = int(blockheight, 16)
+        self.previousblockhash = prevblockid
+        self.difficulty = int(difficulty, 16)
+        self.merkle = merkle
+
 
         
 
 
+
 def main():
 
-    x = Block(1, ["0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000000"], 1105681728405912613142410972512193984481879657863353467234327275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
-    # #y = Block(2, ["0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f400201b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a6849200000000"], 110568172798640591261314241097512146939888796578635346723327275266671322463)
+    x = Block(1, ["0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000000"], 110568172840591261314241097251219333984481879657863353467234327275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
+    # # #y = Block(2, ["0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f400201b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a6849200000000"], 110568172798640591261314241097512146939888796578635346723327275266671322463)
     x.mine()
-    # x.validateBlock()
-    # print(x.blockid)
-    # print(x.blocktime)
-    # x.addBlockToChain()
-    # print(f"Raw: {x.raw}")
-    x.createBlockFromRaw("00000807c9f084501ce44c3874a9806b26a3a265d435f866da0f0b5c33478e900000000000027adf000167475244200000000011b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492000000000000000000000000000000000000100533936338156e20b56a363abf4c255cc6b5fbcd6b6cf8902840ec991f1d928fe8d935e967c34a7179de60e7c7b20c4dc02283e089ea9d5c31926f1ab1000000017e0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000000")
-    print(x.blocktime)
+    print(x.raw)
 
     v = Block()
-    print(v)
+    v.createBlockFromRaw("000a9a947677be3253362f02a37eb8db8843dd73de44db93400ada98233018290000000000000223000167477519700000000011b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a6849200000000000000000000000000000000003e945177bb9313b62fc4a6e3d57a8400d83826cce3c45fe5ac23798dec991f1d928fe8d935e967c34a7179de60e7c7b20c4dc02283e089ea9d5c31926f1ab10000000186000000000102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000000")
 
     
 
