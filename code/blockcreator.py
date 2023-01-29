@@ -133,19 +133,24 @@ class Block():
         #Grabbing info from the raw block data
 
         blockid = raw[0:64]
+        print(f"BlockIdFromRaw: {blockid}")
         nonce = raw[64:80]
+        print(f"Nonce: {nonce}")
         blocktime = raw[80:93]
         blockheight = raw[93:103]
         prevblockid = raw[103:167]
         difficulty = raw[167:263]
         merkle = raw[263:327]
         sizeofTXs = int(raw[327:337], 16)
-
         transactions = raw[337:337+sizeofTXs]
-
+        index = 337
         
-        #Correlating the current blocks attributes to these variables
+        while True:
+            size = transactions[0:8]
+            index2 += int(size, 16)
 
+
+        #Correlating the current blocks attributes to these variables
         self.blockid = blockid
         self.nonce = int(nonce, 16)
         self.blocktime = int(blocktime, 16)
@@ -167,7 +172,7 @@ def main():
     print(x.raw)
 
     v = Block()
-    v.createBlockFromRaw("000a9a947677be3253362f02a37eb8db8843dd73de44db93400ada98233018290000000000000223000167477519700000000011b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a6849200000000000000000000000000000000003e945177bb9313b62fc4a6e3d57a8400d83826cce3c45fe5ac23798dec991f1d928fe8d935e967c34a7179de60e7c7b20c4dc02283e089ea9d5c31926f1ab10000000186000000000102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000000")
+    v.createBlockFromRaw(x.raw)
 
     
 
