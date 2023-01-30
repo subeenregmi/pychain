@@ -107,9 +107,10 @@ def createCoinbaseTx(publicKey, reward):
    scriptPubKey = createPayToPubKeyHash(publicKey)
    value = str(hex(reward)[2:]).zfill(16)
    CoinbaseTemplateDict["value0"] = value
-   
+   CoinbaseTemplateDict["sizePk0"] = len(scriptPubKey) // 2 
+   CoinbaseTemplateDict["scriptPubKey0"] = scriptPubKey
 
-   pass
+   print(CoinbaseTemplateDict)
 
 def main():
 
