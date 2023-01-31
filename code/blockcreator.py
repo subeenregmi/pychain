@@ -40,7 +40,9 @@ class Block():
     def mine(self, publicKey):
 
         #Coinbase Transaction will be added for the reward
-        createCoinbaseTx(publicKey, 100)
+        rawCoinbase = createCoinbaseTx(publicKey, 100)
+        print(rawCoinbase)
+        self.transactions.append(rawCoinbase)
 
         # This calculates the string that needs to be hashed
         timeofmine = int(time.time())
@@ -69,6 +71,7 @@ class Block():
                 self.blockmined = True
                 self.miner = minerAddress
                 self.calculateRaw()
+                self.addBlockToChain()
                 break
 
     # This checks if a block is valid, after its being mined, by hashing the data again with the nonce provided 
@@ -163,7 +166,7 @@ class Block():
         index = 0
         self.transactions = []
 
-        while index != len(transactions):
+        while index <= len(transactions):
             txSize = transactions[0:8]
             txSize = int(txSize, 16)
             index += 8
@@ -183,30 +186,12 @@ class Block():
 
 def main():
 
-    x = Block(1, ["0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c9538555558ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000000", "0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000001"], 1105681728405961314241097251219337798448187965786335346888234327275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
+    x = Block(1, ["0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c9538555558ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000000", "0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000001"], 11056817284059613142410972512193377984481879657863353468882227275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
     # # #y = Block(2, ["0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f400201b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a6849200000000"], 110568172798640591261314241097512146939888796578635346723327275266671322463)
     x.mine((27478882617205022913866810795994685083488102591489070623513923342921168189223, 55112522602840616896238107825541525589537144918969385911224019968193895183400))
     x.validateBlock()
     print(x.raw)
-
-    v = Block()
-    v.createBlockFromRaw(x.raw)
-    print(v.transactions)
-
-    if x.transactions == v.transactions:
-        print(True)
-    
-    print(v.miner)
-    if x.miner == v.miner: 
-        print("Correct Miner")
-
-    if v.blockid == x.blockid:
-        print("SOMEHOW?")
-    
-    if v.difficulty == x.difficulty:
-        print("diff match")
-    
-    #findTXID("ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d60", "blockchain.pickle")
+    print(f"X Transactions: {x.transactions}")
 
 if __name__ == "__main__":
     main()

@@ -95,7 +95,7 @@ def createCoinbaseTx(publicKey, reward):
       "InputCount":"01",
       "txid0":"8266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb44", #hash of 'COINBASE'
       "vout0":"0001",
-      "sizeSig0":"000A",
+      "sizeSig0":"0005",
       "scriptSig0":"0000000000",
       "OutputCount":"01",
       "value0":"",
@@ -107,30 +107,14 @@ def createCoinbaseTx(publicKey, reward):
    scriptPubKey = createPayToPubKeyHash(publicKey)
    value = str(hex(reward)[2:]).zfill(16)
    CoinbaseTemplateDict["value0"] = value
-   CoinbaseTemplateDict["sizePk0"] = len(scriptPubKey) // 2 
+   CoinbaseTemplateDict["sizePk0"] = str(hex(len(scriptPubKey) // 2)[2:]).zfill(4)
    CoinbaseTemplateDict["scriptPubKey0"] = scriptPubKey
-
-   print(CoinbaseTemplateDict)
+   raw = createTxFromDict(CoinbaseTemplateDict)
+   return raw
+   
 
 def main():
 
-   # print("tx from dict")
-   # dict = {
-   # "Version":"01",
-   # "InputCount":"01",
-   # "txid0":"ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d60",
-   # "vout0":"0001",
-   # "sizeSig0":"0020",
-   # "scriptSig0":"46b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c314494",
-   # "OutputCount":"01",
-   # "value0":"00000000000001f4",
-   # "sizePk0":"0026",
-   # "scriptPubKey0":"76a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac",
-   # "locktime":"00000000"   
-   # }
-
-   # rawtx = createTxFromDict(dict)
-   # print(rawtx)
    createCoinbaseTx("dasd", 100)
 
 
