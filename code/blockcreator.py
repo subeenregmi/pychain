@@ -145,7 +145,7 @@ class Block():
         else: 
             file = open("blockchain.txt", "a")
             file.write(self.raw)
-            file.write("\n\n")
+            file.write("\n")
             file.close()
             print("Success")
     
@@ -154,6 +154,7 @@ class Block():
         blockid = raw[0:64]
         nonce = raw[64:80]
         blocktime = raw[80:93]
+        print(f"Blocktime : {blocktime}")
         blockheight = raw[93:103]
         prevblockid = raw[103:167]
         difficulty = raw[167:263]
@@ -177,8 +178,8 @@ class Block():
         #Correlating the current blocks attributes to these variables
         self.blockid = blockid
         self.nonce = int(nonce, 16)
-        self.blocktime = int(blocktime, 16)
-        self.height = int(blockheight, 16)
+        self.blocktime = int(blocktime)
+        self.height = int(blockheight)
         self.previousblockhash = prevblockid
         self.difficulty = int(difficulty, 16)
         self.merkle = merkle
@@ -188,10 +189,24 @@ def main():
 
     x = Block(1, ["0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c9538555558ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000000", "0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000001"], 11056817284059613142410972512193377984481879657863353468882227275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
     # # #y = Block(2, ["0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f400201b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a6849200000000"], 110568172798640591261314241097512146939888796578635346723327275266671322463)
-    x.mine((27478882617205022913866810795994685083488102591489070623513923342921168189223, 55112522602840616896238107825541525589537144918969385911224019968193895183400))
+    x.mine((27478882617205022913866810798513923342921168189223, 55112522602840616896238107825541525589537144918969385911224019968193895183400))
     x.validateBlock()
     print(x.raw)
+    print(x.blocktime)
     print(f"X Transactions: {x.transactions}")
+
+    v = Block()
+    v.createBlockFromRaw(x.raw)
+
+    print(v.blocktime)
+
+    if v.blocktime == x.blocktime:
+        print("s23232")
+
+    if v.nonce == x.nonce:
+        print("Success")
+        
+    print(v.height)
 
 if __name__ == "__main__":
     main()
