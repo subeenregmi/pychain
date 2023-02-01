@@ -38,9 +38,10 @@ class Blockchain():
         self.validChain = False
         self.difficulty = None
         self.reward = None
+        self.averageBlockTime = 60
 
         try:
-            blockchain = open("blockchain.txt", "r")
+            blockchain = open(blockchainfile, "r")
             for line in blockchain.readlines():
                 line = line[:-1]
                 block = Block()
@@ -129,15 +130,31 @@ class Blockchain():
     def setReward(self, reward):
         self.reward = reward
 
+    
+    # This will calculate the average time of the blocks and move the difficulty up or down by using a multiplier.
+    # We get the last ten blocks, find the difference between the last block and the most recent block, and then divide by 60
+    # We need to get this towards 1 so if we multiply by a multiplier that is 60/average this would be the best way to get to 60 average time 
+
     def calculateDifficulty(self):
         totalTime = 0
-        for block in self.blocks[-20:]:
-            
+        twentyBlock = self.blocks[-10].blocktime
+        currentBlock = self.blocks[-1].blocktime
+        difference = currentBlock - twentyBlock
+        difficulty = self.blocks[-1].difficulty
+        multiplier = 600 / difference
+        difficulty *= multiplier
+        difficulty = int(difficulty)
+        print(f"NEW DIFFICULTY = {difficulty}")
+        return difficulty
                   
+    # We need to implement alot of features for a valid chain:
+    #   - All blocks need to be in sequential order
+    #   - All blocks need to have the the correct previous block id
+    #   - All blocks need to have a correct id (rehash the details of the block)
 
-    def validateChain():
-        pass
-
+    def validateChain(self):
+        for block in self.blocks:
+            
 
 
 
@@ -148,7 +165,8 @@ def main():
     test1 = Blockchain("blockchain.txt")
     #test1.findTxid("1ac44d7f4e027b1b4c63ddcd2fc155de8ea04bd7658729372aa83ec981bc3e76")
     #test1.findTxidsRelatingToKey((27478882617205022913866810798513923342921168189223, 55112522602840616896238107825541525589537144918969385911224019968193895183400))
-    test1.calculateDifficulty()
+    #test1.calculateDifficulty()
+    test1.validateChain()
 
 if __name__ == "__main__":
     main()

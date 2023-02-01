@@ -154,7 +154,6 @@ class Block():
         blockid = raw[0:64]
         nonce = raw[64:80]
         blocktime = raw[80:93]
-        print(f"Blocktime : {blocktime}")
         blockheight = raw[93:103]
         prevblockid = raw[103:167]
         difficulty = raw[167:263]
