@@ -3,7 +3,6 @@ import time
 from address import createAddress
 from rawtxcreator import createCoinbaseTx
 from transaction import Transaction
-
 # 
 # Note to self: This class should only be used in the client-side, this should be a way to convert the raw data of block and to 
 # validate and mine blocks. Consensus is not achieved here. Also the mine functions need to have a way to create a coinbase transaction
@@ -53,7 +52,7 @@ class Block():
 
         # Coinbase Transaction will be added for the reward
 
-        rawCoinbase = createCoinbaseTx(publicKey, 100)
+        rawCoinbase = createCoinbaseTx(publicKey, 100, self.height)
         CoinbaseTx = Transaction(rawCoinbase)
         self.transactions.append(CoinbaseTx)
 
@@ -227,30 +226,38 @@ class Block():
         self.difficulty = int(difficulty, 16)
         self.merkle = merkle
         self.miner = miner
+        self.raw = raw
 
 def main():
 
-    x = Block(1, [Transaction("0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c9538555558ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000000"), Transaction("0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f4002676a92169f38a6b51de7e9345992f2161c9c811a8b57cb2c1f31b8f98211b21af61096bd588ac00000001")], 11056817284059613142410972512193377984481879657863353468882227275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
-    # # #y = Block(2, ["0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f400201b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a6849200000000"], 110568172798640591261314241097512146939888796578635346723327275266671322463)
-    x.mine((27478882617205022913866810798513923342921168189223, 55112522602840616896238107825541525589537144918969385911224019968193895183400))
+    #x = Block(1, [Transaction("01017898db070c4bcc871a55da6c53486421c97d2ec9c6b37d0f36a06ac857c36a50000100050000000001010000000000000064002676a921692a3463a826237019f2e3b8106e955c92ff7dbdaaa34288ae2a6697ee24c3714d88ac00000000")], 11056817284059613142410972512193377984481879657863353468882227275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
+    x = Block(2, [Transaction("0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f400201b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a6849200000000")], 110568172798640591261314241097512146939888796578635346723327275266671322463, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
+    x.mine((3, 5555))
     x.validateBlock()
     print(x.raw)
-    print(x.blocktime)
-    for tx in x.transactions:
-        print(f"Txs: {tx.findTotalValueSent()}")
+    print(x.transactions)
+
 
     v = Block()
-    v.createBlockFromRaw(x.raw)
 
-    print(v.blocktime)
+    # print(x.blocktime)
+    # for tx in x.transactions:
+    #     print(f"Txs: {tx.findTotalValueSent()}")
 
-    if v.blocktime == x.blocktime:
-        print("s23232")
+    # v = Block()
+    # v.createBlockFromRaw(x.raw)
 
-    if v.nonce == x.nonce:
-        print("Success")
+    # print(v.blocktime)
+
+    # if v.blocktime == x.blocktime:
+    #     print("s23232")
+
+    # if v.nonce == x.nonce:
+    #     print("Success")
         
-    print(v.height)
+    # print(v.height)
+    
+    
 
 if __name__ == "__main__":
     main()

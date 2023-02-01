@@ -86,9 +86,11 @@ def createTxFromDict(tx2):
 
 def createTXID(rawtx):
    txid = hashlib.sha256(rawtx.encode('utf-8')).hexdigest()
+   txid = hashlib.sha256(txid.encode('utf-8')).hexdigest()
+   
    return txid
 
-def createCoinbaseTx(publicKey, reward):
+def createCoinbaseTx(publicKey, reward, blockheight):
    # The coinbase transaction is the reward the u
    CoinbaseTemplateDict = {
       "Version":"01",
@@ -106,6 +108,7 @@ def createCoinbaseTx(publicKey, reward):
 
    scriptPubKey = createPayToPubKeyHash(publicKey)
    value = str(hex(reward)[2:]).zfill(16)
+   CoinbaseTemplateDict["scriptSig0"] = str(blockheight).zfill(10)
    CoinbaseTemplateDict["value0"] = value
    CoinbaseTemplateDict["sizePk0"] = str(hex(len(scriptPubKey) // 2)[2:]).zfill(4)
    CoinbaseTemplateDict["scriptPubKey0"] = scriptPubKey
@@ -114,8 +117,8 @@ def createCoinbaseTx(publicKey, reward):
    
 
 def main():
-
-   createCoinbaseTx("dasd", 100)
+   tx = createCoinbaseTx((2, 3), 100, 1)
+   print(tx)
 
 
 

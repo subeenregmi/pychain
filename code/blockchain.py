@@ -37,29 +37,42 @@ class Blockchain():
         self.reward = None
         self.averageBlockTime = 60
 
-        try:
-            blockchain = open(blockchainfile, "r")
-            for line in blockchain.readlines():
-                line = line[:-1]
-                block = Block()
-                block.createBlockFromRaw(line)
-                self.blocks.append(block)
-                self.height += 1
-        except:
-            blockchain = open(blockchainfile, "a")
+        blockchain = open(blockchainfile, "r")
+        for line in blockchain.readlines():
+            line = line[:-1]
+            block = Block()
+            block.createBlockFromRaw(line)
+            block.validateBlock()
+            self.blocks.append(block)
+            self.height += 1
 
+            # print("File not there!")
+            # blockchain = open(blockchainfile, "a")
+
+    # This finds a txid in the blocks and returns the raw if found, or it returns false if its not there.
 
     def findTxid(self, txid):
         for block in self.blocks:
             for transaction in block.transactions:
-                txidBlock = hashlib.sha256(transaction.raw.encode('utf-8')).hexdigest()
-                if txidBlock == txid:
-                    print(f"TXID FOUND == {txid}\nTXID IS IN BLOCK {self.blocks.index(block) + 1}, TX NUMBER = {block.transactions.index(transaction) +1}")
-                    print(f"TX RAW = {transaction.raw}")
-                    return transaction
+                if transaction.txid == txid: 
+                    print(f"Found {transaction.txid}!\nBlock Height: {block.height}\nTransaction Index :{block.transactions.index(transaction)}")
+                    print(f"RAW TX: {transaction.raw}")
+                    return transaction.raw
+        else:
+            print("TXID not in blockchain")
+            return False
 
-        print("TXID not found!")
-        return False
+    # This finds a blockid in the blockchain and returns raw if found, or returns false if not there. 
+
+    def findBlockId(self, blockid):
+        for block in self.blocks:
+            if block.blockid == blockid:
+                print(f"Found {block.blockid}!\nBlock Height: {block.height}")
+                print(f"RAW BLOCK: {block.raw}")
+                return block.raw
+        else: 
+            print("Block Id not Found!")
+            return False        
 
     # This function searches the blockchain for transactions that are either from the public address or to the public address and will output two lists
     # There are going to be three types of transactions: Inputs, Outputs, and Coinbase
@@ -79,27 +92,27 @@ class Blockchain():
 
         pyAddress = address.createAddress(publicKey)
         uncompressedAddress = "04 " + str(hex(publicKey[0])[2:]) + str(hex(publicKey[1]))[2:]
-        inputs = {}
+        inputs = []
         outputs = []
 
-        # for block in self.blocks:
+        for block in self.blocks:
+            for transaction in block.transactions:
+                if (pyAddress or uncompressedAddress) in transaction.outputAddress():
+                    inputs.append(transaction)
+                    for tx in inputs:
+                        if tx.txid in transaction.inputs:
+                            outputs.append(transaction)
 
-        #     for transaction in block.transactions:
-        #         transactionID = 
-        #         transaction = rawtxdecoder.decodeRawTx(transaction)
-
-        #         # checking for a inputs to the address 
-        #         for i in range(int(transaction['OutputCount'])):
-        #             input = transaction[f'scriptPubKey{i}']
-        #             input = spubKeydecoder.breakDownLockScript(input)
-        #             if (pyAddress in input) or (uncompressedAddress in input):
                         
-
-                
 
         print(f"---------INPUTS----------")
         for input in inputs:
-            print(input)
+            print(input.txid)
+
+        print(f"---------OUTPUTS----------")
+        for output in outputs:
+            print(output)
+            
             
 
     def setReward(self, reward):
@@ -138,12 +151,17 @@ class Blockchain():
 
 def main():
     test1 = Blockchain("blockchain.txt")
-    test1.findTxid("1ac44d7f4e027b1b4c63ddcd2fc155de8ea04bd7658729372aa83ec981bc3e76")
-    #test1.findTxidsRelatingToKey((27478882617205022913866810798513923342921168189223, 55112522602840616896238107825541525589537144918969385911224019968193895183400))
+    #test1.findTxid("1ac44d7f4e027b1b4c63ddcd2fc155de8ea04bd7658729372aa83ec981bc3e76")
+    test1.findTxidsRelatingToKey((3, 5555))
     #test1.calculateDifficulty()
     #test1.validateChain()
-    print(test1.blocks[-1].transactions[1].txid)
-    test1.findTxid("d26a47abbd0906ea35e6e2570a89c419ad0cdcc0fb64d324f6a1a207f7dc8dd3")
+    #print(test1.blocks[-1].transactions[1].txid)
+    # test1.findTxid("d26a47abbd0906ea35e6e2570a89c419ad0cdcc0fb64d324f6a1a207f7dc8dd3")
+    #test1.findBlockId("0001b328dad9542fada895e80af5e0c59111ee437375bf52de4d170937e291b1")
+    # print(test1.blocks[-1].transactions[0].raw)
+    # print(test1.blocks[-1].transactions[0].inputs)
+    # print(test1.blocks[-1].transactions[-1])
+    # print(test1.blocks[-1].transactions[-1].findTotalValueSent())
 
 if __name__ == "__main__":
     main()
