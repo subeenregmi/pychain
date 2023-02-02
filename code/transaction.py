@@ -14,25 +14,25 @@ class Transaction:
         # To create a transaction, we need to intialise it with the lowest level of a transaction, the raw transactional data,
         # we use this rawtx whenever we want to send transactions on the blockchain.
 
-        tx = decodeRawTx(rawtx)
+        self.tx = decodeRawTx(rawtx)
 
         # this decodes our rawTx into a dictionary format to then be parsed into the following parameters
 
         self.txid = createTXID(rawtx)
-        self.version = tx["Version"]
-        self.inputscount = int(tx["InputCount"])
-        self.outputcount = int(tx["OutputCount"])
+        self.version = self.tx["Version"]
+        self.inputcount = int(self.tx["InputCount"])
+        self.outputcount = int(self.tx["OutputCount"])
         self.inputs = {}
         self.outputs = {}
         self.raw = rawtx
         
         # As a transaction can contain multiple inputs and outputs we need to store the data about both
     
-        for x in range(int(tx["InputCount"])):
-            self.inputs[f"txid{x}"] = {tx[f"txid{x}"] : (tx[f"vout{x}"], tx[f"scriptSig{x}"])}
+        for x in range(int(self.tx["InputCount"])):
+            self.inputs[f"txid{x}"] = {self.tx[f"txid{x}"] : (self.tx[f"vout{x}"], self.tx[f"scriptSig{x}"])}
         
-        for x in range(int(tx["OutputCount"])):
-            self.outputs[tx[f"value{x}"]] = tx[f"scriptPubKey{x}"]
+        for x in range(int(self.tx["OutputCount"])):
+            self.outputs[self.tx[f"value{x}"]] = self.tx[f"scriptPubKey{x}"]
         
         self.locktime = "00000000"
 
@@ -57,9 +57,15 @@ class Transaction:
         
         return addresses
 
+    def inputTxids(self):
+        inputs = []
+        for i in range(self.inputcount):
+            inputs.append(self.tx[f"txid{i}"])
+        return inputs
+
 def main():
 
-    x = Transaction("0102ab696a951348d80c9360d0de0733eef12c6cd64e7bbaaf658acee42a61d32d600001002046b7ebfe9b9639f6f88f77709b453f89ce380ae192202f1fd913864a4c3144948732d097e715d15e8ddd312749a97572bc97b6f8bc1692f08e82f90d0882258e00010020c2d28ed3a36ca0a8a3076d4c2dfa54c95383deee8ed16b63720f0561a86894650100000000000001f400201b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a6849200000000")
+    x = Transaction("0101fcef71991fa65b75b67ab8dc7234c8e852b12f0f6f16932e75a592447ffc92c7000100208266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb440100000000000000640021697e66d2a581463fafe887d892fd1d724825bbe214b7b2547639dbc8a87f7cc25d00000000")
     print(x.inputs)
 
 if __name__ == "__main__":

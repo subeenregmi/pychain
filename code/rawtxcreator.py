@@ -117,8 +117,7 @@ def createCoinbaseTx(publicKey, reward, blockheight):
    
 
 def main():
-   tx = createCoinbaseTx((2, 3), 100, 1)
-   print(tx)
+   print(createTxFromUser())
 
 
 

@@ -45,6 +45,7 @@ class Blockchain():
             block.validateBlock()
             self.blocks.append(block)
             self.height += 1
+        
 
             # print("File not there!")
             # blockchain = open(blockchainfile, "a")
@@ -97,13 +98,23 @@ class Blockchain():
 
         for block in self.blocks:
             for transaction in block.transactions:
-                if (pyAddress or uncompressedAddress) in transaction.outputAddress():
-                    inputs.append(transaction)
-                    for tx in inputs:
-                        if tx.txid in transaction.inputs:
+                try:
+                    if pyAddress in transaction.outputAddress():
+                        inputs.append(transaction)
+                except:
+                    pass
+                
+                for input in inputs:
+                    if (input.txid in transaction.inputTxids()):
+                        if input not in outputs:
                             outputs.append(transaction)
-
-                        
+        
+        uniqueOutputs = []
+        for output in outputs:
+            if output not in uniqueOutputs:
+                uniqueOutputs.append(output)
+        
+        outputs = uniqueOutputs
 
         print(f"---------INPUTS----------")
         for input in inputs:
@@ -111,7 +122,7 @@ class Blockchain():
 
         print(f"---------OUTPUTS----------")
         for output in outputs:
-            print(output)
+            print(output.txid)
             
             
 
@@ -141,27 +152,41 @@ class Blockchain():
     #   - All blocks need to have a correct id (rehash the details of the block)
 
     def validateChain(self):
-        for block in self.blocks:
-            pass
 
+        self.validChain = False
 
+        ordered = False
+        prevBlockIDCorrect = False
+        correctBlockId = False
+
+        for i in range(len(self.blocks)):
+            if i != len(self.blocks) - 1:
+                blockheight1 = self.blocks[i].height
+                blockheight2 = self.blocks[i+1].height
+
+             
 
             
 
 
 def main():
     test1 = Blockchain("blockchain.txt")
-    #test1.findTxid("1ac44d7f4e027b1b4c63ddcd2fc155de8ea04bd7658729372aa83ec981bc3e76")
-    test1.findTxidsRelatingToKey((3, 5555))
+    #print(test1.blocks)
+    # for block in test1.blocks:
+    #     print(block.raw)
+    #test1.findTxid("fcef71991fa65b75b67ab8dc7234c8e852b12f0f6f16932e75a592447ffc92c7")
+    #
+    #test1.findTxidsRelatingToKey((3, 5555))
     #test1.calculateDifficulty()
     #test1.validateChain()
     #print(test1.blocks[-1].transactions[1].txid)
     # test1.findTxid("d26a47abbd0906ea35e6e2570a89c419ad0cdcc0fb64d324f6a1a207f7dc8dd3")
     #test1.findBlockId("0001b328dad9542fada895e80af5e0c59111ee437375bf52de4d170937e291b1")
-    # print(test1.blocks[-1].transactions[0].raw)
-    # print(test1.blocks[-1].transactions[0].inputs)
-    # print(test1.blocks[-1].transactions[-1])
+    #print(test1.blocks[16].transactions[0].raw)
+    # print(test1.blocks[-1].transactions[0].inputTxids())
+    # print(test1.blocks[-1].transactions[0].txid)
     # print(test1.blocks[-1].transactions[-1].findTotalValueSent())
+    test1.validateChain()
 
 if __name__ == "__main__":
     main()
