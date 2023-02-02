@@ -155,16 +155,50 @@ class Blockchain():
 
         self.validChain = False
 
-        ordered = False
-        prevBlockIDCorrect = False
-        correctBlockId = False
-
         for i in range(len(self.blocks)):
-            if i != len(self.blocks) - 1:
-                blockheight1 = self.blocks[i].height
-                blockheight2 = self.blocks[i+1].height
 
-             
+            if len(self.blocks) == 1: 
+                self.validChain = True
+
+            if i != len(self.blocks) - 1:
+                # We are iterating through each block by comparing the nth block to the n+1th block, upto the nth block in the list
+                
+                block1 = self.blocks[i]
+                block2 = self.blocks[i+1]
+
+                # This checks if the blocks are in sequential order
+                if block1.height < block2.height:
+                    self.validChain = True
+                else:
+                    self.validChain = False
+                    print("Blocks Are Not Ordered Sequentially.")
+                    break
+                
+                # This checks the blocks previous hash is the hash of the previous block 
+                if block2.previousblockhash == block1.blockid:
+                    self.validChain = True
+                else:
+                    self.validChain = False
+                    print("Block(s) Previous Hash's are not the same.")
+                    break
+                
+                # This validates the block to make sure the blockid is the correct 
+                if (block1.validateBlock()) and (block2.validateBlock()):
+                    self.validChain = True
+                else:
+                    self.validChain = False
+                    print("Blocks have wrong block id.")
+                    break
+
+        if self.validChain == False:
+            print("Chain is invalid")
+            return False
+        else:
+            print("Chain is valid")
+            return True
+
+
+        
 
             
 

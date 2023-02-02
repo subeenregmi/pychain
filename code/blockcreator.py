@@ -117,6 +117,8 @@ class Block():
             self.blockmined = False
             print("False!")
 
+        return self.blockmined
+
     # This is the function to calculate a raw version of the block after it has been mined.
 
     def calculateRaw(self):
