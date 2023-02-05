@@ -1,22 +1,38 @@
 import socket
+import threading
 
-s = socket.socket()
+clients = []
 
-print("Socket Created")
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-s.bind(("localhost", 9999))
+server_socket.bind(("localhost", 55558))
 
-s.listen(3)
-print("Waiting for connections")
+server_socket.listen(3)
 
-while True:
+def handleClient():
+    while True:
+        client_socket, client_address = server_socket.accept()
+        clients.append(client_socket)
+        print(f"{client_address} has joined!")
+        thread = threading.Thread(target=recieveMessage(client_socket))
+        thread.start()
+        thread.join()
+        if len(clients) == 0:
+            break
+def recieveMessage(socket):
+    while True:
+        data = socket.recv(1024).decode('utf-8')
+        for client in clients:
+            if client == socket:
+                continue
+            socket.send(data.encode('utf-8'))
+        if data == "":
+            clients.remove(socket)
+            break
 
-    c, addr = s.accept()
-     
-    name = c.recv(1024).decode()
+def main():
+    thread1 = threading.Thread(target=handleClient())
+    thread1.start()
+    thread1.join()
 
-    print(f"Connected with {addr}, {name}")
-
-    c.send(bytes(f"Welcome {name}!", "utf-8"))
-
-    c.close()
+main()

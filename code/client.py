@@ -1,10 +1,8 @@
 import socket
 
-c = socket.socket()
-
-c.connect(("localhost", 9999))
-
-name = input("Enter Name: ")
-c.send(bytes(name, "utf-8"))
-
-print(c.recv(1024).decode())
+def createClient(port):
+    client_socket = socket.socket()
+    client_socket.bind(("localhost", port))
+    client_socket.send(("localhost", 55558))
+def sendMessage():
+    pass
