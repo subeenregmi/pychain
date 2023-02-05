@@ -6,4 +6,3 @@ def createClient(port):
     client_socket.send(("localhost", 55558))
 def sendMessage():
     pass
-
