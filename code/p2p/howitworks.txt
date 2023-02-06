@@ -1,0 +1,30 @@
+so this is how two nodes will connect with each other
+
+First every blockchain will have a specific, UDP port set by the blockchain, this is the UDP_SERVER_PORT
+We use this to send a request that we want to connect.
+In this scenario we have two nodes, p1 and p2.
+
+So p1, and p2 want to connect to each other on the pychain network.
+Both p1 and p2 will start a UDP socket on the port, previously mentioned in this example port 900, then both
+sockets will be set to listening.
+
+p1 will first create socket on any free port, with a specific range. This socket will also be set to listening.
+Then p1 will send p2 a udp packet on port 900, inside the packet, it will contain, p1s ip and the port it used to create
+the socket. After this p1, will set his newly created socket to accept the next connection.
+
+when p2 recieves the packet and the data inside, p2 will create a socket, with a free port on p2, and will try to connect
+to p1s, newly created socket. p1 will accept the connection, and there will be a connection between the two pairs.
+
+p1 and p2, will now add that socket to their own pairs list and then can communicate through that line.
+
+if any other nodes want to connect to either p1 or p2, all they need is to send a udp packet to the udp server socket.
+and the process repeats.
+
+In theory this works, but there are some security flaws as we if we are a node waiting for a connection, any node can
+join, so maybe we should make sure the connection is by the ip we sent the packet to? Also we need to create a new
+socket for every connection, this may take up bandwidth or might not?
+
+For terminating nodes, nodes should send one last message, stating a phrase or a code, and then the peers remove the
+socket relating to that node.
+
+Overall, this provides a p2p network, between nodes and even if one

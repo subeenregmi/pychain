@@ -16,53 +16,49 @@ from ..blockchain import Blockchain
 # blockchain is basically a server and a client which can talk to other nodes.
 
 HOST = "localhost"
-PORT = 45569
+PORT = 50001
+UDP_SERVER_PORT = 50000
+MAXPEERS = 10
 
-class Node():
-    def __init__(self, blockchainfile, privateKey):
+class Peer():
+    def __init__(self):
+        # We need a mempool, to hold transactions before mining, we need to access the block
+        # We also need to create a server socket on the udp port and for that to always listen
+        # For now we need to make nodes just talk to create a connection and send data.
 
-        self.blockchain = Blockchain(blockchainfile)
         self.mempool = []
-        self.privateKey = privateKey
-        self.publicKey = ECmultiplication(privateKey, Gx, Gy)
+        self.UDPsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.UDPsocket.bind((HOST, UDP_SERVER_PORT))
+        self.UDPsocket.listen(MAXPEERS)
         self.peers = []
-        self.acceptingPeers = True
 
-        self.serverPeerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.clientPeerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    def connectToPeer(self, ip):
+        message = f"CR:{HOST},{PORT}"
+        tries = 0
+        while tries != 5:
+            try:
+                self.UDPsocket.sendto(message.encode('utf-8'), (ip, UDP_SERVER_PORT))
+                peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                peer_socket.bind((HOST, PORT))
+                peer_socket.settimeout(30.0)
+                connected_peer, connected_address = peer_socket.accept()
+                self.peers.append(connected_peer)
+                print(f"Connection to {ip} is successful!")
+                return True
+            except:
+                tries += 1
+                continue
 
-        self.serverPeerSocket.bind((HOST, PORT))
-        self.clientPeerSocket.bind((HOST, PORT+1))
+        print(f"Connection to {ip} is unsuccessful")
+        return False
 
-        self.clientPeerSocket.listen(256)
-    def acceptPeers(self):
-        print("-----------LISTENING FOR CONNECTIONS--------")
-        while self.acceptingPeers:
-            peer_socket, peer_address = self.serverPeerSocket.accept()
-            self.peers.append(peer_socket)
-            print(f"Established Connection with {peer_address}")
-        print("---------STOPPED LISTENING FOR CONNECTIONS--------")
+    def listenForPeers(self):
+        while len(self.peers) != MAXPEERS:
+            message, address = self.UDPsocket.recvfrom(1024)
+            message.decode('utf-8')
+            if message[0:2] == "CR":
+                IpInfo = message[3:]
 
-    def pingPeers(self):
-        self.peerSocket.settimeout(30.0)
-        for peer in self.peers:
-            peer.send(f"Connection Test from {self.peerSocket.getsockname()}")
-            data = self.peerSocket.recv(1024).decode('utf-8')
-            if data == f"Test received from {peer.getsockname()}":
-                print(f"Connection with {peer.getsockname()} is working!")
             else:
-                print(f"{peer.getsockname} seems to be offline, removing from current peers.")
-                self.peers.remove(peer)
-
-    def tryToConnect(self, peerIp):
-        connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        connection_socket.bind((HOST, PORT+1))
-        try:
-            connection_socket.connect(peerIp, PORT)
-            print(f"Connection with {peerIp} achieved!")
-            self.peers.append(connection_socket)
-            return True
-        except:
-            print(f"Connection with {peerIp} failed! :(")
-            return False
+                continue
 
