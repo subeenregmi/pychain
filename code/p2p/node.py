@@ -1,7 +1,5 @@
 import socket
 import threading
-from ..address import ECmultiplication, Gx, Gy
-from ..blockchain import Blockchain
 
 
 # Our blockchain only works if there is a way of distributing the blockchain(s) files,
@@ -15,50 +13,128 @@ from ..blockchain import Blockchain
 # We will use sockets and threading to do this, and essentially a participant/node on the
 # blockchain is basically a server and a client which can talk to other nodes.
 
-HOST = "localhost"
-PORT = 50001
-UDP_SERVER_PORT = 50000
-MAXPEERS = 10
-
+SERVER_UDP_SERVER = 50001
 class Peer():
-    def __init__(self):
+    def __init__(self, host, portMin, portMax, maxPeers):
         # We need a mempool, to hold transactions before mining, we need to access the block
         # We also need to create a server socket on the udp port and for that to always listen
         # For now we need to make nodes just talk to create a connection and send data.
+        self.host = host
+        self.maxpeers = maxPeers
+
+        self.ports = []
+
+        for i in range( portMin, portMax ):
+            self.ports.append(i)
+
+        try:
+            self.ports.remove(SERVER_UDP_SERVER)
+        except:
+            pass
 
         self.mempool = []
         self.UDPsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.UDPsocket.bind((HOST, UDP_SERVER_PORT))
-        self.UDPsocket.listen(MAXPEERS)
+        self.UDPsocket.bind((self.host, SERVER_UDP_SERVER))
         self.peers = []
 
+    def getFreePort(self):
+        # This function returns a free ports from the ports list
+        return self.ports.pop()
+
     def connectToPeer(self, ip):
-        message = f"CR:{HOST},{PORT}"
+        # This creates the message that will be sent in the UDP packet
+        port = self.getFreePort()
+        message = f"CR:{port}"
         tries = 0
+        print(f"Connecting to {ip}")
+        print(f"Message: {message}")
+
+        # We send the package 5 times and listen 5 times, if not the connection fails
         while tries != 5:
-            try:
-                self.UDPsocket.sendto(message.encode('utf-8'), (ip, UDP_SERVER_PORT))
-                peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                peer_socket.bind((HOST, PORT))
-                peer_socket.settimeout(30.0)
-                connected_peer, connected_address = peer_socket.accept()
-                self.peers.append(connected_peer)
-                print(f"Connection to {ip} is successful!")
-                return True
-            except:
-                tries += 1
-                continue
+
+            # this sends the packet to the server udp socket of who we are trying to connect to
+            self.UDPsocket.sendto(message.encode('utf-8'), (ip, SERVER_UDP_SERVER))
+
+            # this creates a new socket, hosted on the free port, setting us up to receive a connection
+            # we also set a timeout for our socket as otherwise we would be forever waiting for a connection
+            peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            peer_socket.bind((self.host, port))
+            peer_socket.settimeout(30.0)
+            peer_socket.listen(1)
+            print(f"{peer_socket.getsockname()} has been created")
+
+            # We now start listening on our socket for any new connections
+            print(f"{peer_socket.getsockname()} is listening")
+            connected_peer, connected_address = peer_socket.accept()
+            self.peers.append(connected_peer)
+            print(f"Connection to {ip} is successful!")
+            return True
 
         print(f"Connection to {ip} is unsuccessful")
         return False
 
     def listenForPeers(self):
-        while len(self.peers) != MAXPEERS:
+        # This is our listening function that listens for any UDP connection requests, and when one is received it
+        # sends a connection to the sender on the port provided.
+
+        # we need to make sure we do not exceed the max peers the node has set.
+        while len(self.peers) != self.maxpeers:
+
+            # We make our UDP socket to start to listen for any requests
+            print(f"{self.UDPsocket.getsockname()} is listening")
             message, address = self.UDPsocket.recvfrom(1024)
-            message.decode('utf-8')
+            message = message.decode('utf-8')
+            print(f"Message received : {message} from {address}")
+
+            # If the message is in the correct format then we can process it otherwise the packet is disregarded.
             if message[0:2] == "CR":
-                IpInfo = message[3:]
+
+                # We get the port from the message received and pick a port from an unused port in the range
+                port = int(message[3:])
+                print(f"PORT FROM MESSAGE = {port}")
+                tries = 0
+                local_port = self.getFreePort()
+
+                # We try and connect five times otherwise we give up
+                while tries <= 5:
+                    try:
+                        connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        connection_socket.bind((self.host, local_port))
+                        print(f"Trying to connect to {(address[0], port)}")
+                        connection_socket.connect((address[0], port))
+
+                        # Once a connection has been established we can add it onto our connected peers
+                        self.peers.append(connection_socket)
+                        print(f"Connection to {address[0]} established!")
+                        return True
+                    except:
+                        tries += 1
+                        pass
+
+                # If the peer fails to connect in five attempts it stops try to connect
+                print(f"Connection with {address[0]} unsuccessful!")
+                return False
 
             else:
+                print("Invalid Message Format CR:{PORT}")
                 continue
 
+
+
+def main():
+    p1 = Peer("localhost", 50002, 50500, 10)
+    p2 = Peer("localhost", 60000, 60500, 10)
+
+    # P1 CONNECTS TO P2, P2 is listening, and p2 initiates by sending the udp packet
+    # p1s free port, 50001, udp port 50000
+    # p2s free port, 60001, udpport 60000
+
+    # listenThread = threading.Thread(target=p2.listenForPeers, daemon=True)
+    #
+    # connectingThread = threading.Thread(target=p1.connectToPeer, args=("localhost",))
+    #
+    # listenThread.start()
+    # connectingThread.start()
+
+mainThread = threading.Thread(target=main())
+mainThread.start()
