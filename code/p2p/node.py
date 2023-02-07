@@ -13,7 +13,7 @@ import threading
 # We will use sockets and threading to do this, and essentially a participant/node on the
 # blockchain is basically a server and a client which can talk to other nodes.
 
-SERVER_UDP_SERVER = 50001
+SERVER_UDP_SERVER = 60001
 class Peer():
     def __init__(self, host, portMin, portMax, maxPeers):
         # We need a mempool, to hold transactions before mining, we need to access the block
@@ -53,6 +53,7 @@ class Peer():
         while tries != 5:
 
             # this sends the packet to the server udp socket of who we are trying to connect to
+            print(f"Sending {message} to {(ip, SERVER_UDP_SERVER)}")
             self.UDPsocket.sendto(message.encode('utf-8'), (ip, SERVER_UDP_SERVER))
 
             # this creates a new socket, hosted on the free port, setting us up to receive a connection
@@ -60,7 +61,7 @@ class Peer():
             peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             peer_socket.bind((self.host, port))
             peer_socket.settimeout(30.0)
-            peer_socket.listen(1)
+            peer_socket.listen()
             print(f"{peer_socket.getsockname()} has been created")
 
             # We now start listening on our socket for any new connections
@@ -82,7 +83,7 @@ class Peer():
 
             # We make our UDP socket to start to listen for any requests
             print(f"{self.UDPsocket.getsockname()} is listening")
-            message, address = self.UDPsocket.recvfrom(1024)
+            message, address = self.UDPsocket.recvfrom(256)
             message = message.decode('utf-8')
             print(f"Message received : {message} from {address}")
 
@@ -122,19 +123,9 @@ class Peer():
 
 
 def main():
-    p1 = Peer("localhost", 50002, 50500, 10)
-    p2 = Peer("localhost", 60000, 60500, 10)
 
-    # P1 CONNECTS TO P2, P2 is listening, and p2 initiates by sending the udp packet
-    # p1s free port, 50001, udp port 50000
-    # p2s free port, 60001, udpport 60000
+    p1 = Peer("192.168.0.111", 50002, 50500, 10)
 
-    # listenThread = threading.Thread(target=p2.listenForPeers, daemon=True)
-    #
-    # connectingThread = threading.Thread(target=p1.connectToPeer, args=("localhost",))
-    #
-    # listenThread.start()
-    # connectingThread.start()
+    p1.connectToPeer("10.154.0.2")
 
-mainThread = threading.Thread(target=main())
-mainThread.start()
+main()
