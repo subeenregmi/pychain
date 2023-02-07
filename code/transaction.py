@@ -66,7 +66,14 @@ class Transaction:
 def main():
 
     x = Transaction("0101fcef71991fa65b75b67ab8dc7234c8e852b12f0f6f16932e75a592447ffc92c7000100208266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb440100000000000000640021697e66d2a581463fafe887d892fd1d724825bbe214b7b2547639dbc8a87f7cc25d00000000")
+    print(x.tx)
+    print(x.txid)
+    print(x.version)
+    print(x.inputcount)
+    print(x.outputcount)
     print(x.inputs)
+    print(x.outputs)
+    print(x.raw)
 
 if __name__ == "__main__":
     main()

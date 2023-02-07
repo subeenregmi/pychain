@@ -28,3 +28,5 @@ For terminating nodes, nodes should send one last message, stating a phrase or a
 socket relating to that node.
 
 Overall, this provides a p2p network, between nodes and even if one
+
+Nodes on the network need to forward port 60000
