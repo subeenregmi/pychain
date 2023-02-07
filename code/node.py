@@ -3,7 +3,9 @@ import threading
 from address import ECmultiplication, Gx, Gy
 from blockchain import Blockchain
 from transaction import Transaction
+import queue
 import select
+import time
 
 # Our blockchain only works if there is a way of distributing the blockchain(s) files,
 # there are two main ways to implement this. One way would be through centralization,
@@ -34,7 +36,7 @@ class Peer():
 
         try:
             self.ports.remove(SERVER_UDP_SERVER)
-        except:
+        except ValueError:
             pass
 
         self.publickey = ECmultiplication(privateKey, Gx, Gy)
@@ -42,7 +44,7 @@ class Peer():
         self.UDPsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.UDPsocket.bind((self.host, SERVER_UDP_SERVER))
         self.peers = []
-        self.peersThreads = []
+        self.threads = []
         self.listening = True
 
     def getFreePort(self):
@@ -51,96 +53,97 @@ class Peer():
 
     def listenOnUDP(self):
         # This is our listening function that listens for any UDP connection requests, and when one is received it
-        # sends a connection to the sender on the port provided.
+        # sends a connection to the sender on the port provided. It also creates a thread for listening onto that
+        # connection.
 
-        # we need to make sure we do not exceed the max peers the node has set.
-        while len(self.peers) != self.maxpeers:
+        # We need to make sure we do not exceed the maxpeers and we are in listening mode.
+        while len(self.peers) != self.maxpeers and self.listening:
 
             # We make our UDP socket to start to listen for any requests
-            print(f"{self.UDPsocket.getsockname()} is listening")
-            message, address = self.UDPsocket.recvfrom(256)
+            print(f"<UDP SOCK> {self.UDPsocket.getsockname()} is listening")
+            message, address = self.UDPsocket.recvfrom(1024)
             message = message.decode('utf-8')
-            print(f"Message received : {message} from {address}")
+            print(f"<UDP SOCK> Message received : {message} from {address}")
 
             # If the message is in the correct format for a peer connection then we can process it.
             if message[0:2] == "CR":
 
-                # We get the port from the message received and pick a port from an unused port in the range
+                # We get the port from the message received and pick a port from the unused ports.
                 port = int(message[3:])
-                print(f"PORT FROM MESSAGE = {port}")
-                tries = 0
+                print(f"<UDP SOCK> PORT FROM MESSAGE = {port}")
+                tries = 1
                 local_port = self.getFreePort()
 
-                # We try and connect five times otherwise we give up
-                while tries < 5:
+                # We try and connect five times
+                while tries < 6:
                     try:
                         # We create a socket for every time we try and connect
                         connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         connection_socket.bind((self.host, local_port))
                         connection_socket.settimeout(30.0)
-                        print(f"Trying to connect to {(address[0], port)}")
+                        print(f"<UDP SOCK> Trying to connect to {(address[0], port)}")
                         connection_socket.connect((address[0], port))
 
                         # Once a connection has been established we can add it onto our connected peers
                         self.peers.append(connection_socket)
-                        print(f"Connection to {address[0]} established!")
+                        print(f"<UDP SOCK> Connection to {address[0]} established!")
+
+                        # We are also going to create a thread that listens on the TCP socket
+                        thread = threading.Thread( target=self.listenOnTCP, args=(connection_socket,) )
+                        self.threads.append(thread)
+                        thread.start()
                         break
+
                     except:
-                        print(f"Trying again, tries: {tries}")
+                        print(f"<UDP SOCK> Trying again, tries: {tries}")
                         tries += 1
 
                 # If the peer fails to connect in five attempts it stops trying to connect
-                if tries == 4:
-                    print(f"Connection with {address[0]} unsuccessful!")
-
-            elif message[0:2] == "TX":
-                # If the format is in transaction format then we can instantiate
-
-                rawTx = message[3:]
-                try:
-                    transaction = Transaction(rawTx)
-                    self.mempool.append(transaction)
-                except:
-                    print(f"Raw Transaction in incorrect form!")
+                if tries == 5:
+                    print(f"<UDP SOCK> Connection with {address[0]} unsuccessful!")
 
             else:
-                print("Invalid Message Format CR:{PORT}, TX:{RAWTX}")
+                print("<UDP SOCK> Invalid Message Format CR:{PORT}")
 
-    def listenOnSockets(self):
+    def listenOnTCP(self, socket):
         # We need to also start listening to the peer-to-peer connections for transactions and peer list requests.
-        # To do this we can use the select module to make our .receive functions non-blocking.
 
         # By not using "while True", we choose when to listen
+        print(f"<TCP LISTEN> Listening on {socket.getpeername()}...")
         while self.listening:
-            print(f"Node is listening...")
 
-            # This part uses the select module to call .recv on the sockets without blocking any sockets.
-            peers, _, _ = select.select(self.peers, [], [])
-            for peer in peers:
-                message, address = peer.recv(1024), peer.getsockname()
-                message = message.decode('utf-8')
-                print(f"{address}: {message}")
+            message = socket.recv(1024)
+            message = message.decode('utf-8')
 
-                # When we receive a message we check if it is in TX format, so we can create the transaction object
-                # and store it onto our mempool
-                if message[:2] == "TX":
+            # If a peer disconnects then we can get out of this and no longer listen on this connection
+            if message == "":
+                self.peers.remove(socket)
+                break
 
-                    print(f"Transaction received from {address}")
-                    try:
-                        raw_transaction = message[3:]
-                        transaction = Transaction(raw_transaction)
-                        self.mempool.append(transaction)
+            # When we receive a message we check if it is in TX format, so we can create the transaction object
+            # and store it onto our mempool
+            if message[:2] == "TX":
 
-                    except:
-                        # If the raw transaction sent by a peer is invalid, then we reject it and move on
-                        print(f"Transaction not valid")
+                print(f"<TCP LISTEN> Transaction received from {socket.getpeername()}")
 
-                if message[:3] == "PLR":
-                    print("PLR DETECTED")
+                try:
+                    raw_transaction = message[3:]
+                    print(raw_transaction)
+                    transaction = Transaction(raw_transaction)
+                    self.mempool.append(transaction)
+                    print(f"<TCP LISTEN> Added Transaction to mempool")
+                    print(f"<TCP LISTEN> Mempool = {self.mempool}")
 
-                # The peer only accepts packets that contain certain starting values.
-                else:
-                    print("Invalid Format: TX{RAWTX}")
+                except:
+                    # If the raw transaction sent by a peer is invalid, then we reject it and move on
+                    print(f"<TCP LISTEN> Transaction not valid")
+
+            elif message[:3] == "PLR":
+                print("<TCP LISTEN> PLR DETECTED")
+
+            # The peer only accepts packets that contain certain starting values.
+            else:
+                print("<TCP LISTEN> Invalid Format: TX{RAWTX}")
 
     def connectToPeer(self, ip):
         # This creates the message that will be sent in the UDP packet
@@ -203,7 +206,10 @@ class Peer():
 
 def main():
     p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
-    print(p1.publickey)
+    nodeThread = threading.Thread(target=p1.listenOnUDP)
+    nodeThread.start()
+
+
 
 
 if __name__ == "__main__":
