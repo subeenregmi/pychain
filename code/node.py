@@ -3,6 +3,7 @@ import threading
 from address import ECmultiplication, Gx, Gy
 from blockchain import Blockchain
 from transaction import Transaction
+import select
 
 # Our blockchain only works if there is a way of distributing the blockchain(s) files,
 # there are two main ways to implement this. One way would be through centralization,
@@ -41,12 +42,14 @@ class Peer():
         self.UDPsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.UDPsocket.bind((self.host, SERVER_UDP_SERVER))
         self.peers = []
+        self.peersThreads = []
+        self.listening = True
 
     def getFreePort(self):
         # This function returns a free ports from the ports list
         return self.ports.pop()
 
-    def listen(self):
+    def listenOnUDP(self):
         # This is our listening function that listens for any UDP connection requests, and when one is received it
         # sends a connection to the sender on the port provided.
 
@@ -74,7 +77,7 @@ class Peer():
                         # We create a socket for every time we try and connect
                         connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         connection_socket.bind((self.host, local_port))
-                        connection_socket.timeout(30.0)
+                        connection_socket.settimeout(30.0)
                         print(f"Trying to connect to {(address[0], port)}")
                         connection_socket.connect((address[0], port))
 
@@ -84,7 +87,6 @@ class Peer():
                         break
                     except:
                         print(f"Trying again, tries: {tries}")
-                        connection_socket.close()
                         tries += 1
 
                 # If the peer fails to connect in five attempts it stops trying to connect
@@ -101,9 +103,44 @@ class Peer():
                 except:
                     print(f"Raw Transaction in incorrect form!")
 
-
             else:
                 print("Invalid Message Format CR:{PORT}, TX:{RAWTX}")
+
+    def listenOnSockets(self):
+        # We need to also start listening to the peer-to-peer connections for transactions and peer list requests.
+        # To do this we can use the select module to make our .receive functions non-blocking.
+
+        # By not using "while True", we choose when to listen
+        while self.listening:
+            print(f"Node is listening...")
+
+            # This part uses the select module to call .recv on the sockets without blocking any sockets.
+            peers, _, _ = select.select(self.peers, [], [])
+            for peer in peers:
+                message, address = peer.recv(1024), peer.getsockname()
+                message = message.decode('utf-8')
+                print(f"{address}: {message}")
+
+                # When we receive a message we check if it is in TX format, so we can create the transaction object
+                # and store it onto our mempool
+                if message[:2] == "TX":
+
+                    print(f"Transaction received from {address}")
+                    try:
+                        raw_transaction = message[3:]
+                        transaction = Transaction(raw_transaction)
+                        self.mempool.append(transaction)
+
+                    except:
+                        # If the raw transaction sent by a peer is invalid, then we reject it and move on
+                        print(f"Transaction not valid")
+
+                if message[:3] == "PLR":
+                    print("PLR DETECTED")
+
+                # The peer only accepts packets that contain certain starting values.
+                else:
+                    print("Invalid Format: TX{RAWTX}")
 
     def connectToPeer(self, ip):
         # This creates the message that will be sent in the UDP packet
@@ -148,12 +185,25 @@ class Peer():
             peer.send(transaction_message)
             print(f"Message sent to {peer.getsockname()}")
 
+    def sendPeerListRequest(self):
+        # A peer list request is a request to a peer to send its peers it connected to.
+        # It works as follows, our PLR request is made up of the "PLR:" tag and the [host ip], the idea is that a node
+        # that receives a PLR request, sends all their connected peers back to the PLR requester via their UDPsocket
+        # however the node also sends the PLR request to their connected peers. Then the cycle repeats.
+        # The PLR requester now has a list of peers, but their may be some duplicates, so it removes duplicates from the
+        # possible peers list, after doing so, it trys to connect to the peers from that list.
+
+        peer_list_request = f"PLR:[{self.host}]"
+        peer_list_request = peer_list_request.encode('utf-8')
+
+        for peer in self.peers:
+            print(f"PeerListRequest(PLR) sent to {peer.getsockname()}")
+            peer.send(peer_list_request)
 
 
 def main():
-    p1 = Peer("blockchain.txt", "127.0.0.1", 50000, 50500, 10, 8888)
+    p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     print(p1.publickey)
-    print(p1.blockchain.blocks[0].raw)
 
 
 if __name__ == "__main__":
