@@ -110,6 +110,7 @@ class Peer():
 
         # By not using "while True", we choose when to listen
         print(f"<TCP LISTEN> Listening on {socket.getpeername()}...")
+        socket.settimeout(None)
         while self.listening:
 
             message = socket.recv(1024)
@@ -118,6 +119,7 @@ class Peer():
             # If a peer disconnects then we can get out of this and no longer listen on this connection
             if message == "":
                 self.peers.remove(socket)
+                print(f"<TCP LISTEN> Peer {socket.getpeername()} disconnected")
                 break
 
             # When we receive a message we check if it is in TX format, so we can create the transaction object
