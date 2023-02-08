@@ -141,7 +141,7 @@ class Peer():
                     print(f"<TCP LISTEN> Transaction not valid")
 
             # When we receive a PLR from a peer, we need to send them back our list of peers in a Peer List Request
-            # Receieved (PLRR) packet
+            # Receieved (RPLR) packet
             elif message[:3] == "PLR":
                 # The correct format for a PLR request is:
                 # "PLR:[192.0.0.0]
@@ -183,12 +183,14 @@ class Peer():
                         parenthesis_stack.append( char )
                         continue
                     elif char == ')' or char == ']':
-
                         try:
                             checkchar = parenthesis_stack.pop()
                         except IndexError:
                             valid = False
                             break
+
+                        if checkchar =="(" and char == ")":
+                            continue
 
                         if checkchar == '[' and char == ']':
                             continue
@@ -198,7 +200,7 @@ class Peer():
                     else:
                         continue
 
-                # If the parenthesis are valid, then we take out the ips from the PLRR and if the user is already
+                # If the parenthesis are valid, then we take out the ips from the RPLR and if the user is already
                 # connected to one then we don't try to connect again. Otherwise, we try to connect.
                 if valid:
 
@@ -209,9 +211,9 @@ class Peer():
                     possible_peers = possible_peers.split()
                     print(f"<TCP LISTEN> Possible Peers from RPLR: {possible_peers} ")
 
-                    if possible_peers == (''):
+                    if len(possible_peers) == 0:
                         print("<TCP LISTEN> No new peers. ")
-                        return True
+                        break
 
                     for peer in self.peers:
                         currentPeers.append(peer.getpeername()[0])
@@ -234,13 +236,34 @@ class Peer():
     def connectToPeer(self, ip):
         # This creates the message that will be sent in the UDP packet
         port = self.getFreePort()
-        message = f"CR:{port}"
         tries = 0
         print(f"<TCP CONNECT> Connecting to {ip}")
-        print(f"<TCP CONNECT> Message: {message}")
 
         # We send the package 5 times and listen 5 times, if not the connection fails
         while tries != 5:
+
+            # This creates a new socket, hosted on the free port, setting us up to receive a connection
+            # we also set a timeout for our socket as otherwise we would be forever waiting for a connection
+
+            peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                peer_socket.bind((self.host, port))
+            except OSError:
+                valid = False
+                while not valid:
+                    try:
+                        new_port = self.getFreePort()
+                        peer_socket.bind((self.host, new_port))
+                        port = new_port
+                        valid = True
+                    except OSError:
+                        continue
+
+            message = f"CR:{port}"
+
+            peer_socket.settimeout(150.0)
+            peer_socket.listen()
+            print(f"<TCP CREATE>{peer_socket.getsockname()} has been created")
 
             # This sends the packet to the server udp socket of who we are trying to connect to
             print(f"<TCP SEND> Sending {message} to {(ip, SERVER_UDP_SERVER)}")
@@ -248,8 +271,7 @@ class Peer():
 
             # This creates a new socket, hosted on the free port, setting us up to receive a connection
             # we also set a timeout for our socket as otherwise we would be forever waiting for a connection
-            peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            peer_socket.bind((self.host, port))
+
             peer_socket.settimeout(150.0)
             peer_socket.listen()
             print(f"<TCP CREATE>{peer_socket.getsockname()} has been created")
@@ -295,10 +317,13 @@ class Peer():
 
 
 def main():
-    p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
+    p1 = Peer("blockchain.txt", "192.168.0.111", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
 
+    p1.connectToPeer("192.168.0.201")
+    p1.sendTransaction("0101fcef71991fa65b75b67ab8dc7234c8e852b12f0f6f16932e75a592447ffc92c7000100208266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb440100000000000000640021697e66d2a581463fafe887d892fd1d724825bbe214b7b2547639dbc8a87f7cc25d00000000")
+    p1.sendPeerListRequest()
 
 if __name__ == "__main__":
     main()
