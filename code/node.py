@@ -61,7 +61,6 @@ class Peer():
 
             # We make our UDP socket to start to listen for any requests
             print(f"<UDP SOCK> {self.UDPsocket.getsockname()} is listening")
-            print("here")
             message, address = self.UDPsocket.recvfrom(1024)
             message = message.decode('utf-8')
             print(f"<UDP SOCK> Message received : {message} from {address}")
@@ -90,10 +89,9 @@ class Peer():
                         print(f"<UDP SOCK> Connection to {address[0]} established!")
 
                         # We are also going to create a thread that listens on the TCP socket
-                        thread = threading.Thread( target=self.listenOnTCP, args=(connection_socket,), daemon=True )
+                        thread = threading.Thread(target=self.listenOnTCP, args=(connection_socket,))
                         self.threads.append(thread)
                         thread.start()
-                        print("here2")
                         break
 
                     except:
@@ -113,7 +111,7 @@ class Peer():
         # By not using "while True", we choose when to listen
         print(f"<TCP LISTEN> Listening on {socket.getpeername()}...")
         socket.settimeout(None)
-        while self.listening:
+        while self.listening and (len(self.peers) != self.maxpeers):
 
             message = socket.recv(1024)
             message = message.decode('utf-8')
@@ -154,15 +152,15 @@ class Peer():
                 # We are putting all the peers ips into the square brackets, but we do not want to send the requesters
                 # own ip.
                 for peer in self.peers:
-                    peerIp = peer.getpeername()
-                    if peerIp == socket.getpeername:
+                    peerIp = peer.getpeername()[0]
+                    if peerIp == socket.getpeername()[0]:
                         continue
-                    peer_list_request_received += f"[{peerIp}]"
+                    peer_list_request_received += f"[{peerIp[0]}]"
                 peer_list_request_received += ")"
 
                 # This just encodes ands sends the packet back.
-                print(f"<TCP LISTEN> PLRR : {peer_list_request_received} to {socket.getpeername()} ")
-                peer_list_request_received.encode('utf-8')
+                print(f"<TCP SEND> Sending PLRR : {peer_list_request_received} to {socket.getpeername()} ")
+                peer_list_request_received = peer_list_request_received.encode('utf-8')
                 socket.send(peer_list_request_received)
 
             # This is how we will deal with a PLRR from a PLR request we sent
@@ -201,7 +199,7 @@ class Peer():
                         continue
 
                 # If the parenthesis are valid, then we take out the ips from the PLRR and if the user is already
-                # connected to one then we don't try to connect again. Otherwise we try to connect.
+                # connected to one then we don't try to connect again. Otherwise, we try to connect.
                 if valid:
 
                     possible_peers = possible_peers.replace("(", "")
@@ -256,6 +254,9 @@ class Peer():
             print(f"<TCP LISTEN> {peer_socket.getsockname()} is listening")
             connected_peer, connected_address = peer_socket.accept()
             self.peers.append(connected_peer)
+            thread = threading.Thread(target=self.listenOnTCP, args=(connected_peer,))
+            thread.start()
+            self.threads.append(thread)
             print(f"<TCP CONNECT> Connection to {ip} is successful!")
             return True
 
@@ -289,15 +290,10 @@ class Peer():
 
 
 def main():
-    p1 = Peer("blockchain.txt", "192.168.0.111", 50000, 50500, 10, 9999)
+    p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
 
-    p1.connectToPeer("192.168.0.201")
-
-    p1.sendTransaction("0101fcef71991fa65b75b67ab8dc7234c8e852b12f0f6f16932e75a592447ffc92c7000100208266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb440100000000000000640021697e66d2a581463fafe887d892fd1d724825bbe214b7b2547639dbc8a87f7cc25d00000000")
-
-    p1.sendPeerListRequest()
 
 if __name__ == "__main__":
     main()
