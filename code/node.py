@@ -57,10 +57,11 @@ class Peer():
         # connection.
 
         # We need to make sure we do not exceed the maxpeers and we are in listening mode.
-        while len(self.peers) != self.maxpeers and self.listening:
+        while self.listening:
 
             # We make our UDP socket to start to listen for any requests
             print(f"<UDP SOCK> {self.UDPsocket.getsockname()} is listening")
+            print("here")
             message, address = self.UDPsocket.recvfrom(1024)
             message = message.decode('utf-8')
             print(f"<UDP SOCK> Message received : {message} from {address}")
@@ -89,9 +90,10 @@ class Peer():
                         print(f"<UDP SOCK> Connection to {address[0]} established!")
 
                         # We are also going to create a thread that listens on the TCP socket
-                        thread = threading.Thread( target=self.listenOnTCP, args=(connection_socket,) )
+                        thread = threading.Thread( target=self.listenOnTCP, args=(connection_socket,), daemon=True )
                         self.threads.append(thread)
                         thread.start()
+                        print("here2")
                         break
 
                     except:
@@ -232,14 +234,14 @@ class Peer():
         port = self.getFreePort()
         message = f"CR:{port}"
         tries = 0
-        print(f"Connecting to {ip}")
-        print(f"Message: {message}")
+        print(f"<TCP CONNECT> Connecting to {ip}")
+        print(f"<TCP CONNECT> Message: {message}")
 
         # We send the package 5 times and listen 5 times, if not the connection fails
         while tries != 5:
 
             # This sends the packet to the server udp socket of who we are trying to connect to
-            print(f"Sending {message} to {(ip, SERVER_UDP_SERVER)}")
+            print(f"<TCP SEND> Sending {message} to {(ip, SERVER_UDP_SERVER)}")
             self.UDPsocket.sendto(message.encode('utf-8'), (ip, SERVER_UDP_SERVER))
 
             # This creates a new socket, hosted on the free port, setting us up to receive a connection
@@ -248,27 +250,27 @@ class Peer():
             peer_socket.bind((self.host, port))
             peer_socket.settimeout(150.0)
             peer_socket.listen()
-            print(f"{peer_socket.getsockname()} has been created")
+            print(f"<TCP CREATE>{peer_socket.getsockname()} has been created")
 
             # We now start listening on our socket for any new connections
-            print(f"{peer_socket.getsockname()} is listening")
+            print(f"<TCP LISTEN> {peer_socket.getsockname()} is listening")
             connected_peer, connected_address = peer_socket.accept()
             self.peers.append(connected_peer)
-            print(f"Connection to {ip} is successful!")
+            print(f"<TCP CONNECT> Connection to {ip} is successful!")
             return True
 
-        print(f"Connection to {ip} is unsuccessful")
+        print(f"<TCP CONNECT> Connection to {ip} is unsuccessful")
         return False
 
     def sendTransaction(self, rawtx):
         # This sends a transaction to all the connected peers, in the format TX:{rawtx}
 
         transaction_message = f"TX:{rawtx}"
-        print(f"TRANSACTION TO BE SENT: {transaction_message}")
+        print(f"<TCP SEND> TRANSACTION TO BE SENT: {transaction_message}")
         transaction_message = transaction_message.encode('utf-8')
         for peer in self.peers:
             peer.send(transaction_message)
-            print(f"Message sent to {peer.getsockname()}")
+            print(f"<TCP SEND> Message sent to {peer.getsockname()}")
 
     def sendPeerListRequest(self):
         # A peer list request is a request to a peer to send its peers it connected to.
@@ -282,17 +284,20 @@ class Peer():
         peer_list_request = peer_list_request.encode('utf-8')
 
         for peer in self.peers:
-            print(f"PeerListRequest(PLR) sent to {peer.getsockname()}")
+            print(f"<TCP SEND> PeerListRequest(PLR) sent to {peer.getsockname()}")
             peer.send(peer_list_request)
 
 
 def main():
-    p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
+    p1 = Peer("blockchain.txt", "192.168.0.111", 50000, 50500, 10, 9999)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
 
+    p1.connectToPeer("192.168.0.201")
 
+    p1.sendTransaction("0101fcef71991fa65b75b67ab8dc7234c8e852b12f0f6f16932e75a592447ffc92c7000100208266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb440100000000000000640021697e66d2a581463fafe887d892fd1d724825bbe214b7b2547639dbc8a87f7cc25d00000000")
 
+    p1.sendPeerListRequest()
 
 if __name__ == "__main__":
     main()
