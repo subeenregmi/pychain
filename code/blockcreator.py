@@ -179,13 +179,13 @@ class Block():
     
     # This adds the block to the chain
 
-    def addBlockToChain(self):
+    def addBlockToChain(self, blockchainfile):
 
         if self.blockmined == False:
             print("Cannot add a unmined block.")
 
         else: 
-            file = open("blockchain.txt", "a")
+            file = open(blockchainfile, "a")
             file.write(self.raw)
             file.write("\n")
             file.close()

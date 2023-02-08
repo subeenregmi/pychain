@@ -31,6 +31,7 @@ class Peer():
         self.maxpeers = maxPeers
         self.blockchain = Blockchain(blockchainfile)
         self.ports = []
+        self.blockchainfile = blockchainfile
 
         for i in range(portMin, portMax):
             self.ports.append(i)
@@ -181,7 +182,7 @@ class Peer():
 
                 for char in possible_peers:
                     if char == '(' or char == '[':
-                        parenthesis_stack.append( char )
+                        parenthesis_stack.append(char)
                         continue
                     elif char == ')' or char == ']':
                         try:
@@ -231,9 +232,12 @@ class Peer():
                     print(f"<TCP LISTEN> Parenthesis on RPLR is invalid.")
 
             elif message[:6] == "RAWBLS":
-                # This indicates that a raw block is being sent to the user.
+                # This indicates that a raw block is being sent to the user. Once the block has arrived we instatiate it
+                # ,validate the block and add it to our chain.
+
                 rawBlock = message[7:]
                 print(f"<TCP LISTEN> Raw Block from {socket.getpeername()[0]} : {rawBlock}")
+
                 try:
                     newBlock = Block()
                     newBlock.createBlockFromRaw(rawBlock)
@@ -241,6 +245,7 @@ class Peer():
                     if validated:
                         self.blockchain.blocks.append(newBlock)
                         print(f"<TCP LISTEN> Block has been added.")
+                        newBlock.addBlockToChain("blockchain.txt")
                         continue
                     else:
                         print(f"<TCP LISTEN> Block is invalid.")
@@ -264,6 +269,7 @@ class Peer():
             # we also set a timeout for our socket as otherwise we would be forever waiting for a connection
 
             peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # this allows us to not run into the PORT IS BEING USED errors, by picking the next available port
             try:
                 peer_socket.bind((self.host, port))
             except OSError:
@@ -327,13 +333,19 @@ class Peer():
             peer.send(peer_list_request)
 
     def sendBlock(self, height, ip=None):
-        # This function sends a block to either one person, or to all peers
+        # This function sends a block to either one person, or to all peers with the prefix "RAWBLS" - which means
+        # raw block sent - this is used to send a specific peer or peers a block
+
         send_block = "RAWBLS:"
+
+        # this checks if we are sending to one person, or all
         if ip is not None:
             peer = self.checkIPisPeer(ip)
             if peer is False:
                 print(f"<TCP SEND BLOCK> IP does not correlate to a valid peer.")
                 return False
+            # we need to try and get the block from our blockchain.txt file, as if we specify a height that is too big
+            # the block may not exist
             try:
                 raw_block_at_height = self.blockchain.blocks[height].raw
                 send_block += raw_block_at_height
@@ -349,7 +361,7 @@ class Peer():
                 raw_block_at_height = self.blockchain.blocks[height].raw
                 send_block += raw_block_at_height
                 print(f"<TCP SEND BLOCK PEERS> Sending block at height {height}: {send_block}")
-                send_block = send_block.encode('utf-6')
+                send_block = send_block.encode('utf-8')
                 for peer in self.peers:
                     peer.send(send_block)
                 return True
@@ -359,15 +371,17 @@ class Peer():
 
     def checkIPisPeer(self, ip):
         # This function checks if the parameter ip is a connected peer, and returns the socket if it is a peer.
+        # this returns false if the ip is not a peer, and the socket if the ip is a peer
 
         if ip == self.host:
             print(f"<IP CHECK> Ip is host.")
             return False
+        # we check if the ip is the same our sockets remote address if so that ip is a peer
         for peer in self.peers:
             if peer.getpeername()[0] == ip:
-                print(f"<IP CHECK> Ip is a peer.")
+                print(f"<IP CHECK> {ip} is a peer.")
                 return peer
-        print(f"<IP CHECK> Ip is NOT a peer.")
+        print(f"<IP CHECK> {ip} is NOT a peer.")
         return False
 
 def main():
@@ -377,7 +391,7 @@ def main():
 
     time.sleep(4)
     truth = p1.checkIPisPeer("192.168.0.111")
-    print(truth)
+
 
 if __name__ == "__main__":
     main()
