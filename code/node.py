@@ -269,13 +269,6 @@ class Peer():
             print(f"<TCP SEND> Sending {message} to {(ip, SERVER_UDP_SERVER)}")
             self.UDPsocket.sendto(message.encode('utf-8'), (ip, SERVER_UDP_SERVER))
 
-            # This creates a new socket, hosted on the free port, setting us up to receive a connection
-            # we also set a timeout for our socket as otherwise we would be forever waiting for a connection
-
-            peer_socket.settimeout(150.0)
-            peer_socket.listen()
-            print(f"<TCP CREATE>{peer_socket.getsockname()} has been created")
-
             # We now start listening on our socket for any new connections
             print(f"<TCP LISTEN> {peer_socket.getsockname()} is listening")
             connected_peer, connected_address = peer_socket.accept()
@@ -315,15 +308,37 @@ class Peer():
             print(f"<TCP SEND> PeerListRequest(PLR) sent to {peer.getsockname()}")
             peer.send(peer_list_request)
 
+    def sendBlock(self, height, ip=None):
+        # This function sends a block to either one person, or to all peers
+
+        if ip is not None:
+            peer = self.checkIPisPeer(ip)
+            if peer is False:
+                print(f"<TCP SEND BLOCK> IP does not correlate to a valid peer.")
+
+    def checkIPisPeer(self, ip):
+        # This function checks if the parameter ip is a connected peer, and returns the socket if it is a peer.
+
+        if ip == self.host:
+            print(f"<IP CHECK> Ip is host.")
+            return False
+        for peer in self.peers:
+            if peer.getpeername() == ip:
+                print(f"<IP CHECK> Ip is a peer.")
+                return peer
+        print(f"<IP CHECK> Ip is NOT a peer.")
+        return False
 
 def main():
-    p1 = Peer("blockchain.txt", "192.168.0.111", 50000, 50500, 10, 8888)
+    p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
 
-    p1.connectToPeer("192.168.0.201")
+    p1.connectToPeer("192.168.0.111")
     p1.sendTransaction("0101fcef71991fa65b75b67ab8dc7234c8e852b12f0f6f16932e75a592447ffc92c7000100208266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb440100000000000000640021697e66d2a581463fafe887d892fd1d724825bbe214b7b2547639dbc8a87f7cc25d00000000")
     p1.sendPeerListRequest()
+    time.sleep(1)
+    p1.checkIPisPeer("192.168.0.111")
 
 if __name__ == "__main__":
     main()
