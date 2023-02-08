@@ -2,6 +2,7 @@ import socket
 import threading
 from address import ECmultiplication, Gx, Gy
 from blockchain import Blockchain
+from blockcreator import Block
 from transaction import Transaction
 import queue
 import select
@@ -57,7 +58,7 @@ class Peer():
         # connection.
 
         # We need to make sure we do not exceed the maxpeers and we are in listening mode.
-        while self.listening:
+        while self.listening and len(self.peers) <= self.maxpeers:
 
             # We make our UDP socket to start to listen for any requests
             print(f"<UDP SOCK> {self.UDPsocket.getsockname()} is listening")
@@ -111,7 +112,7 @@ class Peer():
         # By not using "while True", we choose when to listen
         print(f"<TCP LISTEN> Listening on {socket.getpeername()}...")
         socket.settimeout(None)
-        while self.listening and (len(self.peers) != self.maxpeers):
+        while self.listening:
 
             message = socket.recv(1024)
             message = message.decode('utf-8')
@@ -189,7 +190,7 @@ class Peer():
                             valid = False
                             break
 
-                        if checkchar =="(" and char == ")":
+                        if checkchar == "(" and char == ")":
                             continue
 
                         if checkchar == '[' and char == ']':
@@ -213,7 +214,7 @@ class Peer():
 
                     if len(possible_peers) == 0:
                         print("<TCP LISTEN> No new peers. ")
-                        break
+                        continue
 
                     for peer in self.peers:
                         currentPeers.append(peer.getpeername()[0])
@@ -228,6 +229,23 @@ class Peer():
                                 print(f"<TCP LISTEN> Connection with {possiblePeer} is unsuccessful.")
                 else:
                     print(f"<TCP LISTEN> Parenthesis on RPLR is invalid.")
+
+            elif message[:6] == "RAWBLS":
+                # This indicates that a raw block is being sent to the user.
+                rawBlock = message[7:]
+                print(f"<TCP LISTEN> Raw Block from {socket.getpeername()[0]} : {rawBlock}")
+                try:
+                    newBlock = Block()
+                    newBlock.createBlockFromRaw(rawBlock)
+                    validated = newBlock.validateBlock()
+                    if validated:
+                        self.blockchain.blocks.append(newBlock)
+                        print(f"<TCP LISTEN> Block has been added.")
+                        continue
+                    else:
+                        print(f"<TCP LISTEN> Block is invalid.")
+                except:
+                    print(f"<TCP LISTEN> Invalid Block.")
 
             # The peer only accepts packets that contain certain starting values.
             else:
@@ -310,11 +328,34 @@ class Peer():
 
     def sendBlock(self, height, ip=None):
         # This function sends a block to either one person, or to all peers
-
+        send_block = "RAWBLS:"
         if ip is not None:
             peer = self.checkIPisPeer(ip)
             if peer is False:
                 print(f"<TCP SEND BLOCK> IP does not correlate to a valid peer.")
+                return False
+            try:
+                raw_block_at_height = self.blockchain.blocks[height].raw
+                send_block += raw_block_at_height
+                print(f"<TCP SEND BLOCK IP> Sending block at height {height}: {send_block}")
+                send_block = send_block.encode('utf-8')
+                peer.send(send_block)
+                return True
+            except IndexError:
+                print(f"<TCP SEND BLOCK IP> Block at height: {height} does not exist.")
+                return False
+        else:
+            try:
+                raw_block_at_height = self.blockchain.blocks[height].raw
+                send_block += raw_block_at_height
+                print(f"<TCP SEND BLOCK PEERS> Sending block at height {height}: {send_block}")
+                send_block = send_block.encode('utf-6')
+                for peer in self.peers:
+                    peer.send(send_block)
+                return True
+            except IndexError:
+                print(f"<TCP SEND BLOCK PEERS> Block at height {height} does not exist.")
+                return False
 
     def checkIPisPeer(self, ip):
         # This function checks if the parameter ip is a connected peer, and returns the socket if it is a peer.
@@ -323,7 +364,7 @@ class Peer():
             print(f"<IP CHECK> Ip is host.")
             return False
         for peer in self.peers:
-            if peer.getpeername() == ip:
+            if peer.getpeername()[0] == ip:
                 print(f"<IP CHECK> Ip is a peer.")
                 return peer
         print(f"<IP CHECK> Ip is NOT a peer.")
@@ -334,11 +375,9 @@ def main():
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
 
-    p1.connectToPeer("192.168.0.111")
-    p1.sendTransaction("0101fcef71991fa65b75b67ab8dc7234c8e852b12f0f6f16932e75a592447ffc92c7000100208266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb440100000000000000640021697e66d2a581463fafe887d892fd1d724825bbe214b7b2547639dbc8a87f7cc25d00000000")
-    p1.sendPeerListRequest()
-    time.sleep(1)
-    p1.checkIPisPeer("192.168.0.111")
+    time.sleep(4)
+    truth = p1.checkIPisPeer("192.168.0.111")
+    print(truth)
 
 if __name__ == "__main__":
     main()
