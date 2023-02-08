@@ -1,13 +1,12 @@
 import time
-import threading
 
-ips = "PLRR:([192.0.0.1][19.234.512.2])"
+x = 3
 
-ips = ips[5:]
-print(ips)
-ips = ips.replace("(", "")
-ips = ips.replace(")", "")
-ips = ips.replace("[", "")
-ips = ips.replace("]", " ")
-ips = ips.split()
-print(ips)
+if x>2222:
+    print(True)
+elif x==3:
+    print(True)
+elif x<4:
+    print(True)
+else:
+    print(None)

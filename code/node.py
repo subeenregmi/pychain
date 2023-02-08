@@ -147,7 +147,7 @@ class Peer():
                 # "PLR:[192.0.0.0]
 
                 print(f"<TCP LISTEN> Peer List Request from {socket.getpeername()} ")
-                peer_list_request_received = "PLRR:("
+                peer_list_request_received = "RPLR:("
 
                 # We are putting all the peers ips into the square brackets, but we do not want to send the requesters
                 # own ip.
@@ -159,16 +159,16 @@ class Peer():
                 peer_list_request_received += ")"
 
                 # This just encodes ands sends the packet back.
-                print(f"<TCP SEND> Sending PLRR : {peer_list_request_received} to {socket.getpeername()} ")
+                print(f"<TCP SEND> Sending RPLR : {peer_list_request_received} to {socket.getpeername()} ")
                 peer_list_request_received = peer_list_request_received.encode('utf-8')
                 socket.send(peer_list_request_received)
 
-            # This is how we will deal with a PLRR from a PLR request we sent
-            elif message[:4] == "PLRR":
-                # The standard form for a PLRR is:
-                # PLRR:([192.0.0.1][12.34.56.78])
+            # This is how we will deal with a RPLR from a PLR request we sent
+            elif message[:4] == "RPLR":
+                # The standard form for a RPLR is:
+                # RPLR:([192.0.0.1][12.34.56.78])
 
-                # First we need to check if the PLRR is in the right format, if it not then we cannot go further
+                # First we need to check if the RPLR is in the right format, if it not then we cannot go further
                 # So first we need to check if the syntax is correct, we can easily do this by iterating through the
                 # message and then checking if is an opening or closing bracket, and if it is opening, we push it onto
                 # the stack, and if it is closing we pop the top element, and if the brackets match we can just continue
@@ -207,7 +207,11 @@ class Peer():
                     possible_peers = possible_peers.replace("[", "")
                     possible_peers = possible_peers.replace("]", " ")
                     possible_peers = possible_peers.split()
-                    print(f"<TCP LISTEN> Possible Peers for PLR: {possible_peers} ")
+                    print(f"<TCP LISTEN> Possible Peers from RPLR: {possible_peers} ")
+
+                    if possible_peers == (''):
+                        print("<TCP LISTEN> No new peers. ")
+                        return True
 
                     for peer in self.peers:
                         currentPeers.append(peer.getpeername()[0])
@@ -221,7 +225,7 @@ class Peer():
                             else:
                                 print(f"<TCP LISTEN> Connection with {possiblePeer} is unsuccessful.")
                 else:
-                    print(f"<TCP LISTEN> Parenthesis on PLRR is invalid.")
+                    print(f"<TCP LISTEN> Parenthesis on RPLR is invalid.")
 
             # The peer only accepts packets that contain certain starting values.
             else:
@@ -284,6 +288,7 @@ class Peer():
         peer_list_request = f"PLR:[{self.host}]"
         peer_list_request = peer_list_request.encode('utf-8')
 
+        print(self.peers)
         for peer in self.peers:
             print(f"<TCP SEND> PeerListRequest(PLR) sent to {peer.getsockname()}")
             peer.send(peer_list_request)
