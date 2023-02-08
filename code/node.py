@@ -140,8 +140,34 @@ class Peer():
                     # If the raw transaction sent by a peer is invalid, then we reject it and move on
                     print(f"<TCP LISTEN> Transaction not valid")
 
+            # When we receive a PLR from a peer, we need to send them back our list of peers in a Peer List Request
+            # Receieved (PLRR) packet
             elif message[:3] == "PLR":
-                print("<TCP LISTEN> PLR DETECTED")
+                # The correct format for a PLR request is:
+                # "PLR:[192.0.0.0]
+
+                print(f"<TCP LISTEN> Peer List Request from {socket.getpeername()} ")
+                peer_list_request_received = "PLRR:("
+
+                # We are putting all the peers ips into the square brackets, but we do not want to send the requesters
+                # own ip.
+                for peer in self.peers:
+                    peerIp = peer.getpeername()
+                    if peerIp == socket.getpeername:
+                        continue
+                    peer_list_request_received += f"[{peerIp}]"
+                peer_list_request_received += ")"
+
+                # This just encodes ands sends the packet back.
+                print(f"<TCP LISTEN> PLRR : {peer_list_request_received} to {socket.getpeername()} ")
+                peer_list_request_received.encode('utf-8')
+                socket.send(peer_list_request_received)
+
+            # This is only used if the
+            elif message[:4] == "PLRR":
+                pass
+
+
 
             # The peer only accepts packets that contain certain starting values.
             else:
