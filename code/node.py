@@ -163,11 +163,65 @@ class Peer():
                 peer_list_request_received.encode('utf-8')
                 socket.send(peer_list_request_received)
 
-            # This is only used if the
+            # This is how we will deal with a PLRR from a PLR request we sent
             elif message[:4] == "PLRR":
-                pass
+                # The standard form for a PLRR is:
+                # PLRR:([192.0.0.1][12.34.56.78])
 
+                # First we need to check if the PLRR is in the right format, if it not then we cannot go further
+                # So first we need to check if the syntax is correct, we can easily do this by iterating through the
+                # message and then checking if is an opening or closing bracket, and if it is opening, we push it onto
+                # the stack, and if it is closing we pop the top element, and if the brackets match we can just continue
+                # This will check for valid parenthesis
+                possible_peers = message[5:]
+                parenthesis_stack = []
+                currentPeers = []
+                valid = True
 
+                for char in possible_peers:
+                    if char == '(' or char == '[':
+                        parenthesis_stack.append( char )
+                        continue
+                    elif char == ')' or char == ']':
+
+                        try:
+                            checkchar = parenthesis_stack.pop()
+                        except IndexError:
+                            valid = False
+                            break
+
+                        if checkchar == '[' and char == ']':
+                            continue
+                        else:
+                            valid = False
+                            break
+                    else:
+                        continue
+
+                # If the parenthesis are valid, then we take out the ips from the PLRR and if the user is already
+                # connected to one then we don't try to connect again. Otherwise we try to connect.
+                if valid:
+
+                    possible_peers = possible_peers.replace("(", "")
+                    possible_peers = possible_peers.replace(")", "")
+                    possible_peers = possible_peers.replace("[", "")
+                    possible_peers = possible_peers.replace("]", " ")
+                    possible_peers = possible_peers.split()
+                    print(f"<TCP LISTEN> Possible Peers for PLR: {possible_peers} ")
+
+                    for peer in self.peers:
+                        currentPeers.append(peer.getpeername()[0])
+                    for possiblePeer in possible_peers:
+                        if possiblePeer in currentPeers:
+                            continue
+                        else:
+                            connection_success = self.connectToPeer(possiblePeer)
+                            if connection_success:
+                                print(f"<TCP LISTEN> Connection with {possiblePeer} is sucessful!")
+                            else:
+                                print(f"<TCP LISTEN> Connection with {possiblePeer} is unsuccessful.")
+                else:
+                    print(f"<TCP LISTEN> Parenthesis on PLRR is invalid.")
 
             # The peer only accepts packets that contain certain starting values.
             else:
