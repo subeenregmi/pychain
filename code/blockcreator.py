@@ -32,7 +32,8 @@ class Block():
         self.blocktime = 0
         self.blockmined = False
         self.raw = ""
-        self.miner = "" 
+        self.miner = ""
+        self.blockchainfile = "blockchain.txt"
         
         # This just adds the transactions to the block
 
@@ -41,7 +42,7 @@ class Block():
             for transaction in self.transactions:
                 self.merkle += transaction.raw
 
-        # The merkle root/hash is the raw transactional data hashed together, this creates a unique hash for those transactions
+        # The merkle root/hash is the raw transactional.py data hashed together, this creates a unique hash for those transactions
         
         self.merkle = hashlib.sha256(self.merkle.encode('utf-8')).hexdigest()
 
@@ -91,7 +92,7 @@ class Block():
                 self.blockmined = True
                 self.miner = minerAddress
                 self.calculateRaw()
-                self.addBlockToChain()
+                self.addBlockToChain(self.blockchainfile)
                 break
 
     # This checks if a block is valid, after its being mined, by hashing the data again with the nonce provided as this should match the blockid
@@ -214,6 +215,9 @@ class Block():
             txSize = int(txSize, 16)
             index += 8
             tx = transactions[index:index+txSize]
+            if tx == '':
+                break
+            print(tx)
             txO = Transaction(tx)
             self.transactions.append(txO)
             index += txSize
@@ -232,20 +236,23 @@ class Block():
 
 def main():
 
-    #x = Block(1, [Transaction("01017898db070c4bcc871a55da6c53486421c97d2ec9c6b37d0f36a06ac857c36a50000100050000000001010000000000000064002676a921692a3463a826237019f2e3b8106e955c92ff7dbdaaa34288ae2a6697ee24c3714d88ac00000000")], 11056817284059613142410972512193377984481879657863353468882227275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
-    x = Block(2, [Transaction("0101fcef71991fa65b75b67ab8dc7234c8e852b12f0f6f16932e75a592447ffc92c7000100208266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb440100000000000000640021697e66d2a581463fafe887d892fd1d724825bbe214b7b2547639dbc8a87f7cc25d00000000")], 110568172798640591261314241097512146939888796578635346723327275266671322463, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
-    x.mine((3, 5555))
-    x.validateBlock()
-    print(x.raw)
-    print(x.transactions)
+    # #x = Block(1, [Transaction("01017898db070c4bcc871a55da6c53486421c97d2ec9c6b37d0f36a06ac857c36a50000100050000000001010000000000000064002676a921692a3463a826237019f2e3b8106e955c92ff7dbdaaa34288ae2a6697ee24c3714d88ac00000000")], 11056817284059613142410972512193377984481879657863353468882227275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
+    x = Block(3, [], 1105681727986405912613142410975121469398887965786353467233272752666322463, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
+    x.mine((1, 5555))
+    # x.validateBlock()
+    # print(x.raw)
+    # print(x.transactions)
+    # for transaction in x.transactions:
+    #     print(f"TX = {transaction.raw}")
+    #
+    # v = Block()
+    # v.createBlockFromRaw(x.raw)
+    # print(v.transactions[0].inputs)
+    # v.validateBlock()
 
-    v = Block()
-    v.createBlockFromRaw(x.raw)
-    print(v.transactions[0].inputs)
-    v.validateBlock()
-
-
-    v = Block()
+    #
+    #
+    # v = Block()
 
     # print(x.blocktime)
     # for tx in x.transactions:
@@ -253,6 +260,7 @@ def main():
 
     # v = Block()
     # v.createBlockFromRaw(x.raw)
+
 
     # print(v.blocktime)
 

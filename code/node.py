@@ -7,6 +7,7 @@ from transaction import Transaction
 import queue
 import select
 import time
+import rawtxdecoder
 
 # Our blockchain only works if there is a way of distributing the blockchain(s) files,
 # there are two main ways to implement this. One way would be through centralization,
@@ -383,6 +384,41 @@ class Peer():
                 return peer
         print(f"<IP CHECK> {ip} is NOT a peer.")
         return False
+
+    def validateTransactioninMempool(self):
+        # This function will validate the transactions that we get.
+        for transaction in self.mempool:
+            transactionDict = rawtxdecoder.decodeRawTx(transaction.raw)
+            inputsCount = transaction.inputcount
+            for i in range(inputsCount):
+                txid = transactionDict[f"txid{i}"]
+                vout = transactionDict[f"vout{i}"]
+                sig = transactionDict[f"sig{i}"]
+                if txid == "8266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb44":
+                    if int(sig) == self.blockchain.height:
+                        print(f"<MEMPOOL> Transaction: {transaction.txid} is valid.")
+                        continue
+                    else:
+                        print(f"<MEMPOOL> Transaction: {transaction.txid} has wrong scriptSig")
+                        self.mempool.remove(transaction)
+                        break
+                else:
+                    try:
+                        rawReferTransaction = self.blockchain.findTxid(txid)
+                        referTransactionDict = rawtxdecoder.decodeRawTx(rawReferTransaction)
+                    except:
+                        print(f"<MEMPOOL> Transaction {transaction.txid} has refers to a non-existing txid.")
+                        self.mempool.remove(transaction)
+                        break
+
+                    output = int(vout) - 1
+                    value = referTransactionDict[f"value{output}"]
+                    scriptpubkey = referTransactionDict[f"scriptPubKey{0}"]
+
+
+
+
+
 
 def main():
     p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)

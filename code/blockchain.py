@@ -5,6 +5,7 @@ import scriptsigdecoder
 import spubKeydecoder
 import address
 import rawtxcreator
+import rawtxdecoder
 
 '''
 This will be the blockchain class that will regulate the rewards for the blocks, blockheight and difficulty,
@@ -148,7 +149,7 @@ class Blockchain():
                   
     # We need to implement alot of features for a valid chain:
     #   - All blocks need to be in sequential order
-    #   - All blocks need to have the the correct previous block id
+    #   - All blocks need to have the correct previous block id
     #   - All blocks need to have a correct id (rehash the details of the block)
 
     def validateChain(self):
@@ -197,14 +198,17 @@ class Blockchain():
             print("Chain is valid")
             return True
 
-
-        
-
-            
-
-
 def main():
     test1 = Blockchain("blockchain.txt")
+    print(test1.height)
+    for block in test1.blocks:
+        for transaction in block.transactions:
+            print(transaction.txid)
+            print(transaction.inputs)
+            print(rawtxdecoder.decodeRawTx(transaction.raw))
+            x = list(transaction.outputs.values())[0]
+            print(x)
+
     #print(test1.blocks)
     # for block in test1.blocks:
     #     print(block.raw)
@@ -220,7 +224,7 @@ def main():
     # print(test1.blocks[-1].transactions[0].inputTxids())
     # print(test1.blocks[-1].transactions[0].txid)
     # print(test1.blocks[-1].transactions[-1].findTotalValueSent())
-    test1.validateChain()
+    # test1.validateChain()
 
 if __name__ == "__main__":
     main()

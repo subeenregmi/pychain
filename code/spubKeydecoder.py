@@ -27,7 +27,7 @@ def breakDownLockScript(scriptcode):
     return script
 
 def main():
-    print(breakDownLockScript("4104a09760dae68f23cb1a57cffd3bd4d2247f6128d9695f6f0802248809d1639023301c863f672a2c62d622fc5d42a7d2a72c4fb77bb5637d547cbf0ac6e9999027ac"))
+    print(breakDownLockScript("76a9216993bd7f6f19bf866096041e3a25093819059f69fbe36d604529b0d1d1f84355e188ac"))
 
 if __name__ == "__main__":
     main()

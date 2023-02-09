@@ -20,6 +20,7 @@ def EQUALVERIFY(stack):
         return stack
  
 def OPCHECKSIG(stack, tx):
+
     public_address = stack.pop()
     signature = stack.pop()
     result = verifySig(signature[0], signature[1], tx, public_address)
