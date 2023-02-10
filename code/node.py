@@ -419,22 +419,42 @@ class Peer():
         return False
 
     def validateTransaction(self, transaction, public_key):
-        # This function will validate a transaction when we recieve it, and this determines if the transactions reach
+        # This function will validate a transaction when we receive it, and this determines if the transactions reach
         # our mempool, to be mined.
-        # Update: we need a system where when we get the transaction stated in the input txid, we need to look for any
-        # other transactions on the blockchain that also refers to that specific transaction.
+        # Update: Transactions have to be checked that no two transactions have the same input and same vout. This
+        # easily prevents double spending, we also need to check that this transaction is not a used as an input for
+        # transactions in the mempool
         total_value = 0
+
         try:
 
             # We first decode our raw transaction into a dictionary
             transactionDict = rawtxdecoder.decodeRawTx(transaction.raw)
             inputs = int(transactionDict["InputCount"])
             for i in range(inputs):
+
                 # For each input we get the txid, vout and the sig
                 txid = transactionDict[f"txid{i}"]
                 vout = transactionDict[f"vout{i}"]
                 vout = int(vout, 16)
                 sig = transactionDict[f"scriptSig{i}"]
+
+                # This checks each transaction in the blockchain to see if the same txid and vout is already mentioned
+                for block in self.blockchain.blocks:
+                    for tx in block.transactions:
+                        decodedtx = rawtxdecoder.decodeRawTx(tx.raw)
+                        inputs = int(decodedtx["InputCount"])
+                        for z in range(inputs):
+                            if decodedtx[f"txid{z}"] == txid and int(decodedtx[f"vout{z}"], 16) == vout:
+                                return False
+
+                # This checks if the transactions txid and vout is already in the mempool
+                for tx in self.mempool:
+                    decodedtx = rawtxdecoder.decodeRawTx(tx.raw)
+                    inputs = int(decodedtx["InputCount"])
+                    for z in range(inputs):
+                        if decodedtx[f"txid{z}"] == txid and int(decodedtx[f"vout{z}"], 16) == vout:
+                            return False
 
                 # We find the transaction that is used for an input and take the scriptPubKey
                 previousTransaction = self.blockchain.findTxid(txid)
@@ -474,9 +494,18 @@ class Peer():
         return True
 
     def startMine(self):
-        # This function will continously mine blocks in the mempool, this works even if there are no transactions it
-        # will continue mine. This function is also responsible to update the difficulty and add to the blockchain.
-        pass
+        # This function will continuously mine blocks in the mempool, this works even if there are no transactions it
+        # will continue mine. This function is also responsible to update the difficulty and add to the blockchain. Gas
+        # fees will be calculated as the discrepancy for the total sent to the total input in, and this will be added
+        # onto the reward
+        while self.mining:
+            current_height = self.blockchain.height + 1
+            current_transactions = []
+            for transaction in self.mempool:
+                current_transactions
+            miningBlock = Block()
+
+
 
 
 def main():
@@ -485,6 +514,7 @@ def main():
     nodeThread.start()
     p1.connectToPeer("192.168.0.111")
     p1.sendTransaction("01017b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed600000042408b22520c20af4de60e54aa2af78486e661efbffc38286253a54bcf24ab2b79934020d79daebf01adb60a15f87eec4c2f41bf5804eab89a8aa995b6224f15f5782c010000000000000064002676a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac00000000", (92641855401206585750031304985966472123204240504167073082041014802408154789641, 5320727137213493453320294950656953718594582159943012446202168292331376026727))
+    p1.startMine()
 
 if __name__ == "__main__":
     main()
