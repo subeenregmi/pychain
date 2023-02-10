@@ -202,12 +202,12 @@ def main():
     test1 = Blockchain("blockchain.txt")
     print(test1.height)
     for block in test1.blocks:
+        print(f"blockraw : {block.raw}")
         for transaction in block.transactions:
+            print(transaction.raw)
+            print(transaction.tx)
             print(transaction.txid)
-            print(transaction.inputs)
-            print(rawtxdecoder.decodeRawTx(transaction.raw))
-            x = list(transaction.outputs.values())[0]
-            print(x)
+    print(test1.findTxid("7b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed6"))
 
     #print(test1.blocks)
     # for block in test1.blocks:

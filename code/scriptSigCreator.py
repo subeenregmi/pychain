@@ -61,7 +61,9 @@ def createDictWithSig(tx, privKey, randNumber):
    return tx, rawtx2
   
 def main():
-   pass
+   scriptSig, rawtx = createSig("01018266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb44000100050000000000010000000000000064002676a9216918d03beae3e40678ce42cebbafbd713d19a7de97af5c20fe720761a030bccdf788ac00000000", 2004, 238293892839283)
+   print(f"Sig = {scriptSig}")
+   print(f"rawTx = {rawtx}")
 
 if __name__ == "__main__":
    main()
