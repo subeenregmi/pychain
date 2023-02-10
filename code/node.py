@@ -136,22 +136,37 @@ class Peer():
                     # This is the parsing of the transactions as they now contain a public key, implemented by using a
                     # four-character text buffer.
 
-                    raw_transaction = message[3:]
-                    transaction_length = raw_transaction[:4]
-                    transaction_length = int(transaction_length, 16)
-                    raw_transaction_sent = raw_transaction[4:4+transaction_length]
+                    message = message[3:]
+                    print(message)
 
-                    public_key = raw_transaction[4+transaction_length:]
-                    public_key_x_length = public_key[:4]
-                    public_key_x_length = int(public_key_x_length, 16)
-                    public_key_x = public_key[4:4+public_key_x_length]
-                    public_key_y_length = public_key[4+public_key_x_length:8+public_key_x_length]
-                    public_key_y_length = int(public_key_y_length, 16)
-                    public_key_y = public_key[8+public_key_x_length:public_key_y_length]
+                    txlength = message[:4]
+                    txlength = int(txlength, 16)
 
-                    transaction = Transaction(raw_transaction_sent)
+                    print(txlength)
+
+                    transaction = message[4:4 + txlength]
+                    print(transaction)
+
+                    public_key = message[4 + txlength:]
+                    print(public_key)
+
+                    pubxlength = public_key[:4]
+                    pubxlength = int(pubxlength, 16)
+                    print(pubxlength)
+
+                    pubx = public_key[4:4 + pubxlength]
+                    print(pubx)
+
+                    pubylen = public_key[4 + pubxlength: 8 + pubxlength]
+                    pubylen = int(pubylen, 16)
+                    print(pubylen)
+
+                    puby = public_key[8 + pubxlength: 8 + pubxlength + pubylen]
+                    print(puby)
+
+                    transaction = Transaction(transaction)
                     self.mempool.append(transaction)
-                    self.transactionsWithPk[transaction] = (int(public_key_x), int(public_key_y))
+                    self.transactionsWithPk[transaction] = (int(pubx), int(puby))
                     print(f"<TCP LISTEN> Transaction From {self.transactionsWithPk[transaction]}\n<TCP LISTEN>Transaction:{transaction}")
                     print(f"<TCP LISTEN> Added Transaction to mempool")
 
@@ -448,8 +463,6 @@ def main():
     nodeThread.start()
 
     p1.connectToPeer("192.168.0.111")
-    time.sleep(1)
-    truth = p1.checkIPisPeer("192.168.0.111")
     p1.sendTransaction("01017b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed6000042408b22520c20af4de60e54aa2af78486e661efbffc38286253a54bcf24ab2b79934020d79daebf01adb60a15f87eec4c2f41bf5804eab89a8aa995b6224f15f5782c010000000000000064002676a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac00000000", p1.publickey)
 
 if __name__ == "__main__":
