@@ -35,7 +35,7 @@ def OPCHECKSIG(stack, tx):
 def runScript(stack, script, tx):
 
     for opcode in script:
-        print(stack)
+
         if opcode == "OP_DUP":
             DUPLICATE(stack)
 

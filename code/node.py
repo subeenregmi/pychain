@@ -52,7 +52,6 @@ class Peer():
         self.UDPsocket.bind((self.host, SERVER_UDP_SERVER))
         self.peers = []
         self.threads = []
-        self.transactionsWithPk = {}
         self.listening = True
 
     def getFreePort(self):
@@ -154,11 +153,13 @@ class Peer():
                     pubx = int(pubx)
                     puby = int(puby)
                     transaction = Transaction(transaction)
+
+                    # If this is a valid transaction we can add it our mempool and mine it.
                     if self.validateTransaction(transaction, (pubx, puby)):
+
                         self.mempool.append(transaction)
-                        self.transactionsWithPk[transaction] = (pubx, puby)
-                        print(f"<TCP LISTEN> Transaction From {self.transactionsWithPk[transaction]}\n<TCP LISTEN> Transaction:{transaction.raw}")
                         print(f"<TCP LISTEN> Added Transaction to mempool.")
+
                     else:
                         print("<TCP LISTEN> Invalid Transaction")
 
@@ -293,7 +294,8 @@ class Peer():
             # we also set a timeout for our socket as otherwise we would be forever waiting for a connection
 
             peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            # this allows us to not run into the PORT IS BEING USED errors, by picking the next available port
+
+            # This allows us to not run into the PORT IS BEING USED errors, by picking the next available port
             try:
                 peer_socket.bind((self.host, port))
             except OSError:
@@ -339,6 +341,7 @@ class Peer():
         public_key_y_length = hex(len(str(pk[1])))[2:].zfill(4)
         transaction_length = hex(len(rawtx))[2:].zfill(4)
 
+        # Below is the pychain standard for transaction transmission
         transaction_message = f"TX:{transaction_length}{rawtx}{public_key_x_length}{pk[0]}{public_key_y_length}{pk[1]}"
         print(f"<TCP SEND> TRANSACTION TO BE SENT: {transaction_message}")
         transaction_message = transaction_message.encode('utf-8')
@@ -418,14 +421,18 @@ class Peer():
         # This function will validate a transaction when we recieve it, and this determines if the transactions reach
         # our mempool, to be mined.
         try:
+
+            # We first decode our raw transaction into a dictionary
             transactionDict = rawtxdecoder.decodeRawTx(transaction.raw)
             inputs = int(transactionDict["InputCount"])
             for i in range(inputs):
+                # For each input we get the txid, vout and the sig
                 txid = transactionDict[f"txid{i}"]
                 vout = transactionDict[f"vout{i}"]
                 vout = int(vout, 16)
                 sig = transactionDict[f"scriptSig{i}"]
 
+                # We find the transaction that is used for a input and take the scriptPubKey
                 previousTransaction = self.blockchain.findTxid(txid)
                 previousTransactionDict = rawtxdecoder.decodeRawTx(previousTransaction)
                 scriptPubKey = previousTransactionDict[f"scriptPubKey{vout}"]
@@ -434,14 +441,17 @@ class Peer():
                 sig = decoder(sig)
                 stack = [sig, public_key]
 
+                # This creates the hash of the message the signature is used on.
                 rawtx2 = createEmptyTxForSign(transactionDict)
 
-                print(script, stack, rawtx2)
                 truth = runScript(stack, script, rawtx2)
+
                 if truth == [1]:
+                    # We have to check all the signatures with their respective inputs.
                     continue
                 else:
                     return False
+
         except:
             print("<TX VALIDATE> Transaction is invalid.")
 
