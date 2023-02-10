@@ -139,7 +139,7 @@ class Peer():
                     raw_transaction = message[3:]
                     transaction_length = raw_transaction[:4]
                     transaction_length = int(transaction_length, 16)
-                    raw_transaction = raw_transaction[4:4+transaction_length]
+                    raw_transaction_sent = raw_transaction[4:4+transaction_length]
 
                     public_key = raw_transaction[4+transaction_length:]
                     public_key_x_length = public_key[:4]
@@ -149,7 +149,7 @@ class Peer():
                     public_key_y_length = int(public_key_y_length, 16)
                     public_key_y = public_key[8+public_key_x_length:public_key_y_length]
 
-                    transaction = Transaction(raw_transaction)
+                    transaction = Transaction(raw_transaction_sent)
                     self.mempool.append(transaction)
                     self.transactionsWithPk[transaction] = (int(public_key_x), int(public_key_y))
                     print(f"<TCP LISTEN> Transaction From {self.transactionsWithPk[transaction]}\n<TCP LISTEN>Transaction:{transaction}")
@@ -328,8 +328,8 @@ class Peer():
         # Update 10.02.2023: This also need to contain a public key, for sending maybe putting a buffer after the tx,
         # so we know what the public key is.
 
-        public_key_x_length = hex(len(pk[0]))[2:].zfill(4)
-        public_key_y_length = hex(len(pk[1]))[2:].zfill(4)
+        public_key_x_length = hex(len(str(pk[0])))[2:].zfill(4)
+        public_key_y_length = hex(len(str(pk[1])))[2:].zfill(4)
         transaction_length = hex(len(rawtx))[2:].zfill(4)
 
         transaction_message = f"TX:{transaction_length}{rawtx}{public_key_x_length}{pk[0]}{public_key_y_length}{pk[1]}"
@@ -447,9 +447,10 @@ def main():
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
 
-    time.sleep(4)
+    p1.connectToPeer("192.168.0.111")
+    time.sleep(1)
     truth = p1.checkIPisPeer("192.168.0.111")
-
+    p1.sendTransaction("01017b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed6000042408b22520c20af4de60e54aa2af78486e661efbffc38286253a54bcf24ab2b79934020d79daebf01adb60a15f87eec4c2f41bf5804eab89a8aa995b6224f15f5782c010000000000000064002676a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac00000000", p1.publickey)
 
 if __name__ == "__main__":
     main()
