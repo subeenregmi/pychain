@@ -4,6 +4,10 @@ from address import ECmultiplication, Gx, Gy
 from blockchain import Blockchain
 from blockcreator import Block
 from transaction import Transaction
+from scriptsigdecoder import decoder
+from scriptSigCreator import createEmptyTxForSign
+from spubKeydecoder import breakDownLockScript
+from opcodeBlocks import runScript
 import queue
 import select
 import time
@@ -147,12 +151,16 @@ class Peer():
                     pubylength = public_key[4 + pubxlength: 8 + pubxlength]
                     pubylength = int(pubylength, 16)
                     puby = public_key[8 + pubxlength: 8 + pubxlength + pubylength]
-
+                    pubx = int(pubx)
+                    puby = int(puby)
                     transaction = Transaction(transaction)
-                    self.mempool.append(transaction)
-                    self.transactionsWithPk[transaction] = (int(pubx), int(puby))
-                    print(f"<TCP LISTEN> Transaction From {self.transactionsWithPk[transaction]}\n<TCP LISTEN> Transaction:{transaction.raw}")
-                    print(f"<TCP LISTEN> Added Transaction to mempool.")
+                    if self.validateTransaction(transaction, (pubx, puby)):
+                        self.mempool.append(transaction)
+                        self.transactionsWithPk[transaction] = (pubx, puby)
+                        print(f"<TCP LISTEN> Transaction From {self.transactionsWithPk[transaction]}\n<TCP LISTEN> Transaction:{transaction.raw}")
+                        print(f"<TCP LISTEN> Added Transaction to mempool.")
+                    else:
+                        print("<TCP LISTEN> Invalid Transaction")
 
                 except:
                     # If the raw transaction sent by a peer is invalid, then we reject it and move on
@@ -406,48 +414,46 @@ class Peer():
         print(f"<IP CHECK> {ip} is NOT a peer.")
         return False
 
-    def validateTransactioninMempool(self):
-        # This function will validate the transactions that we get.
-        for transaction in self.mempool:
+    def validateTransaction(self, transaction, public_key):
+        # This function will validate a transaction when we recieve it, and this determines if the transactions reach
+        # our mempool, to be mined.
+        try:
             transactionDict = rawtxdecoder.decodeRawTx(transaction.raw)
-            inputsCount = transaction.inputcount
-            for i in range(inputsCount):
+            inputs = int(transactionDict["InputCount"])
+            for i in range(inputs):
                 txid = transactionDict[f"txid{i}"]
                 vout = transactionDict[f"vout{i}"]
-                sig = transactionDict[f"sig{i}"]
-                if txid == "8266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb44":
-                    if int(sig) == self.blockchain.height:
-                        print(f"<MEMPOOL> Transaction: {transaction.txid} is valid.")
-                        continue
-                    else:
-                        print(f"<MEMPOOL> Transaction: {transaction.txid} has wrong scriptSig")
-                        self.mempool.remove(transaction)
-                        break
+                vout = int(vout, 16)
+                sig = transactionDict[f"scriptSig{i}"]
+
+                previousTransaction = self.blockchain.findTxid(txid)
+                previousTransactionDict = rawtxdecoder.decodeRawTx(previousTransaction)
+                scriptPubKey = previousTransactionDict[f"scriptPubKey{vout}"]
+
+                script = breakDownLockScript(scriptPubKey)
+                sig = decoder(sig)
+                stack = [sig, public_key]
+
+                rawtx2 = createEmptyTxForSign(transactionDict)
+
+                print(script, stack, rawtx2)
+                truth = runScript(stack, script, rawtx2)
+                if truth == [1]:
+                    continue
                 else:
-                    try:
-                        rawReferTransaction = self.blockchain.findTxid(txid)
-                        referTransactionDict = rawtxdecoder.decodeRawTx(rawReferTransaction)
-                    except:
-                        print(f"<MEMPOOL> Transaction {transaction.txid} has refers to a non-existing txid.")
-                        self.mempool.remove(transaction)
-                        break
+                    return False
+        except:
+            print("<TX VALIDATE> Transaction is invalid.")
 
-                    output = int(vout) - 1
-                    value = referTransactionDict[f"value{output}"]
-                    scriptpubkey = referTransactionDict[f"scriptPubKey{0}"]
-
-
-
-
-
+        print(f"<TX VALIDATE> Transaction is valid!")
+        return True
 
 def main():
     p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
-
     p1.connectToPeer("192.168.0.111")
-    p1.sendTransaction("01017b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed600000042408b22520c20af4de60e54aa2af78486e661efbffc38286253a54bcf24ab2b79934020d79daebf01adb60a15f87eec4c2f41bf5804eab89a8aa995b6224f15f5782c010000000000000064002676a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac00000000", p1.publickey)
+    p1.sendTransaction("01017b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed600000042408b22520c20af4de60e54aa2af78486e661efbffc38286253a54bcf24ab2b79934020d79daebf01adb60a15f87eec4c2f41bf5804eab89a8aa995b6224f15f5782c010000000000000064002676a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac00000000", (92641855401206585750031304985966472123204240504167073082041014802408154789641, 5320727137213493453320294950656953718594582159943012446202168292331376026727))
 
 if __name__ == "__main__":
     main()

@@ -11,7 +11,7 @@ def decodeRawTx(RawTx):
     InputCount = RawTx[2:end]
     dectxid["InputCount"] = InputCount
     
-    for i in range(int(InputCount, 16)):
+    for i in range(int(InputCount)):
 
         txid = RawTx[end:end + 64]
         dectxid[f"txid{i}"] = txid
