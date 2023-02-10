@@ -53,6 +53,7 @@ class Peer():
         self.peers = []
         self.threads = []
         self.listening = True
+        self.mining = False
 
     def getFreePort(self):
         # This function returns a free ports from the ports list
@@ -63,7 +64,7 @@ class Peer():
         # sends a connection to the sender on the port provided. It also creates a thread for listening onto that
         # connection.
 
-        # We need to make sure we do not exceed the maxpeers and we are in listening mode.
+        # We need to make sure we do not exceed the max peers, and we are in listening mode.
         while self.listening and len(self.peers) <= self.maxpeers:
 
             # We make our UDP socket to start to listen for any requests
@@ -420,6 +421,9 @@ class Peer():
     def validateTransaction(self, transaction, public_key):
         # This function will validate a transaction when we recieve it, and this determines if the transactions reach
         # our mempool, to be mined.
+        # Update: we need a system where when we get the transaction stated in the input txid, we need to look for any
+        # other transactions on the blockchain that also refers to that specific transaction.
+        total_value = 0
         try:
 
             # We first decode our raw transaction into a dictionary
@@ -432,11 +436,17 @@ class Peer():
                 vout = int(vout, 16)
                 sig = transactionDict[f"scriptSig{i}"]
 
-                # We find the transaction that is used for a input and take the scriptPubKey
+                # We find the transaction that is used for an input and take the scriptPubKey
                 previousTransaction = self.blockchain.findTxid(txid)
                 previousTransactionDict = rawtxdecoder.decodeRawTx(previousTransaction)
-                scriptPubKey = previousTransactionDict[f"scriptPubKey{vout}"]
 
+                # Finding the values of the previous transaction totalled
+                previous_value = previousTransactionDict[f"value{vout}"]
+                previous_value = int(previous_value, 16)
+                total_value += previous_value
+
+                # This picks the specific locking script that the vout refers to
+                scriptPubKey = previousTransactionDict[f"scriptPubKey{vout}"]
                 script = breakDownLockScript(scriptPubKey)
                 sig = decoder(sig)
                 stack = [sig, public_key]
@@ -455,8 +465,19 @@ class Peer():
         except:
             print("<TX VALIDATE> Transaction is invalid.")
 
+        transaction_value = transaction.findTotalValueSent()
+        if transaction_value > total_value:
+            print(f"<TX VALIDATE> Transaction is invalid.")
+            return False
+
         print(f"<TX VALIDATE> Transaction is valid!")
         return True
+
+    def startMine(self):
+        # This function will continously mine blocks in the mempool, this works even if there are no transactions it
+        # will continue mine. This function is also responsible to update the difficulty and add to the blockchain.
+        pass
+
 
 def main():
     p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
