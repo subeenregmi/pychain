@@ -117,9 +117,8 @@ def createCoinbaseTx(publicKey, reward, blockheight):
    
 
 def main():
-   coinbase = createCoinbaseTx((95440839670107969455973995843666399663662641812074432045896568980475242364517, 67400892360194400039319989411395972789004161889863182881857158544061243615929), 100, 2)
-   print(f"Coinbase = {coinbase}")
-   tx1 = createTxFromDict({'Version': '01', 'InputCount': '01', 'txid0': '7b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed6', 'vout0': '0001', 'sizeSig0': '0005', 'scriptSig0': '0000000000', 'OutputCount': '01', 'value0': '0000000000000064', 'sizePk0': '0026', 'scriptPubKey0': '76a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac', 'locktime': '00000000'})
+
+   tx1 = createTxFromDict({'Version': '01', 'InputCount': '01', 'txid0': '7b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed6', 'vout0': '0000', 'sizeSig0': '0042', 'scriptSig0': '408b22520c20af4de60e54aa2af78486e661efbffc38286253a54bcf24ab2b79934020d79daebf01adb60a15f87eec4c2f41bf5804eab89a8aa995b6224f15f5782c', 'OutputCount': '01', 'value0': '0000000000000064', 'sizePk0': '0026', 'scriptPubKey0': '76a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac', 'locktime': '00000000'})
    print(f"Tx1 = {tx1}")
 
 

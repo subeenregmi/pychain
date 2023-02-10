@@ -27,6 +27,7 @@ def decodeRawTx(RawTx):
 
         sizeSig = int(sizeSig, 16)
         sizeSig *= 2
+        print(sizeSig)
 
         scriptSig = RawTx[end:end + sizeSig]
         dectxid[f"scriptSig{i}"] = scriptSig
@@ -60,7 +61,7 @@ def decodeRawTx(RawTx):
     return dectxid
         
 def main():
-    rawtx = "01017b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed6000100050000000000010000000000000064002676a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac00000000"
+    rawtx = "01017b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed600000042408b22520c20af4de60e54aa2af78486e661efbffc38286253a54bcf24ab2b79934020d79daebf01adb60a15f87eec4c2f41bf5804eab89a8aa995b6224f15f5782c010000000000000064002676a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac00000000"
     decoded = decodeRawTx(rawtx)
     print(decoded)
     

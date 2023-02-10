@@ -1,4 +1,8 @@
 import time
 
-for i in range(1):
-    print(i)
+dict = {}
+trans = "Hello"
+tuP = ("12321", 313132)
+dict[trans] = tuP
+
+print(dict[trans])

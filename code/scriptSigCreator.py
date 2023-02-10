@@ -3,6 +3,7 @@ import hashlib
 from address import signatureGeneration, n
 
 def createSig(tx, privKey, randNumber):
+   #tx is Dictionary
 
    inputcounter = int(tx["InputCount"])
    for i in range(inputcounter):
@@ -56,13 +57,15 @@ def createDictWithSig(tx, privKey, randNumber):
 
    for i in range(inputcounter):
       tx[f"scriptSig{i}"] = f"{rawsig}"
-      tx[f"sizeSig{i}"] = str(hex(len(rawsig))[2:])
+      tx[f"sizeSig{i}"] = str(hex(len(rawsig)//2)[2:]).zfill(4)
 
    return tx, rawtx2
   
 def main():
-   scriptSig, rawtx = createSig("01018266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb44000100050000000000010000000000000064002676a9216918d03beae3e40678ce42cebbafbd713d19a7de97af5c20fe720761a030bccdf788ac00000000", 2004, 238293892839283)
+   tx = {'Version': '01', 'InputCount': '01', 'txid0': '7b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed6', 'vout0': '0001', 'sizeSig0': '0005', 'scriptSig0': '0000000000', 'OutputCount': '01', 'value0': '0000000000000064', 'sizePk0': '0026', 'scriptPubKey0': '76a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac', 'locktime': '00000000'}
+   scriptSig, rawtx = createDictWithSig(tx, 2004, 238293892839283)
    print(f"Sig = {scriptSig}")
+   print(createTxFromDict(tx))
    print(f"rawTx = {rawtx}")
 
 if __name__ == "__main__":

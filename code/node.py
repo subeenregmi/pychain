@@ -48,6 +48,7 @@ class Peer():
         self.UDPsocket.bind((self.host, SERVER_UDP_SERVER))
         self.peers = []
         self.threads = []
+        self.transactionsWithPk = {}
         self.listening = True
 
     def getFreePort(self):
@@ -132,12 +133,27 @@ class Peer():
                 print(f"<TCP LISTEN> Transaction received from {socket.getpeername()}")
 
                 try:
+                    # This is the parsing of the transactions as they now contain a public key, implemented by using a
+                    # four-character text buffer.
+
                     raw_transaction = message[3:]
-                    print(raw_transaction)
+                    transaction_length = raw_transaction[:4]
+                    transaction_length = int(transaction_length, 16)
+                    raw_transaction = raw_transaction[4:4+transaction_length]
+
+                    public_key = raw_transaction[4+transaction_length:]
+                    public_key_x_length = public_key[:4]
+                    public_key_x_length = int(public_key_x_length, 16)
+                    public_key_x = public_key[4:4+public_key_x_length]
+                    public_key_y_length = public_key[4+public_key_x_length:8+public_key_x_length]
+                    public_key_y_length = int(public_key_y_length, 16)
+                    public_key_y = public_key[8+public_key_x_length:public_key_y_length]
+
                     transaction = Transaction(raw_transaction)
                     self.mempool.append(transaction)
+                    self.transactionsWithPk[transaction] = (int(public_key_x), int(public_key_y))
+                    print(f"<TCP LISTEN> Transaction From {self.transactionsWithPk[transaction]}\n<TCP LISTEN>Transaction:{transaction}")
                     print(f"<TCP LISTEN> Added Transaction to mempool")
-                    print(f"<TCP LISTEN> Mempool = {self.mempool}")
 
                 except:
                     # If the raw transaction sent by a peer is invalid, then we reject it and move on
@@ -307,10 +323,16 @@ class Peer():
         print(f"<TCP CONNECT> Connection to {ip} is unsuccessful")
         return False
 
-    def sendTransaction(self, rawtx):
+    def sendTransaction(self, rawtx, pk):
         # This sends a transaction to all the connected peers, in the format TX:{rawtx}
+        # Update 10.02.2023: This also need to contain a public key, for sending maybe putting a buffer after the tx,
+        # so we know what the public key is.
 
-        transaction_message = f"TX:{rawtx}"
+        public_key_x_length = hex(len(pk[0]))[2:].zfill(4)
+        public_key_y_length = hex(len(pk[1]))[2:].zfill(4)
+        transaction_length = hex(len(rawtx))[2:].zfill(4)
+
+        transaction_message = f"TX:{transaction_length}{rawtx}{public_key_x_length}{pk[0]}{public_key_y_length}{pk[1]}"
         print(f"<TCP SEND> TRANSACTION TO BE SENT: {transaction_message}")
         transaction_message = transaction_message.encode('utf-8')
         for peer in self.peers:
