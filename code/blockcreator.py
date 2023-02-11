@@ -49,11 +49,11 @@ class Block():
     # This is the algorithm to mine a block, which consists of finding a hash of the block with an included nonce value which 
     # is lower than the difficulty, thus being a valid block
 
-    def mine(self, publicKey):
+    def mine(self, publicKey, fee):
 
         # Coinbase Transaction will be added for the reward
 
-        rawCoinbase = createCoinbaseTx(publicKey, 100, self.height)
+        rawCoinbase = createCoinbaseTx(publicKey, 100 + fee, self.height+1)
         CoinbaseTx = Transaction(rawCoinbase)
         self.transactions.append(CoinbaseTx)
 
@@ -113,10 +113,10 @@ class Block():
         
         if int(checkid, 16) == int(self.blockid, 16):
             self.blockmined = True
-            print("Validated Block")
+            # print("Validated Block")
         else:
             self.blockmined = False
-            print("False!")
+            # print("False!")
 
         return self.blockmined
 
@@ -167,15 +167,15 @@ class Block():
 
             print("----------------------")
             print(f"BLOCK ID: {self.blockid}")
-            print(f"NONCE: {nonce}")
+            # print(f"NONCE: {nonce}")
             print(f"BLOCKTIME: {blocktime}")
             print(f"BLOCK HEIGHT: {blockheight}")
             print(f"PREVIOUS BLOCK ID/HASH : {self.previousblockhash}")
             print(f"DIFFICULTY: {difficultlyOfBlock}")
-            print(f"MERKLE ROOT: {self.merkle}")
-            print(f"SIZE OF TXS : {sizeTx}")
-            print(f"TXS : {transactions}")
-            print(f"MINER: {self.miner}")
+            # print(f"MERKLE ROOT: {self.merkle}")
+            # print(f"SIZE OF TXS : {sizeTx}")
+            # print(f"TXS : {transactions}")
+            # print(f"MINER: {self.miner}")
             print("----------------------")
     
     # This adds the block to the chain
@@ -217,7 +217,7 @@ class Block():
             tx = transactions[index:index+txSize]
             if tx == '':
                 break
-            print(tx)
+            # print(tx)
             txO = Transaction(tx)
             self.transactions.append(txO)
             index += txSize

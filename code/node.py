@@ -497,23 +497,62 @@ class Peer():
         # This function will continuously mine blocks in the mempool, this works even if there are no transactions it
         # will continue mine. This function is also responsible to update the difficulty and add to the blockchain. Gas
         # fees will be calculated as the discrepancy for the total sent to the total input in, and this will be added
-        # onto the reward
+        # onto the reward: this seems too hard as
         while self.mining:
-            current_height = self.blockchain.height + 1
+
+            if self.blockchain.height == -1:
+                current_height = 0
+                current_difficulty = 1105681727986405912613142410975121469398887965786353467233272752666322463
+                previous_block_hash = "7cb95d760cbecec3e8f537d55a307ba8e5598ecce09ece40fcffc50ca7028735"
+            else:
+                current_height = self.blockchain.height + 1
+                current_difficulty = self.blockchain.calculateDifficulty()
+                previous_block_hash = self.blockchain.blocks[-1].blockid
+
             current_transactions = []
-            for transaction in self.mempool:
-                current_transactions
-            miningBlock = Block()
+            total_in = 0
+            total_output = 0
+            # Here we add all the transactions in the mempool.
+            if self.mempool is not []:
+                for transaction in self.mempool:
+                    current_transactions.append(transaction)
+                    # Here we will calculate the total input to the total output and whatever discrepancy there is we
+                    # use this as an additional fee for the miners.
+                    for i in range(int(transaction['InputCount'])):
+                        txid = transaction[f'txid{0}']
+                        vout = transaction[f'vout{0}']
+                        previous_transaction_raw = self.blockchain.findTxid(txid)
+                        previous_transaction_dict = rawtxdecoder.decodeRawTx(previous_transaction_raw)
+                        total_in += previous_transaction_dict[f'value{int(vout, 16)}']
+                    for i in range(int(transaction['OutputCount'])):
+                        total_output += transaction[f'value{i}']
+                fee = total_in - total_output
 
+            else:
+                pass
+                fee = 0
 
+            # We mine construct and mine our new block
+            print(f"CurrentHeight = {current_height}")
+            print(f"CurrentDifficulty = {current_difficulty}")
+            print(f"prevBlockId = {previous_block_hash}")
+            miningBlock = Block(current_height, current_transactions, current_difficulty, previous_block_hash)
+            miningBlock.mine(self.publickey, fee)
+            self.blockchain.height += 1
+
+            time.sleep(5)
+
+            print(current_height)
+            self.sendBlock(current_height)
+
+            print(f"<MINER> Block {current_height} has been successfully mined!")
 
 
 def main():
     p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
-    p1.connectToPeer("192.168.0.111")
-    p1.sendTransaction("01017b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed600000042408b22520c20af4de60e54aa2af78486e661efbffc38286253a54bcf24ab2b79934020d79daebf01adb60a15f87eec4c2f41bf5804eab89a8aa995b6224f15f5782c010000000000000064002676a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac00000000", (92641855401206585750031304985966472123204240504167073082041014802408154789641, 5320727137213493453320294950656953718594582159943012446202168292331376026727))
+    p1.mining = True
     p1.startMine()
 
 if __name__ == "__main__":

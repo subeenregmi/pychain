@@ -23,7 +23,7 @@ class Blockchain():
     def __init__(self, blockchainfile):
         
         '''
-            Here are some parameters:- 
+            Here are some parameters:-
             Blocks - is the list of blocks currently in the blockchain file
             The height of blocks, the number of blocks in the blockchain file
             validChain - The validity of the chain, this is used to contribute a new block to the chain 
@@ -32,21 +32,24 @@ class Blockchain():
         '''
 
         self.blocks = []
-        self.height = 0
+        self.height = -1
         self.validChain = False
         self.difficulty = None
         self.reward = None
         self.averageBlockTime = 60
 
-        blockchain = open(blockchainfile, "r")
-        for line in blockchain.readlines():
-            line = line[:-1]
-            block = Block()
-            block.createBlockFromRaw(line)
-            block.validateBlock()
-            self.blocks.append(block)
-            self.height += 1
-        
+        try:
+
+            blockchain = open(blockchainfile, "r")
+            for line in blockchain.readlines():
+                line = line[:-1]
+                block = Block()
+                block.createBlockFromRaw(line)
+                block.validateBlock()
+                self.blocks.append(block)
+                self.height += 1
+        except:
+            pass
 
             # print("File not there!")
             # blockchain = open(blockchainfile, "a")
@@ -106,7 +109,7 @@ class Blockchain():
                     pass
                 
                 for input in inputs:
-                    if (input.txid in transaction.inputTxids()):
+                    if input.txid in transaction.inputTxids():
                         if input not in outputs:
                             outputs.append(transaction)
         
@@ -136,17 +139,26 @@ class Blockchain():
     # We need to get this towards 1 so if we multiply by a multiplier that is 60/average this would be the best way to get to 60 average time 
 
     def calculateDifficulty(self):
-        totalTime = 0
-        twentyBlock = self.blocks[-10].blocktime
-        currentBlock = self.blocks[-1].blocktime
-        difference = currentBlock - twentyBlock
-        difficulty = self.blocks[-1].difficulty
-        multiplier = 600 / difference
-        difficulty *= multiplier
-        difficulty = int(difficulty)
-        print(f"NEW DIFFICULTY = {difficulty}")
-        return difficulty
-                  
+        try:
+            twentyBlock = self.blocks[-2].blocktime
+            currentBlock = self.blocks[-1].blocktime
+            difference = currentBlock - twentyBlock
+            difficulty = self.blocks[-1].difficulty
+            if difference == 0:
+                multiplier = 60
+            else:
+                multiplier = 60 / difference
+
+            difficulty = difficulty / multiplier
+            difficulty = int(difficulty)
+            print(f"NEW DIFFICULTY = {difficulty}")
+            return difficulty
+        except IndexError:
+            print("ERROR")
+            print(self.blocks)
+            return self.blocks[-1].difficulty
+
+
     # We need to implement alot of features for a valid chain:
     #   - All blocks need to be in sequential order
     #   - All blocks need to have the correct previous block id
