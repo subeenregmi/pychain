@@ -27,4 +27,6 @@ while True:
     newBlock.mine((2222, 5555), 0)
     testchain.blocks.append(newBlock)
     newBlock.addBlockToChain("testchain.txt")
+    difference = testchain.blocks[-1].blocktime - testchain.blocks[-2].blocktime
+    print(f"Difference in block times = {difference}")
     time.sleep(5)

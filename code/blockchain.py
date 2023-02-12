@@ -140,14 +140,19 @@ class Blockchain():
 
     def calculateDifficulty(self):
         try:
-            twentyBlock = self.blocks[-2].blocktime
+            secondBlock = self.blocks[-2].blocktime
             currentBlock = self.blocks[-1].blocktime
-            difference = currentBlock - twentyBlock
+            difference = currentBlock - secondBlock
+            print(f"TIME DIFFERENCE = {difference}")
             difficulty = self.blocks[-1].difficulty
             if difference == 0:
                 multiplier = 60
             else:
                 multiplier = 60 / difference
+            if multiplier > 1.01:
+                multiplier = 1.01
+            if multiplier < 0.9:
+                multiplier = 0.95
 
             difficulty = difficulty / multiplier
             difficulty = int(difficulty)
