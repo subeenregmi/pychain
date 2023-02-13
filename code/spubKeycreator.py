@@ -1,4 +1,4 @@
-from  address import createAddress
+from address import createAddress
 
 OPCodeDict = {
     "ac" : "OP_CHECKSIG", 

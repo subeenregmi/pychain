@@ -27,7 +27,6 @@ def decodeRawTx(RawTx):
 
         sizeSig = int(sizeSig, 16)
         sizeSig *= 2
-        print(sizeSig)
 
         scriptSig = RawTx[end:end + sizeSig]
         dectxid[f"scriptSig{i}"] = scriptSig

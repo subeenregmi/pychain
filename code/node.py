@@ -500,59 +500,76 @@ class Peer():
         # onto the reward: this seems too hard as
         while self.mining:
 
-            if self.blockchain.height == -1:
-                current_height = 0
-                current_difficulty = 1105681727986405912613142410975121469398887965786353467233272752666322463
-                previous_block_hash = "7cb95d760cbecec3e8f537d55a307ba8e5598ecce09ece40fcffc50ca7028735"
+            # So as the difficulty is calculated based on the time difference between of the last two blocks, we need
+            # to hard set the difficulty and the previous block id.
+            if self.blockchain.height == -1 or self.blockchain.height == 0:
+                current_height = self.blockchain.height + 1
+                current_difficulty = 1356070408455153134437993161961410835287938134204933650932722462845952
+
+                try:
+                    previous_block_hash = self.blockchain.blocks[-1].blockid
+                except IndexError:
+                    previous_block_hash = "7cb95d760cbecec3e8f537d55a307ba8e5598ecce09ece40fcffc50ca7028735"#Hash of pycharm
+
+                self.blockchain.difficulty = current_difficulty
+
             else:
                 current_height = self.blockchain.height + 1
                 current_difficulty = self.blockchain.calculateDifficulty()
                 previous_block_hash = self.blockchain.blocks[-1].blockid
+                self.blockchain.difficulty = current_difficulty
 
             current_transactions = []
             total_in = 0
             total_output = 0
-            # Here we add all the transactions in the mempool.
+
+            # Here we add all the transactions in the mempool if the mempool isn't empty.
             if self.mempool is not []:
                 for transaction in self.mempool:
                     current_transactions.append(transaction)
+
                     # Here we will calculate the total input to the total output and whatever discrepancy there is we
-                    # use this as an additional fee for the miners.
+                    # will use this as an additional fee for the miners.
+
                     for i in range(int(transaction['InputCount'])):
                         txid = transaction[f'txid{0}']
                         vout = transaction[f'vout{0}']
                         previous_transaction_raw = self.blockchain.findTxid(txid)
                         previous_transaction_dict = rawtxdecoder.decodeRawTx(previous_transaction_raw)
                         total_in += previous_transaction_dict[f'value{int(vout, 16)}']
+
+                    # We also need to calculate total value of the outputs
                     for i in range(int(transaction['OutputCount'])):
                         total_output += transaction[f'value{i}']
+
                 fee = total_in - total_output
 
             else:
-                pass
                 fee = 0
 
             # We mine construct and mine our new block
             print(f"CurrentHeight = {current_height}")
             print(f"CurrentDifficulty = {current_difficulty}")
             print(f"prevBlockId = {previous_block_hash}")
-            miningBlock = Block(current_height, current_transactions, current_difficulty, previous_block_hash)
+            miningBlock = Block(self.blockchainfile, current_height, current_transactions, current_difficulty, previous_block_hash)
             miningBlock.mine(self.publickey, fee)
+
+            # After successfully mining we need to add the blocks to our blockchain and increment our blockchains height
+            self.blockchain.blocks.append(miningBlock)
             self.blockchain.height += 1
 
-            time.sleep(5)
-
-            print(current_height)
+            # We need to also send the block we just mined.
             self.sendBlock(current_height)
 
             print(f"<MINER> Block {current_height} has been successfully mined!")
-
 
 def main():
     p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
     p1.mining = True
+    time.sleep(1)
+
     p1.startMine()
 
 if __name__ == "__main__":
