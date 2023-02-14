@@ -279,6 +279,26 @@ class Peer:
                 except:
                     print(f"<TCP LISTEN> Invalid Block.")
 
+            elif message[:3] == "RBC":
+                # If we receive a Request Block Count packet, we will send back another Received Request Block Count
+                # (RRBC) which contains the amount of blocks that we contain. We should also check the number of blocks
+                # that came attached and see if we need to request any blocks.
+                block_count = self.blockchain.blocks.count()
+                peer_block_count = int(message[4:])
+
+                # Before anything, we should send back a RRBC packet.
+                message = f"RRBC:{block_count}"
+                message = message.encode('utf-8')
+                socket.send(message)
+
+                # If the peer has more packets that us we need to send a request block packet.
+                if peer_block_count > block_count:
+                    # We need to work what blocks need to be sent to us
+                    self.RequestBlocks()
+                else:
+                    pass
+
+
             # The peer only accepts packets that contain certain starting values.
             else:
                 print("<TCP LISTEN> Invalid Format: TX{RAWTX}")
@@ -403,6 +423,37 @@ class Peer:
             except IndexError:
                 print(f"<TCP SEND BLOCK PEERS> Block at height {height} does not exist.")
                 return False
+
+    def RequestBlockCount(self):
+        # This function will send a block count request, that asks how much blocks a peer has, attached to this request
+        # is the amount of blocks that the requester has. This way they can make the comparison locally and request
+        # blocks.
+        block_amount = self.blockchain.blocks.count()
+        message = f"RBC:{block_amount}"
+        message = message.encode('utf-8')
+        for peer in self.peers:
+            peer.send(message)
+            print(f"<RBC SENT> Request Block Count sent to {peer.getpeername()}")
+
+    def RequestBlocks(self, fromHeight=None, endHeight=None, peer=None):
+        # This function is to request a specific amount of blocks from a specific peer, or to the whole networks if the
+        # fromHeight and endHeight aren't specified then we can request all the blocks that they have.
+
+        # We need to check if any of all the parameters are set to None if they are we are sending a request for all of
+        # their blocks.
+        if fromHeight is None and endHeight is None and peer is None:
+            message = "RB"
+            message = message.encode('utf-8')
+            for peer in self.peers:
+                peer.send(message)
+                print(f"<REQUEST ALL BLOCKS> Request sent to {peer.getpeername()}")
+            return True
+
+        # If the opposite is true, and all the parameters are filled out we are going to send a Request Block packet (RB)
+        # this packet will also contain two parameters containing the starting and the ending heights.
+        if fromHeight is not None and endHeight is not None and peer is not None:
+            pass
+
 
     def checkIPisPeer(self, ip):
         # This function checks if the parameter ip is a connected peer, and returns the socket if it is a peer.
