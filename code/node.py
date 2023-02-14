@@ -27,7 +27,7 @@ import rawtxdecoder
 SERVER_UDP_SERVER = 60000
 
 
-class Peer():
+class Peer:
     def __init__(self, blockchainfile, host, portMin, portMax, maxPeers, privateKey):
         # We need a mempool, to hold transactions before mining, we need to access the block
         # We also need to create a server socket on the udp port and for that to always listen
@@ -168,8 +168,9 @@ class Peer():
                     # If the raw transaction sent by a peer is invalid, then we reject it and move on
                     print(f"<TCP LISTEN> Transaction not valid")
 
-            # When we receive a PLR from a peer, we need to send them back our list of peers in a Peer List Request
-            # Receieved (RPLR) packet
+            # A Peer List Request (PLR) packets is used to request the peers of a peer. To respond back a Received Peer
+            # List Request (RPLR) packet is sent back and this contains a list of connected peers.
+
             elif message[:3] == "PLR":
                 # The correct format for a PLR request is:
                 # "PLR:[192.0.0.0]
@@ -265,13 +266,13 @@ class Peer():
                 print(f"<TCP LISTEN> Raw Block from {socket.getpeername()[0]} : {rawBlock}")
 
                 try:
-                    newBlock = Block()
+                    newBlock = Block(self.blockchainfile)
                     newBlock.createBlockFromRaw(rawBlock)
                     validated = newBlock.validateBlock()
                     if validated:
                         self.blockchain.blocks.append(newBlock)
                         print(f"<TCP LISTEN> Block has been added.")
-                        newBlock.addBlockToChain("blockchain.txt")
+                        newBlock.addBlockToChain()
                         continue
                     else:
                         print(f"<TCP LISTEN> Block is invalid.")
@@ -504,7 +505,7 @@ class Peer():
             # to hard set the difficulty and the previous block id.
             if self.blockchain.height == -1 or self.blockchain.height == 0:
                 current_height = self.blockchain.height + 1
-                current_difficulty = 1356070408455153134437993161961410835287938134204933650932722462845952
+                current_difficulty = 13560704084551531344379931619614108352879381342049336509327224628459529
 
                 try:
                     previous_block_hash = self.blockchain.blocks[-1].blockid
@@ -567,8 +568,9 @@ def main():
     p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
+    p1.connectToPeer("192.168.0.111")
     p1.mining = True
-    time.sleep(1)
+    time.sleep(5)
 
     p1.startMine()
 
