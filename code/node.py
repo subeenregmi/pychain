@@ -310,11 +310,14 @@ class Peer:
                 # has a number which indicates how many blocks the receiver has.
                 block_count = len(self.blockchain.blocks)
                 print(f"<RECEIVED REQUEST BLOCK COUNT> Sent from {socket.getpeername()}")
+
                 try:
                     peer_block_count = int(message[5:])
                 except ValueError:
                     print(f"<TCP LISTEN> Invalid Received Request Block Count format.")
                     continue
+
+                # Here we are making a list of blocks that we need.
                 blocks_list = []
                 if peer_block_count > block_count:
                     for i in range(block_count+1, peer_block_count+1):
@@ -326,12 +329,30 @@ class Peer:
 
             elif message[:2] == "RB":
                 # This is the request block packet, if we get a RB packet, we should send that block in our blockchain
+                # We need to try to send as there is a bug when sending, packets arrive at the same time, so it forms a
+                # single message that contains all the RB packets.
+
                 print(f"<TCP LISTEN> Request Block packet from {socket.getpeername()}")
                 try:
                     index = int(message[3:])
+                    self.sendBlock(index, socket.getpeername()[0])
+
+                # This is our exception handling, if the messages arrive all at once into one message
                 except ValueError:
-                    print(message)
-                print(f"message = {message}")
+                    # We split the message up into just the indexes.
+
+                    blocks = message.split('RB:')
+                    for index in blocks:
+                        if index == '':
+                            continue
+                        try:
+                            index = int(index)
+                            # This sleep is pivotal as mentioned previously the raw blocks will be sent all at once.
+                            time.sleep(1)
+                            self.sendBlock(index, socket.getpeername()[0])
+                        except:
+                            print(f"<ERROr>")
+
             # The peer only accepts packets that contain certain starting values.
             else:
                 print("<TCP LISTEN> Invalid Format: TX{RAWTX}")
@@ -464,6 +485,7 @@ class Peer:
         block_amount = len(self.blockchain.blocks)
         message = f"RBC:{block_amount}"
         message = message.encode('utf-8')
+
         for peer in self.peers:
             peer.send(message)
             print(f"<RBC SENT> Request Block Count sent to {peer.getpeername()}")
@@ -471,13 +493,12 @@ class Peer:
     def sendBlocksRequest(self, height_list, peerSocket=None):
         # This function is used to send a Request Block packet, which request for a singular block, the receiver should
         # either send the raw block or False.
-        for i in height_list:
+        for height in height_list:
 
-            height = i
             message = f"RB:{height-1}"
             message = message.encode('utf-8')
 
-
+            # If a peer is not specified we send the request to all connected peers.
             if peerSocket is None:
                 for peer in self.peers:
                     peer.send(message)
@@ -650,9 +671,11 @@ class Peer:
             print(f"<MINER> Block {current_height} has been successfully mined!")
 
 def main():
+
     p1 = Peer("testchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
+
 
 if __name__ == "__main__":
     main()

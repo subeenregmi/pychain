@@ -1,4 +1,3 @@
-start = 6
-end = 10
-for i in range(start, end):
-    print(i)
+x = "RB:1RB:2RB:3RB:4RB:5RB:6RB:7RB:8RB:9RB:10RB:11RB:12"
+
+print(x.split('RB:'))
