@@ -1,11 +1,6 @@
 from blockcreator import Block
-import hashlib
-import rawtxdecoder
-import scriptsigdecoder
-import spubKeydecoder
 import address
-import rawtxcreator
-import rawtxdecoder
+
 
 '''
 This will be the blockchain class that will regulate the rewards for the blocks, blockheight and difficulty,
@@ -19,7 +14,7 @@ Properties in a blockchain
     - Blockchain parsing into Blocks 
 '''
 
-class Blockchain():
+class Blockchain:
     def __init__(self, blockchainfile):
 
         '''

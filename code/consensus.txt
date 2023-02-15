@@ -20,10 +20,7 @@ We need a system so that the longest blockchain is always worked on.
 
 To-DO
 ---------
-    - System where two blocks mined at the same time or at the same height have to be added to the stack and the next
-      block's previous id determines which block to accept.
-    - Make sure that the system only works for when the two blocks competing are for the top blocks. But also should work
-      if blocks are getting totally reconstructed
-    - System where it goes on until one miner clearly wins in a certain time gap
+    - Changed it to a ruthless blockchain, so even if a miner has mined a block and another miner
+
     - GUI, that does one main thing that it can automatically create transactions using the txids saved. And has abilities
       to use multiple accounts and multiple chains. Also has to look good.

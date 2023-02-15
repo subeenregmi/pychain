@@ -703,19 +703,14 @@ class Peer:
             if recentlyMinedBlock:
                 print(f"Disregarding mined block")
                 continue
-
             else:
-                miningBlock.addBlockToChain()
-
                 # After successfully mining we need to add the blocks to our blockchain and increment our
                 # blockchains height
+                miningBlock.addBlockToChain()
                 self.blockchain.blocks.append(miningBlock)
                 self.blockchain.height += 1
-                # We need to also send the block we just mined.
-
                 self.sendBlock(current_height)
                 print(f"<MINER> Block {current_height} has been successfully mined!")
-
 def main():
 
     p1 = Peer("testchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
