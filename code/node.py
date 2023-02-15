@@ -315,54 +315,23 @@ class Peer:
                 except ValueError:
                     print(f"<TCP LISTEN> Invalid Received Request Block Count format.")
                     continue
+                blocks_list = []
                 if peer_block_count > block_count:
                     for i in range(block_count+1, peer_block_count+1):
-                        self.sendBlocksRequest(i, socket)
+                        blocks_list.append(i)
                 else:
                     print(f"<RECEIVED REQUEST BLOCK COUNT> No new blocks to add.")
+
+                self.sendBlocksRequest(blocks_list, socket)
 
             elif message[:2] == "RB":
                 # This is the request block packet, if we get a RB packet, we should send that block in our blockchain
                 print(f"<TCP LISTEN> Request Block packet from {socket.getpeername()}")
                 try:
                     index = int(message[3:])
-                    IpPeer = socket.getpeername()[0]
-                    self.sendBlock(index, IpPeer)
                 except ValueError:
-                    # This is our handling if all messages are received at the same time causing the packets to not send
-                    # separately.
-                    try:
-                        stack = []
-                        for char in message:
-                            if char == 'R':
-                                stack.append(char)
-                                continue
-                            elif char == 'B':
-                                stack.append(char)
-                                continue
-                            elif char == ':':
-                                continue
-                            else:
-                                try:
-                                    char = int(char)
-                                    if stack.pop() == 'B':
-                                        if stack.pop() == 'R':
-                                            ip = socket.getpeername()[0]
-                                            time.sleep(0.01)
-                                            self.sendBlock(char, ip)
-                                            continue
-                                        else:
-                                            print(f"<REQUEST BLOCK> Invalid packet sent.")
-                                    else:
-                                        print(f"<REQUEST BLOCK> Invalid packet sent.")
-                                except:
-                                    print(f"<REQUEST BLOCK> Invalid packet sent.")
-                        break
-                    except:
-                        pass
-
-                    print(f"<REQUEST BLOCK LISTEN> Invalid request block packet.")
-
+                    print(message)
+                print(f"message = {message}")
             # The peer only accepts packets that contain certain starting values.
             else:
                 print("<TCP LISTEN> Invalid Format: TX{RAWTX}")
@@ -499,22 +468,25 @@ class Peer:
             peer.send(message)
             print(f"<RBC SENT> Request Block Count sent to {peer.getpeername()}")
 
-    def sendBlocksRequest(self, height, peerSocket=None):
+    def sendBlocksRequest(self, height_list, peerSocket=None):
         # This function is used to send a Request Block packet, which request for a singular block, the receiver should
         # either send the raw block or False.
-        message = f"RB:{height-1}"
-        message = message.encode('utf-8')
+        for i in height_list:
 
-        if peerSocket is None:
-            for peer in self.peers:
-                peer.send(message)
-                print(f"<BLOCK REQUEST> Requesting Block {height} from {peer.getpeername()}")
-        else:
-            try:
-                peerSocket.send(message)
-                print(f"<BLOCK REQUEST> Requesting Block {height} from {peerSocket.getpeername()} only!")
-            except:
-                print(f"<BLOCK REQUEST> Peer specified is invalid.")
+            height = i
+            message = f"RB:{height-1}"
+            message = message.encode('utf-8')
+
+            if peerSocket is None:
+                for peer in self.peers:
+                    peer.send(message)
+                    print(f"<BLOCK REQUEST> Requesting Block {height} from {peer.getpeername()}")
+            else:
+                try:
+                    peerSocket.send(message)
+                    print(f"<BLOCK REQUEST> Requesting Block {height} from {peerSocket.getpeername()} only!")
+                except:
+                    print(f"<BLOCK REQUEST> Peer specified is invalid.")
 
     def checkIPisPeer(self, ip):
         # This function checks if the parameter ip is a connected peer, and returns the socket if it is a peer.
@@ -680,8 +652,6 @@ def main():
     p1 = Peer("testchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
-
-
 
 if __name__ == "__main__":
     main()

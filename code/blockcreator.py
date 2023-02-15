@@ -68,7 +68,7 @@ class Block():
             self.nonce += 1
             tobehashed2 = str(self.nonce) + tobehashed
             tobehashed2 = hashlib.sha256(tobehashed2.encode('utf-8')).hexdigest()
-            print(f"Trying Nonce Value = {self.nonce}, hash is {tobehashed2}")
+            # print(f"Trying Nonce Value = {self.nonce}, hash is {tobehashed2}")
 
             # If the hash is lower than the difficulty, it calculates the raw and the saves blocks time information
             if int(tobehashed2, 16) < self.difficulty:
