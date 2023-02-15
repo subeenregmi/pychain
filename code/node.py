@@ -477,6 +477,7 @@ class Peer:
             message = f"RB:{height-1}"
             message = message.encode('utf-8')
 
+
             if peerSocket is None:
                 for peer in self.peers:
                     peer.send(message)
