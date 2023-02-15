@@ -29,6 +29,7 @@ class Block():
         self.raw = ""
         self.miner = ""
         self.blockchainfile = blockchainfile
+        self.stop = False
 
         # This just adds the transactions to the block
         if transactions is not None:
@@ -64,6 +65,9 @@ class Block():
         while True:
             # We calculate random hashes by incrementing a nonce value, we do this to try and get a hash value which is
             # less than the difficulty.
+            if self.stop:
+                print(f"Block has stopped mining.")
+                break
 
             self.nonce += 1
             tobehashed2 = str(self.nonce) + tobehashed
@@ -79,7 +83,7 @@ class Block():
                 self.blockmined = True
                 self.miner = minerAddress
                 self.calculateRaw()
-                self.addBlockToChain()
+                # self.addBlockToChain()
                 break
 
     def validateBlock(self):

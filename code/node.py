@@ -54,6 +54,7 @@ class Peer:
         self.threads = []
         self.listening = True
         self.mining = False
+        self.recentlyAddedBlocks = []
 
     def getFreePort(self):
         # This function returns a free ports from the ports list
@@ -283,6 +284,7 @@ class Peer:
                             self.blockchain.blocks.append(newBlock)
                             newBlock.addBlockToChain()
                             self.sendBlock(self.blockchain.height)
+                            self.recentlyAddedBlocks.append(newBlock)
                             print(f"<TCP LISTEN> Block has been added.")
                             continue
 
@@ -629,8 +631,6 @@ class Peer:
             print(f"<VALIDATE DIFFICULTY> Difficulty is invalid.")
             return False
 
-
-
     def startMine(self):
         # This function will continuously mine blocks in the mempool, this works even if there are no transactions it
         # will continue mine. This function is also responsible to update the difficulty and add to the blockchain. Gas
@@ -692,20 +692,36 @@ class Peer:
             miningBlock = Block(self.blockchainfile, current_height, current_transactions, current_difficulty, previous_block_hash)
             miningBlock.mine(self.publickey, fee)
 
-            # After successfully mining we need to add the blocks to our blockchain and increment our blockchains height
-            self.blockchain.blocks.append(miningBlock)
-            self.blockchain.height += 1
+            # Check if any blocks have been recently mined by anyone else before our block has been mined.
+            recentlyMinedBlock = False
+            for block in self.recentlyAddedBlocks:
+                if miningBlock.height == block.height:
+                    # A block has been mined before ours, so we don't keep our block we just mined.
+                    recentlyMinedBlock = True
+                    self.recentlyAddedBlocks.remove(block)
 
-            # We need to also send the block we just mined.
-            self.sendBlock(current_height)
+            if recentlyMinedBlock:
+                print(f"Disregarding mined block")
+                continue
 
-            print(f"<MINER> Block {current_height} has been successfully mined!")
+            else:
+                miningBlock.addBlockToChain()
+
+                # After successfully mining we need to add the blocks to our blockchain and increment our
+                # blockchains height
+                self.blockchain.blocks.append(miningBlock)
+                self.blockchain.height += 1
+                # We need to also send the block we just mined.
+
+                self.sendBlock(current_height)
+                print(f"<MINER> Block {current_height} has been successfully mined!")
 
 def main():
 
     p1 = Peer("testchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
+
     p1.mining = True
     p1.startMine()
 

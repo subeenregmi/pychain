@@ -123,13 +123,15 @@ class Blockchain():
             currentBlock = self.blocks[-1].blocktime
             difference = currentBlock - secondBlock
             difficulty = self.blocks[-1].difficulty
-            multiplier = self.averageBlockTime / difference
+            if difference == 0:
+                multiplier = 1.05
+            else:
+                multiplier = self.averageBlockTime / difference
+                if multiplier > 1.01:
+                    multiplier = 1.01
 
-            if multiplier > 1.01:
-                multiplier = 1.01
-
-            if multiplier < 0.9:
-                multiplier = 0.95
+                if multiplier < 0.9:
+                    multiplier = 0.95
 
             difficulty = difficulty / multiplier
             difficulty = int(difficulty)
