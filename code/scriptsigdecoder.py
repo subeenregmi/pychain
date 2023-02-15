@@ -9,6 +9,7 @@ def decoder(scriptsig):
     return (scriptsig_x, scriptsig_y)
 
 def main():
-    print(decoder("408b22520c20af4de60e54aa2af78486e661efbffc38286253a54bcf24ab2b79934020d79daebf01adb60a15f87eec4c2f41bf5804eab89a8aa995b6224f15f5782c"))
+    print(decoder("4027d9a8a59366991c370394c03af99f0a065109c22d826e0889933b1af89931cb40328e8db58d8216ebbc4efe90173c1951506974592c1ece0860a9110281433b5a"))
+
 if __name__ == "__main__":
     main()

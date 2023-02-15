@@ -42,7 +42,7 @@ class Blockchain():
             blockchain = open(blockchainfile, "r")
             for line in blockchain.readlines():
                 line = line[:-1]
-                block = Block()
+                block = Block(blockchainfile)
                 block.createBlockFromRaw(line)
                 block.validateBlock()
                 self.blocks.append(block)
@@ -190,10 +190,17 @@ class Blockchain():
             return True
 
 def main():
-    blockchain = Blockchain("testchain.txt")
-    for block in blockchain.blocks:
+    test = Blockchain("blockchain.txt")
+    for block in test.blocks:
         for transaction in block.transactions:
-            print(transaction.raw)
+            print(transaction.txid)
+            print(transaction.tx)
+
+    print(test.findTxid("9d62dc5dda5e01d7f9aa919e2f2b9c9e424b7cf1f8092d2fb6138223e6356cc3"))
+    print(test.findTxidsRelatingToKey((63954422509139660694275478881573291931659433822585593108077818434106113196321, 26900081337699559997929288916999997486541154242084777368521628620275013037611)))
+    print(test.findBlockId("0000015cae0a93eb716a443497386b36c1e9675627288a811191157b6aa04e97"))
+    test.calculateDifficulty()
+    test.validateChain()
 
 if __name__ == "__main__":
     main()

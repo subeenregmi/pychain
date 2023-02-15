@@ -78,7 +78,7 @@ def createEmptyTxForSign(tx):
   
 def main():
    tx = {'Version': '01', 'InputCount': '01', 'txid0': '7b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed6', 'vout0': '0001', 'sizeSig0': '0005', 'scriptSig0': '0000000000', 'OutputCount': '01', 'value0': '0000000000000064', 'sizePk0': '0026', 'scriptPubKey0': '76a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac', 'locktime': '00000000'}
-   scriptSig, rawtx = createDictWithSig(tx, 2004, 238293892839283)
+   scriptSig, rawtx = createDictWithSig(tx, 2004, 23829389283928313232)
    print(f"Sig = {scriptSig}")
    print(createTxFromDict(tx))
    print(f"rawTx = {rawtx}")

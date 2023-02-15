@@ -284,7 +284,11 @@ class Peer:
                 # (RRBC) which contains the amount of blocks that we contain. We should also check the number of blocks
                 # that came attached and see if we need to request any blocks.
                 block_count = self.blockchain.blocks.count()
-                peer_block_count = int(message[4:])
+                try:
+                    peer_block_count = int(message[4:])
+                except ValueError:
+                    print(f"<TCP LISTEN> Invalid Request Block Count packet.")
+                    continue
 
                 # Before anything, we should send back a RRBC packet.
                 message = f"RRBC:{block_count}"
@@ -294,10 +298,25 @@ class Peer:
                 # If the peer has more packets that us we need to send a request block packet.
                 if peer_block_count > block_count:
                     # We need to work what blocks need to be sent to us
-                    self.RequestBlocks()
+                    for i in range(block_count+1, peer_block_count+1):
+                        self.sendBlocksRequest(i, socket)
                 else:
                     pass
 
+            elif message[:4] == "RRBC":
+                # The Received Request Block Count packet, is in response to the Request Block Count packet, this always
+                # has a number which indicates how many blocks the receiver has.
+                block_count = self.blockchain.blocks.count()
+                try:
+                    peer_block_count = int(message[5:])
+                except ValueError:
+                    print(f"<TCP LISTEN> Invalid Received Request Block Count format.")
+                    continue
+                if peer_block_count > block_count:
+                    for i in range(block_count+1, peer_block_count+1):
+                        self.sendBlocksRequest(i, socket)
+                else:
+                    pass
 
             # The peer only accepts packets that contain certain starting values.
             else:
@@ -435,25 +454,22 @@ class Peer:
             peer.send(message)
             print(f"<RBC SENT> Request Block Count sent to {peer.getpeername()}")
 
-    def RequestBlocks(self, fromHeight=None, endHeight=None, peer=None):
-        # This function is to request a specific amount of blocks from a specific peer, or to the whole networks if the
-        # fromHeight and endHeight aren't specified then we can request all the blocks that they have.
+    def sendBlocksRequest(self, height, peerSocket=None):
+        # This function is used to send a Request Block packet, which request for a singular block, the receiver should
+        # either send the raw block or False.
+        message = f"RB:{height}"
+        message.encode('utf-8')
 
-        # We need to check if any of all the parameters are set to None if they are we are sending a request for all of
-        # their blocks.
-        if fromHeight is None and endHeight is None and peer is None:
-            message = "RB"
-            message = message.encode('utf-8')
+        if peerSocket is None:
             for peer in self.peers:
                 peer.send(message)
-                print(f"<REQUEST ALL BLOCKS> Request sent to {peer.getpeername()}")
-            return True
-
-        # If the opposite is true, and all the parameters are filled out we are going to send a Request Block packet (RB)
-        # this packet will also contain two parameters containing the starting and the ending heights.
-        if fromHeight is not None and endHeight is not None and peer is not None:
-            pass
-
+                print(f"<BLOCK REQUEST> Requesting Block {height} from {peer.getpeername()}")
+        else:
+            try:
+                peerSocket.send(message)
+                print(f"<BLOCK REQUEST> Requesting Block {height} from {peerSocket.getpeername()} only!")
+            except:
+                print(f"<BLOCK REQUEST> Peer specified is invalid.")
 
     def checkIPisPeer(self, ip):
         # This function checks if the parameter ip is a connected peer, and returns the socket if it is a peer.
@@ -616,14 +632,20 @@ class Peer:
             print(f"<MINER> Block {current_height} has been successfully mined!")
 
 def main():
-    p1 = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
+    p1 = Peer("testchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
-    p1.connectToPeer("192.168.0.111")
-    p1.mining = True
-    time.sleep(5)
 
-    p1.startMine()
+    p1.connectToPeer("192.168.0.111")
+    time.sleep(1)
+    p1.checkIPisPeer("192.168.0.111")
+    time.sleep(1)
+    p1.sendPeerListRequest()
+    p1.sendBlock(3)
+    time.sleep(1)
+    p1.sendTransaction("01018266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb44000100050000000004010000000000000064002676a92169a45fd1b1733c7967f1452dcdd77cb488f55977af24229ef49ccce62e780d285388ac00000000", (11,22))
+
+
 
 if __name__ == "__main__":
     main()
