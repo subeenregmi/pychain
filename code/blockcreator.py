@@ -124,7 +124,7 @@ class Block():
         """
 
         # To make a raw block, we need to have mined the block 
-        if self.blockmined == False:
+        if not self.blockmined:
             print("Cannot generate raw of unmined block")
         else:
 
@@ -162,19 +162,27 @@ class Block():
             # print(f"MINER: {self.miner}")
             print("----------------------")
 
-
     def addBlockToChain(self):
-        # This function adds the block into the blockchain file.
+        # This function adds the block into the blockchain file. This also checks if the block has been mined and is not
+        # already in the blockchain
+
+        file = open(self.blockchainfile, "r")
+        for line in file:
+            if line == self.raw:
+                print("Block already in blockchain")
+                file.close()
+                return False
 
         if not self.blockmined:
             print("Cannot add a unmined block.")
+            return False
 
-        else:
-            file = open(self.blockchainfile, "a")
-            file.write(self.raw)
-            file.write("\n")
-            file.close()
-            print("Successfully added to the blockchain!")
+        file = open(self.blockchainfile, "a")
+        file.write(self.raw)
+        file.write("\n")
+        file.close()
+        print("Successfully added to the blockchain!")
+        return True
 
     def createBlockFromRaw(self, raw):
         # Grabbing info from the raw block data

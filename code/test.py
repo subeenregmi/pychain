@@ -1,3 +1,4 @@
-x = "RB:1RB:2RB:3RB:4RB:5RB:6RB:7RB:8RB:9RB:10RB:11RB:12"
+file = open("testchain.txt", "r")
 
-print(x.split('RB:'))
+for line in file:
+    print(line)

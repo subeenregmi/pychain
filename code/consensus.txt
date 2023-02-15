@@ -20,9 +20,6 @@ We need a system so that the longest blockchain is always worked on.
 
 To-DO
 ---------
-    - System to send and request blocks - DONE
-    - Change the block and blockchain validation system to check after a block is received and to check the difficulty.
-    - Protocol that propagates transaction to all peers, and to disregard transactions that have already been received.
     - System where two blocks mined at the same time or at the same height have to be added to the stack and the next
       block's previous id determines which block to accept.
     - Make sure that the system only works for when the two blocks competing are for the top blocks. But also should work

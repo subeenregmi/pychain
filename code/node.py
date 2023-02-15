@@ -160,6 +160,8 @@ class Peer:
 
                         self.mempool.append(transaction)
                         print(f"<TCP LISTEN> Added Transaction to mempool.")
+                        print(f"<TCP SEND> Transaction sent to peers.")
+                        self.sendTransaction(transaction.raw, (pubx, puby), socket)
 
                     else:
                         print("<TCP LISTEN> Invalid Transaction")
@@ -269,11 +271,23 @@ class Peer:
                     newBlock = Block(self.blockchainfile)
                     newBlock.createBlockFromRaw(rawBlock)
                     validated = newBlock.validateBlock()
+
+                    if self.validateBlockDifficulty(newBlock) is False:
+                        print(f"<TCP LISTEN> Block has incorrect difficulty.")
+                        break
+
                     if validated:
-                        self.blockchain.blocks.append(newBlock)
-                        print(f"<TCP LISTEN> Block has been added.")
-                        newBlock.addBlockToChain()
-                        continue
+                        if newBlock not in self.blockchain.blocks:
+
+                            self.blockchain.height += 1
+                            self.blockchain.blocks.append(newBlock)
+                            newBlock.addBlockToChain()
+                            self.sendBlock(self.blockchain.height)
+                            print(f"<TCP LISTEN> Block has been added.")
+                            continue
+
+                        else:
+                            print(f"<TCP LISTEN> Block is already in chain.")
                     else:
                         print(f"<TCP LISTEN> Block is invalid.")
                 except:
@@ -408,7 +422,7 @@ class Peer:
         print(f"<TCP CONNECT> Connection to {ip} is unsuccessful")
         return False
 
-    def sendTransaction(self, rawtx, pk):
+    def sendTransaction(self, rawtx, pk, sender=None):
         # This sends a transaction to all the connected peers, in the format TX:{rawtx}
         # Update 10.02.2023: This also need to contain a public key, for sending maybe putting a buffer after the tx,
         # so we know what the public key is.
@@ -422,6 +436,9 @@ class Peer:
         print(f"<TCP SEND> TRANSACTION TO BE SENT: {transaction_message}")
         transaction_message = transaction_message.encode('utf-8')
         for peer in self.peers:
+            if sender is not None:
+                if peer == sender:
+                   continue
             peer.send(transaction_message)
             print(f"<TCP SEND> Message sent to {peer.getsockname()}")
 
@@ -600,6 +617,20 @@ class Peer:
         print(f"<TX VALIDATE> Transaction is valid!")
         return True
 
+    def validateBlockDifficulty(self, block):
+        # This is used to validate that a given block has the correct difficulty, and thus validating it again.
+        # This returns true if valid and false if invalid.
+
+        calculatedDifficulty = self.blockchain.calculateDifficulty()
+        if block.difficulty == calculatedDifficulty:
+            print(f"<VALIDATE DIFFICULTY> Difficulty is validated.")
+            return True
+        else:
+            print(f"<VALIDATE DIFFICULTY> Difficulty is invalid.")
+            return False
+
+
+
     def startMine(self):
         # This function will continuously mine blocks in the mempool, this works even if there are no transactions it
         # will continue mine. This function is also responsible to update the difficulty and add to the blockchain. Gas
@@ -675,7 +706,8 @@ def main():
     p1 = Peer("testchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
-
+    p1.mining = True
+    p1.startMine()
 
 if __name__ == "__main__":
     main()
