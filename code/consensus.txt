@@ -20,7 +20,7 @@ We need a system so that the longest blockchain is always worked on.
 
 To-DO
 ---------
-    - System to send and request blocks
+    - System to send and request blocks - DONE
     - Change the block and blockchain validation system to check after a block is received and to check the difficulty.
     - Protocol that propagates transaction to all peers, and to disregard transactions that have already been received.
     - System where two blocks mined at the same time or at the same height have to be added to the stack and the next
@@ -28,3 +28,5 @@ To-DO
     - Make sure that the system only works for when the two blocks competing are for the top blocks. But also should work
       if blocks are getting totally reconstructed
     - System where it goes on until one miner clearly wins in a certain time gap
+    - GUI, that does one main thing that it can automatically create transactions using the txids saved. And has abilities
+      to use multiple accounts and multiple chains. Also has to look good.

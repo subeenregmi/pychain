@@ -283,6 +283,7 @@ class Peer:
                 # If we receive a Request Block Count packet, we will send back another Received Request Block Count
                 # (RRBC) which contains the amount of blocks that we contain. We should also check the number of blocks
                 # that came attached and see if we need to request any blocks.
+                print(f"<REQUEST BLOCK COUNT> Request sent from {socket.getpeername()}")
                 block_count = len(self.blockchain.blocks)
                 try:
                     peer_block_count = int(message[4:])
@@ -301,12 +302,14 @@ class Peer:
                     for i in range(block_count+1, peer_block_count+1):
                         self.sendBlocksRequest(i, socket)
                 else:
-                    pass
+                    print(f"<REQUEST BLOCK COUNT> No new blocks to add.")
+                    print(f"<RECEIVED REQUEST BLOCK COUNT> Sent to {socket.getpeername()}")
 
             elif message[:4] == "RRBC":
                 # The Received Request Block Count packet, is in response to the Request Block Count packet, this always
                 # has a number which indicates how many blocks the receiver has.
                 block_count = len(self.blockchain.blocks)
+                print(f"<RECEIVED REQUEST BLOCK COUNT> Sent from {socket.getpeername()}")
                 try:
                     peer_block_count = int(message[5:])
                 except ValueError:
@@ -316,7 +319,7 @@ class Peer:
                     for i in range(block_count+1, peer_block_count+1):
                         self.sendBlocksRequest(i, socket)
                 else:
-                    pass
+                    print(f"<RECEIVED REQUEST BLOCK COUNT> No new blocks to add.")
 
             # The peer only accepts packets that contain certain starting values.
             else:
@@ -632,13 +635,12 @@ class Peer:
             print(f"<MINER> Block {current_height} has been successfully mined!")
 
 def main():
-    p1 = Peer("testchain.txt", "192.168.0.111", 50000, 50500, 10, 8888)
+    p1 = Peer("testchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
 
+    p1.connectToPeer("192.168.0.111")
 
-    time.sleep(3)
-    p1.RequestBlockCount()
 
 
 if __name__ == "__main__":
