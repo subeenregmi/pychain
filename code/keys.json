@@ -1,6 +1,10 @@
 {
-    "Accounts" : 
-    [
-        1234232
-    ]
+    "0": {
+        "pk": "231313",
+        "passHash": "InsecurePassword"
+    },
+    "1": {
+        "pk": "1111",
+        "passHash": "Password"
+    }
 }

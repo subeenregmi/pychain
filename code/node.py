@@ -720,5 +720,6 @@ def main():
     p1.mining = True
     p1.startMine()
 
+
 if __name__ == "__main__":
     main()
