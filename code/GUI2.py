@@ -6,7 +6,7 @@ import address
 import hashlib
 import requests
 from PIL import Image
-
+import shutil
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -15,7 +15,7 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
-        # we call a method as users may want to go back
+        # We call a method as users may want to go back
         self.start()
 
     def start(self):
@@ -166,7 +166,7 @@ class App(customtkinter.CTk):
         # This is the text for the Public Key
         text2 = customtkinter.CTkLabel(master=frame2, text="Public Key :", font=customtkinter.CTkFont(size=15, weight="bold"))
         text2.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        self.text2k = customtkinter.CTkLabel(master=frame2, text="", wraplength=600, anchor="center")
+        self.text2k = customtkinter.CTkLabel(master=frame2, text="", wraplength=610, anchor="center")
         self.text2k.grid(row=0, column=1, padx=5, pady=5)
 
         # This is the text for the Pychain Address
@@ -215,7 +215,6 @@ class App(customtkinter.CTk):
             previewIcon = customtkinter.CTkImage(light_image=image, dark_image=image, size=(125, 125))
             self.previewIcon.configure(image=previewIcon,)
 
-
     def saveAddress(self):
         # This function will get the private key, and the hash of the password. Then will store it into as a json file,
         # named 'keys.json'.
@@ -234,7 +233,6 @@ class App(customtkinter.CTk):
 
             # These conditional statements are to check that all appropriate fields have been filled properly. If either
             # one is not filled when trying to save a new window pops up and then indicates the problem.
-
             if password == '' and private_key != '':
                 label = customtkinter.CTkLabel(master=window, text="Password has not been entered.", anchor="center", wraplength=150)
                 label.pack(padx=20, pady=20)
@@ -248,18 +246,29 @@ class App(customtkinter.CTk):
                 label.pack(padx=20, pady=20)
 
         else:
-            # Here we store the hash of the password so, the private keys are secure, we do this by instantiating a json
-            # object into a list and then once all the fields are filled we can create another dictionary and append it
-            # to the list, and then dump it as a json object.
+            # Here we store data about or keys, the password hash and the icon created.
+            # We open the keys file, load it into an object, store the data, and then append that into the object and
+            # then dump it into a json object.
 
             with open('keys.json') as keys:
                 data = json.load(keys)
 
-            data.append({private_key: password_hash})
+            count = len(data)
+            keyInfo = {
+                "privateKey": private_key,
+                "passwordHash": password_hash,
+                "iconPath": f"icons/account_icon{count}.png"
+            }
+
+            data.append(keyInfo)
 
             with open('keys.json', 'w') as keys:
                 json.dump(data, keys, indent=2)
 
+            # Here we copy the icon into another file, to be used later.
+            shutil.copyfile('icons/test.png', f'icons/account_icon{count}.png')
+
+            # Then we return back into our login page.
             self.start()
 
 if __name__ == "__main__":

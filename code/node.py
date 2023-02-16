@@ -371,6 +371,7 @@ class Peer:
 
             # The peer only accepts packets that contain certain starting values.
             else:
+                print(message)
                 print("<TCP LISTEN> Invalid Format: TX{RAWTX}")
 
     def connectToPeer(self, ip):
@@ -520,11 +521,11 @@ class Peer:
             # If a peer is not specified we send the request to all connected peers.
             if peerSocket is None:
                 for peer in self.peers:
-                    peer.send(message)
+                    peer.sendall(message)
                     print(f"<BLOCK REQUEST> Requesting Block {height} from {peer.getpeername()}")
             else:
                 try:
-                    peerSocket.send(message)
+                    peerSocket.sendall(message)
                     print(f"<BLOCK REQUEST> Requesting Block {height} from {peerSocket.getpeername()} only!")
                 except:
                     print(f"<BLOCK REQUEST> Peer specified is invalid.")
@@ -713,13 +714,15 @@ class Peer:
                 print(f"<MINER> Block {current_height} has been successfully mined!")
 def main():
 
-    p1 = Peer("testchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
+    p1 = Peer("testchain.txt", "192.168.0.111", 50000, 50500, 10, 8888)
     nodeThread = threading.Thread(target=p1.listenOnUDP)
     nodeThread.start()
 
     p1.mining = True
     p1.startMine()
 
+    p1.connectToPeer("192.168.0.201")
+    p1.RequestBlockCount()
 
 if __name__ == "__main__":
     main()
