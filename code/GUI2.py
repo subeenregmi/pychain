@@ -3,6 +3,8 @@ import tkinter
 import json
 import random
 import address
+import hashlib
+import requests
 
 
 customtkinter.set_appearance_mode("dark")
@@ -16,6 +18,11 @@ class App(customtkinter.CTk):
         self.start()
 
     def start(self):
+
+        # This destroys all previous widgets if switching to the start menu.
+        for widget in self.winfo_children():
+            widget.destroy()
+
         # Settings for the window
         self.title("Pychain")
         self.geometry("225x350")
@@ -51,7 +58,7 @@ class App(customtkinter.CTk):
 
     def Login(self):
         try:
-            f = open( "keys.json" )
+            f = open("keys.json")
             data = json.load(f)
             # Do something here, e.g: send to next menu.
             print("LOADED")
@@ -144,19 +151,19 @@ class App(customtkinter.CTk):
         # This is the text for the Private Key
         text1 = customtkinter.CTkLabel(master=frame1, text="Private Key :", font=customtkinter.CTkFont(size=15, weight="bold"))
         text1.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        self.text1k = customtkinter.CTkLabel(master=frame1, text="Key", anchor="center", wraplength=400)
+        self.text1k = customtkinter.CTkLabel(master=frame1, text="", anchor="center", wraplength=400)
         self.text1k.grid(row=0, column=1, padx=5, pady=5)
 
         # This is the text for the Public Key
         text2 = customtkinter.CTkLabel(master=frame2, text="Public Key :", font=customtkinter.CTkFont(size=15, weight="bold"))
         text2.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        self.text2k = customtkinter.CTkLabel(master=frame2, text="Key", wraplength=600, anchor="center")
+        self.text2k = customtkinter.CTkLabel(master=frame2, text="", wraplength=600, anchor="center")
         self.text2k.grid(row=0, column=1, padx=5, pady=5)
 
         # This is the text for the Pychain Address
         text3 = customtkinter.CTkLabel(master=frame3, text="Pychain Address :", font=customtkinter.CTkFont(size=15, weight="bold"))
         text3.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        self.text3k = customtkinter.CTkLabel(master=frame3, text="Key")
+        self.text3k = customtkinter.CTkLabel(master=frame3, text="")
         self.text3k.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
         # Frame that stores entry for password and the save to json button
@@ -174,16 +181,16 @@ class App(customtkinter.CTk):
         Label3.grid(row=0, column=0, sticky="nesw", padx=10, pady=10)
 
         # Entry for password 
-        passwordEntry = customtkinter.CTkEntry(master=frame4, font=customtkinter.CTkFont(size=20))
-        passwordEntry.grid(row=0, column=1, sticky="nsew", padx=(0, 10), pady=10)
+        self.passwordEntry = customtkinter.CTkEntry(master=frame4, font=customtkinter.CTkFont(size=20))
+        self.passwordEntry.grid(row=0, column=1, sticky="nsew", padx=(0, 10), pady=10)
 
         # Button to save the current key stored.
-        passwordButton = customtkinter.CTkButton(master=frame4, anchor="center", text="Save and Quit", fg_color="#533FD3", hover_color="#2c1346")
+        passwordButton = customtkinter.CTkButton(master=frame4, anchor="center", text="Save and Quit", fg_color="#533FD3", hover_color="#2c1346", command=self.saveAddress)
         passwordButton.grid(row=1, column=0, columnspan=2, ipadx=10, ipady=10)
 
     def addressCreator(self):
-        # This function creates a random private key, public key and pychain address. This is used in the 'Generate Address'
-        # Button.
+        # This function creates a random private key, public key and pychain address. This is used in the 'Generate
+        # Address' Button.
 
         randomInteger = random.randint(0, address.n)
         public_key = address.ECmultiplication(randomInteger, address.Gx, address.Gy)
@@ -191,6 +198,52 @@ class App(customtkinter.CTk):
         self.text1k.configure(text=randomInteger)
         self.text2k.configure(text=public_key)
         self.text3k.configure(text=pychainAddress)
+
+    def saveAddress(self):
+        # This function will get the private key, and the hash of the password. Then will store it into as a json file,
+        # named 'keys.json'.
+
+        # We are getting the data from the labels (textboxes) and the entry (inputs)
+        private_key = self.text1k.cget("text")
+        password = self.passwordEntry.get()
+        password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+        if private_key == '' or password == '':
+            # Settings for window that pops up when the user does not have any password or key, and they are trying to
+            # save and quit.
+            window = customtkinter.CTkToplevel(self)
+            window.geometry("200x100")
+            window.resizable(False, False)
+
+            # These conditional statements are to check that all appropriate fields have been filled properly. If either
+            # one is not filled when trying to save a new window pops up and then indicates the problem.
+
+            if password == '' and private_key != '':
+                label = customtkinter.CTkLabel(master=window, text="Password has not been entered.", anchor="center", wraplength=150)
+                label.pack(padx=20, pady=20)
+
+            if password != '' and private_key == '':
+                label = customtkinter.CTkLabel(master=window, text="Private Key has not been generated.", anchor="center", wraplength=150)
+                label.pack(padx=20, pady=20)
+
+            if password == '' and private_key == '':
+                label = customtkinter.CTkLabel(master=window, text="Password and Private Key fields both are empty.", anchor="center", wraplength=150)
+                label.pack(padx=20, pady=20)
+
+        else:
+            # Here we store the hash of the password so, the private keys are secure, we do this by instantiating a json
+            # object into a list and then once all the fields are filled we can create another dictionary and append it
+            # to the list, and then dump it as a json object.
+
+            with open('keys.json') as keys:
+                data = json.load(keys)
+
+            data.append({private_key: password_hash})
+
+            with open('keys.json', 'w') as keys:
+                json.dump(data, keys, indent=2)
+
+            self.start()
 
 if __name__ == "__main__":
     app = App()
