@@ -5,6 +5,7 @@ import random
 import address
 import hashlib
 import requests
+from PIL import Image
 
 
 customtkinter.set_appearance_mode("dark")
@@ -126,6 +127,14 @@ class App(customtkinter.CTk):
         frameAddress.grid_columnconfigure(0, weight=4)
         frameAddress.grid_columnconfigure(1, weight=2)
 
+        # Some text to describe the icon
+        text = customtkinter.CTkLabel(master=frameAddress, text="This is an image generated based on your private key!", wraplength=125)
+        text.grid(row=0, column=1)
+
+        # Label for the preview icon to go into
+        self.previewIcon = customtkinter.CTkLabel(master=frameAddress, text="")
+        self.previewIcon.grid(row=1, column=1, sticky="nsew")
+
         # Adding three frames, one for each row on the first column
         # This is the frame for the private key.
         frame1 = customtkinter.CTkFrame(master=frameAddress, border_color="#533FD3", border_width=3)
@@ -198,6 +207,14 @@ class App(customtkinter.CTk):
         self.text1k.configure(text=randomInteger)
         self.text2k.configure(text=public_key)
         self.text3k.configure(text=pychainAddress)
+
+        r = requests.get(f"https://api.dicebear.com/5.x/identicon/png?seed={randomInteger}")
+        with open('icons/test.png', 'rb+') as file:
+            file.write(r.content)
+            image = Image.open(file)
+            previewIcon = customtkinter.CTkImage(light_image=image, dark_image=image, size=(125, 125))
+            self.previewIcon.configure(image=previewIcon,)
+
 
     def saveAddress(self):
         # This function will get the private key, and the hash of the password. Then will store it into as a json file,
