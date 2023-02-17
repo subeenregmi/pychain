@@ -7,6 +7,7 @@ import hashlib
 import requests
 from PIL import Image
 import shutil
+import queue
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -58,12 +59,14 @@ class App(customtkinter.CTk):
         bottomTitle.grid(row=3)
 
     def Login(self):
+        # This is going to bring up the login page if the keys have been loaded in successfully.
         try:
             f = open("keys.json")
             data = json.load(f)
-            # Do something here, e.g: send to next menu.
             print("LOADED")
+            loaded = True
             f.close()
+
         except FileNotFoundError:
             # Settings for window that pops up when the user does not have any keys stored in 'keys.json'
             window = customtkinter.CTkToplevel(self)
@@ -76,6 +79,79 @@ class App(customtkinter.CTk):
 
             # Greying out the login button after login fails
             self.LoginButton.configure(state="disabled", fg_color="grey")
+            loaded = False
+
+        if loaded:
+            # First we need to destroy all the previous widgets to clear the screen
+            for widget in self.winfo_children():
+                widget.destroy()
+            self.grid_rowconfigure((0, 1, 2, 3), weight=0)
+
+            # Geometry for the new window.
+            self.title("Pycharm Login")
+            self.geometry("1200x700")
+            self.resizable(False, False)
+
+            # We need to create a login page that contains a slider that displays the image and the pychain address
+            # and the image from the path, and then an entry for the password. If the password matches the hash then
+            # we can go to the next page, we will also need a slider for multiple accounts, and an enter button.
+
+            # Grid configuration for the actual window. We are doing a 2x3
+            self.grid_rowconfigure((0, 1), weight=1)
+            self.grid_columnconfigure((0, 1, 2), weight=1)
+
+            # We are getting the data of the first account in 'keys.json'. This data is the pychain address and the
+            # icon file path.
+            account = data[0]
+            account_img_path = account["iconPath"]
+            icon_img = Image.open(account_img_path)
+            Icon = customtkinter.CTkImage(dark_image=icon_img, size=(250, 250))
+            private_key = int(account["privateKey"])
+            pychain_address = address.createAddress(address.ECmultiplication(private_key, address.Gx, address.Gy))
+
+            # We need to create a index, so we can loop through all the accounts.
+            self.account_index= 0
+
+            # We also need a 2x1 frame to hold the image and the pychain address.
+            frame = customtkinter.CTkFrame(master=self, fg_color="transparent")
+            frame.grid(row=0, column=1)
+            frame.grid_rowconfigure(0, weight=4)
+            frame.grid_rowconfigure(1, weight=1)
+
+            # The button has the image of the icon, and once clicked cycles through the accounts.
+            self.icon_button = customtkinter.CTkButton(master=frame, image=Icon, fg_color="transparent", text="",
+                                                       hover_color="grey", command=self.switchAccounts)
+            self.icon_button.grid(row=0, padx=10, pady=10)
+
+            # This is the text box that holds the pychain address.
+            self.pychain_address_label = customtkinter.CTkLabel(master=frame, text=pychain_address,
+                                                                font=customtkinter.CTkFont(weight="bold", size=18))
+            self.pychain_address_label.grid(row=1)
+
+            # This is the entry that holds the password, this will be hashed and checked in order for a successful login
+            password_entry = customtkinter.CTkEntry(master=self, placeholder_text="Password",
+                                                    font=customtkinter.CTkFont(size=30))
+            password_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
+
+    def switchAccounts(self):
+        # This function handles the account cycling mechanism in the login screen.
+
+        # We load 'keys.json' into a format we can handle.
+        with open('keys.json') as file:
+            data = json.load(file)
+
+        # We increment the account index by one and mod it with the amount of the keys, thus will get us the index of
+        # the specific keys in the list
+        self.account_index = (self.account_index + 1) % len(data)
+        next_account = data[self.account_index]
+        icon_img = Image.open(next_account["iconPath"])
+        Icon = customtkinter.CTkImage(dark_image=icon_img, size=(250, 250))
+        private_key = next_account["privateKey"]
+        pychain_address = address.createAddress(address.ECmultiplication(private_key, address.Gx, address.Gy))
+
+        # We now configure the buttons with the next account.
+        self.icon_button.configure(image=Icon)
+        self.pychain_address_label.configure(text=pychain_address)
 
     def CreateNewAccount(self):
 
@@ -105,14 +181,17 @@ class App(customtkinter.CTk):
         frameTitle.grid_rowconfigure(0, weight=1)
 
         # Title at the top of the window, and the description on the right, and a button to generate an address
-        Label = customtkinter.CTkLabel(master=frameTitle, anchor="center", text="Pychain Wallet Creator", font=customtkinter.CTkFont(size=20, weight="bold"))
+        Label = customtkinter.CTkLabel(master=frameTitle, anchor="center", text="Pychain Wallet Creator",
+                                       font=customtkinter.CTkFont(size=20, weight="bold"))
         Label.grid(row=0, column=0, padx=10, pady=10)
-        Label2 = customtkinter.CTkLabel(master=frameTitle, text="How To Use: Click the button to generate a pseudorandom"
-                                                                " Address\nStore the account by giving it a password and "
-                                                                "click the Save Button!")
+        Label2 = customtkinter.CTkLabel(master=frameTitle, text="How To Use: Click the button to generate a "
+                                                                "pseudorandom Address\nStore the account by "
+                                                                "giving it a password and click the Save Button!")
         Label2.grid(row=0, column=1, padx=10, pady=10)
 
-        Button = customtkinter.CTkButton(master=frameTitle, text="Generate Address", font=customtkinter.CTkFont(size=30), text_color="white", fg_color="#533FD3", hover_color="#2c1346", command=self.addressCreator)
+        Button = customtkinter.CTkButton(master=frameTitle, text="Generate Address", font=customtkinter.CTkFont(size=30),
+                                         text_color="white", fg_color="#533FD3", hover_color="#2c1346",
+                                         command=self.addressCreator)
         Button.grid(row=0, column=2, padx=10, pady=10, sticky="nsew")
 
         # Frame for the next section requires, the private address view, the public address view, the pychain address
@@ -186,15 +265,17 @@ class App(customtkinter.CTk):
         frame4.grid_columnconfigure(1, weight=4)
 
         # Label for password 
-        Label3 = customtkinter.CTkLabel(master=frame4, bg_color="#533FD3", text="Password :", font=customtkinter.CTkFont(size=20))
-        Label3.grid(row=0, column=0, sticky="nesw", padx=10, pady=10)
+        Label3 = customtkinter.CTkLabel(master=frame4, bg_color="#533FD3", text="Password :",
+                                        font=customtkinter.CTkFont(size=20))
+        Label3.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
         # Entry for password 
         self.passwordEntry = customtkinter.CTkEntry(master=frame4, font=customtkinter.CTkFont(size=20))
         self.passwordEntry.grid(row=0, column=1, sticky="nsew", padx=(0, 10), pady=10)
 
         # Button to save the current key stored.
-        passwordButton = customtkinter.CTkButton(master=frame4, anchor="center", text="Save and Quit", fg_color="#533FD3", hover_color="#2c1346", command=self.saveAddress)
+        passwordButton = customtkinter.CTkButton(master=frame4, anchor="center", text="Save and Quit",
+                                                 fg_color="#533FD3", hover_color="#2c1346", command=self.saveAddress)
         passwordButton.grid(row=1, column=0, columnspan=2, ipadx=10, ipady=10)
 
     def addressCreator(self):
