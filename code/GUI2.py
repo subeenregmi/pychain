@@ -545,10 +545,17 @@ class App(customtkinter.CTk):
         blocks_label.grid(row=0)
 
         # Frame to hold all other blocks.
-        blocks_frame = customtkinter.CTkScrollableFrame(master=blocks, fg_color="grey")
+        blocks_frame = customtkinter.CTkScrollableFrame(master=blocks)
         blocks_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
 
-        for block in self.peer.blockchain.blocks:
+        count=0
+        for block in self.peer.blockchain.blocks.reverse():
+            blockid = customtkinter.CTkLabel(master=blocks_frame, text=block.blockid)
+            blockid.grid(row=count)
+            count += 1
+
+
+
 
 
 

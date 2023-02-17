@@ -714,15 +714,9 @@ class Peer:
                 print(f"<MINER> Block {current_height} has been successfully mined!")
 def main():
 
-    p1 = Peer("testchain.txt", "192.168.0.111", 50000, 50500, 10, 8888)
-    nodeThread = threading.Thread(target=p1.listenOnUDP)
-    nodeThread.start()
+    p1 = Peer("testchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
 
-    p1.mining = True
-    p1.startMine()
-
-    p1.connectToPeer("192.168.0.201")
-    p1.RequestBlockCount()
-
+    for block in p1.blockchain.blocks:
+        print(block.height)
 if __name__ == "__main__":
     main()
