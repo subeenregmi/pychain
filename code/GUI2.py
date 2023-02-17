@@ -480,27 +480,49 @@ class App(customtkinter.CTk):
         transaction_label.grid(row=1, column=0, sticky="nw", padx=5)
 
         # There will also be a frame for the three latest transactions, just below the transaction button
-        transactions_frame = customtkinter.CTkFrame(master=home, fg_color="grey")
+        transactions_frame = customtkinter.CTkFrame(master=home, fg_color="transparent")
         transactions_frame.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
+        transactions_frame.grid_rowconfigure((0, 1, 2), weight=1)
+        transactions_frame.grid_rowconfigure(3, weight=0)
+        transactions_frame.grid_columnconfigure(0, weight=1)
+        transactions_frame.grid_columnconfigure(1, weight=0)
 
         # There will be three frames inside the frame indicate the transactions. inside those frames we will have a
         # button and the label for the transaction details, we could also have an image to the left of the frame
         # indicating if the transaction was incoming or outgoing.
 
+        self.latest_transaction_one = customtkinter.CTkFrame(master=transactions_frame, height=40)
+        self.latest_transaction_one.grid(row=0, sticky="nsew", pady=(0, 5))
 
+        self.latest_transaction_two = customtkinter.CTkFrame(master=transactions_frame, height=40)
+        self.latest_transaction_two.grid(row=1, sticky="nsew", pady=(0, 5))
 
-
-
+        self.latest_transaction_three = customtkinter.CTkFrame(master=transactions_frame, height=40)
+        self.latest_transaction_three.grid(row=2, sticky="nsew")
 
         # A 'Latest Blocks' button, once clicked will go to the blocks tab.
         latest_blocks_label = customtkinter.CTkButton(master=home, text="Latest Blocks:", fg_color="transparent",
                                                       font=customtkinter.CTkFont(size=20, family="Montserrat"),
                                                       hover_color="grey")
-        latest_blocks_label.grid(row=3, column=0, sticky="nw", padx=5)
+        latest_blocks_label.grid(row=3, column=0, sticky="nw", padx=5, pady=(5, 0))
 
-        # There will be a frame holding tha last three blocks.
-        latest_blocks_frame = customtkinter.CTkFrame(master=home, fg_color="grey")
+        # There will be a frame holding tha last three blocks. In each frame we will have the last three blocks. That
+        # have been mined.
+        latest_blocks_frame = customtkinter.CTkFrame(master=home, fg_color="transparent")
         latest_blocks_frame.grid(row=4, column=0, sticky="nsew", padx=5, pady=5)
+        latest_blocks_frame.grid_rowconfigure((0, 1, 2), weight=1)
+        latest_blocks_frame.grid_rowconfigure(3, weight=0)
+        latest_blocks_frame.grid_columnconfigure(0, weight=1)
+        latest_blocks_frame.grid_columnconfigure(1, weight=0)
+
+        self.latest_block_one = customtkinter.CTkFrame(master=latest_blocks_frame, height=40)
+        self.latest_block_one.grid(row=0, sticky="nsew", pady=(0, 5))
+
+        self.latest_block_two = customtkinter.CTkFrame(master=latest_blocks_frame, height=40)
+        self.latest_block_two.grid(row=1, sticky="nsew", pady=(0, 5))
+
+        self.latest_block_three = customtkinter.CTkFrame(master=latest_blocks_frame, height=40)
+        self.latest_block_three.grid(row=2, sticky="nsew", pady=(0, 5))
 
 
         # The sidebar has 5 user buttons: Home, Settings, CLI, Create Address, Logout
