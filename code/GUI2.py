@@ -7,7 +7,7 @@ import hashlib
 import requests
 from PIL import Image
 import shutil
-import queue
+from node import Peer
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -18,6 +18,7 @@ class App(customtkinter.CTk):
 
         # We call a method as users may want to go back
         self.account=None
+        self.peer = None
         self.start()
 
 
@@ -186,6 +187,7 @@ class App(customtkinter.CTk):
         hash_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
         if account['passwordHash'] == hash_password:
             self.account = account
+            self.peer = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, self.account['privateKey'])
             self.gui()
 
 
@@ -523,6 +525,32 @@ class App(customtkinter.CTk):
 
         self.latest_block_three = customtkinter.CTkFrame(master=latest_blocks_frame, height=40)
         self.latest_block_three.grid(row=2, sticky="nsew", pady=(0, 5))
+
+        # The following code will be about the blocks tabs, this will instantiate the blockchain and will display all
+        # the current blocks, we can do this by making it into scrollable frame, and inside we will have frames, that
+        # contain the block details, we will order the blocks by the latest at the top of the tab. The individual block
+        # frames will contain a button that once clicked opens a new top-level containing all the details of the block.
+
+        # Blocks Tab grid configuration
+        blocks.grid_rowconfigure(0, weight=1)
+        blocks.grid_rowconfigure(1, weight=19)
+        blocks.grid_rowconfigure(2, weight=0)
+        blocks.grid_columnconfigure(0, weight=1)
+        blocks.grid_columnconfigure(1, weight=0)
+
+        # Label to describe what is going on.
+        blocks_label = customtkinter.CTkLabel(master=blocks, text="These are the current blocks, that are loaded in. "
+                                                                  "The latest blocks are at the top.",
+                                              font=customtkinter.CTkFont(size=20, family="Montserrat"))
+        blocks_label.grid(row=0)
+
+        # Frame to hold all other blocks.
+        blocks_frame = customtkinter.CTkScrollableFrame(master=blocks, fg_color="grey")
+        blocks_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+
+        for block in self.peer.blockchain.blocks:
+
+
 
 
         # The sidebar has 5 user buttons: Home, Settings, CLI, Create Address, Logout
