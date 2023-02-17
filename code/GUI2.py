@@ -190,7 +190,7 @@ class App(customtkinter.CTk):
             widget.destroy()
 
         # Create new window
-        self.title("Pycharm")
+        self.title("Pychain")
         self.geometry("1200x700")
         self.resizable(False, False)
 
@@ -385,10 +385,77 @@ class App(customtkinter.CTk):
 
     def gui(self):
         # This is the GUI for pychain.
-        print("Final Stage!")
+        for widget in self.winfo_children():
+            widget.destroy()
+        self.grid_rowconfigure((0, 1, 2, 3), weight=0)
+        self.grid_columnconfigure((0, 1, 2, 3), weight=0)
 
+        # Title, geometry, and resize config
+        self.title("Pychain")
+        self.geometry("1200x700")
+        self.resizable(False, False)
 
+        # Grid configuration: 1x2 with a weighted first column
+        self.grid_rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=19)
+        self.columnconfigure(1, weight=1)
 
+        # Two frames, one for the tabview and one for the sidebar menu.
+        tabview_frame = customtkinter.CTkFrame(master=self)
+        tabview_frame.grid(row=0, column=0, sticky="nsew", padx=(10, 0), pady=10)
+        tabview_frame.grid_rowconfigure(0, weight=1)
+        tabview_frame.grid_rowconfigure(1, weight=0)
+        tabview_frame.grid_columnconfigure(0, weight=1)
+        tabview_frame.grid_columnconfigure(1, weight=0)
+
+        sidebar_frame = customtkinter.CTkFrame(master=self, width=40)
+        sidebar_frame.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+        sidebar_frame.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
+        sidebar_frame.grid_rowconfigure(5, weight=0)
+        sidebar_frame.grid_columnconfigure(0, weight=1)
+        sidebar_frame.grid_columnconfigure(1, weight=0)
+
+        # The tabview, containing the tabs: Home, Send, Transactions, Blocks, Connect, Mine.
+        Tabview = customtkinter.CTkTabview(master=tabview_frame, segmented_button_selected_color="#533FD3",
+                                           segmented_button_selected_hover_color="#2c1346")
+        Tabview.add("Home")
+        Tabview.add("Send")
+        Tabview.add("Transactions")
+        Tabview.add("Blocks")
+        Tabview.add("Connect")
+        Tabview.add("Mine")
+        Tabview.grid(sticky="nsew", padx=20, pady=(0, 20))
+
+        # The sidebar has 5 user buttons: Home, Settings, CLI, Create Address, Logout
+        home_button_image = Image.open("icons/homeIcon.png")
+        home_button_img = customtkinter.CTkImage(dark_image=home_button_image, size=(40, 40))
+        home_button = customtkinter.CTkButton(master=sidebar_frame, image=home_button_img, width=40, height=40, text="",
+                                              fg_color="transparent", hover_color="grey")
+        home_button.grid(row=0, sticky="nsew")
+
+        settings_button_image = Image.open("icons/settingsIcon.png")
+        settings_button_img = customtkinter.CTkImage(dark_image=settings_button_image, size=(40, 40))
+        settings_button = customtkinter.CTkButton(master=sidebar_frame, image=settings_button_img, width=40, height=40,
+                                                  text="", fg_color="transparent", hover_color="grey")
+        settings_button.grid(row=1, sticky="nsew")
+
+        CLI_button_image = Image.open("icons/cliIcon.png")
+        CLI_button_img = customtkinter.CTkImage(dark_image=CLI_button_image, size=(40, 40))
+        CLI_button = customtkinter.CTkButton(master=sidebar_frame, image=CLI_button_img, width=40, height=40, text="",
+                                             fg_color="transparent", hover_color="grey")
+        CLI_button.grid(row=2, sticky="nsew")
+
+        CreateAccount_button_image = Image.open("icons/createUserIcon.png")
+        CreateAccount_button_img = customtkinter.CTkImage(dark_image=CreateAccount_button_image, size=(40, 40))
+        CreateAccount_button = customtkinter.CTkButton(master=sidebar_frame, image=CreateAccount_button_img, width=40,
+                                                       height=40, text="", fg_color="transparent", hover_color="grey")
+        CreateAccount_button.grid(row=3, sticky="nsew")
+
+        Exit_button_image = Image.open("icons/logoutIcon.png")
+        Exit_button_img = customtkinter.CTkImage(dark_image=Exit_button_image, size=(40, 40))
+        Exit_button = customtkinter.CTkButton(master=sidebar_frame, image=Exit_button_img, width=40, height=40, text="",
+                                              fg_color="transparent", hover_color="grey")
+        Exit_button.grid(row=4, sticky="nsew")
 
 if __name__ == "__main__":
     app = App()
