@@ -17,13 +17,17 @@ class App(customtkinter.CTk):
         super().__init__()
 
         # We call a method as users may want to go back
+        self.account=None
         self.start()
+
 
     def start(self):
 
         # This destroys all previous widgets if switching to the start menu.
         for widget in self.winfo_children():
             widget.destroy()
+        self.grid_rowconfigure((0, 1, 2, 3), weight=0)
+        self.grid_columnconfigure((0, 1, 2, 3), weight=0)
 
         # Settings for the window
         self.title("Pychain")
@@ -92,8 +96,8 @@ class App(customtkinter.CTk):
             # First we need to destroy all the previous widgets to clear the screen
             for widget in self.winfo_children():
                 widget.destroy()
-            self.grid_rowconfigure((0, 1, 2, 3), weight=0)
-
+            self.grid_rowconfigure( (0, 1, 2, 3), weight=0 )
+            self.grid_columnconfigure( (0, 1, 2, 3), weight=0 )
             # Geometry for the new window.
             self.title("Pycharm Login")
             self.geometry("1200x700")
@@ -181,13 +185,17 @@ class App(customtkinter.CTk):
         password = self.password_entry.get()
         hash_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
         if account['passwordHash'] == hash_password:
+            self.account = account
             self.gui()
+
 
     def CreateNewAccount(self):
 
         # Destroys all previous widgets to clear the screen
         for widget in self.winfo_children():
             widget.destroy()
+        self.grid_rowconfigure((0, 1, 2, 3), weight=0)
+        self.grid_columnconfigure((0, 1, 2, 3), weight=0)
 
         # Create new window
         self.title("Pychain")
@@ -416,15 +424,84 @@ class App(customtkinter.CTk):
         sidebar_frame.grid_columnconfigure(1, weight=0)
 
         # The tabview, containing the tabs: Home, Send, Transactions, Blocks, Connect, Mine.
-        Tabview = customtkinter.CTkTabview(master=tabview_frame, segmented_button_selected_color="#533FD3",
-                                           segmented_button_selected_hover_color="#2c1346")
-        Tabview.add("Home")
-        Tabview.add("Send")
-        Tabview.add("Transactions")
-        Tabview.add("Blocks")
-        Tabview.add("Connect")
-        Tabview.add("Mine")
-        Tabview.grid(sticky="nsew", padx=20, pady=(0, 20))
+        pychainTabview = customtkinter.CTkTabview(master=tabview_frame, segmented_button_selected_color="#533FD3",
+                                                  segmented_button_selected_hover_color="#2c1346")
+        pychainTabview.grid(sticky="nsew", padx=20, pady=(0, 20))
+
+        home = pychainTabview.add("Home")
+        send = pychainTabview.add("Send")
+        transactions = pychainTabview.add("Transactions")
+        blocks = pychainTabview.add("Blocks")
+        connect = pychainTabview.add("Connect")
+        mine = pychainTabview.add("Mine")
+
+        # All things to be displayed in the home section in the tabview:
+        # We need to get a balance of pychain coins, the latest transactions, the latest blocks mined.
+
+        # home.configure(fg_color="white", border_color="grey")
+        home.grid_rowconfigure(0, weight=1)
+        home.grid_rowconfigure(1, weight=1)
+        home.grid_rowconfigure(2, weight=5)
+        home.grid_rowconfigure(3, weight=1)
+        home.grid_rowconfigure(4, weight=5)
+        home.grid_rowconfigure(5, weight=0)
+        home.grid_columnconfigure(0, weight=19)
+        home.grid_columnconfigure(1, weight=1)
+        home.grid_columnconfigure(2, weight=0)
+
+        # We have a frame that holds both the welcome label and the balance. We can also update the balance at anytime
+        # as we have defined it with self.
+        welcomeFrame = customtkinter.CTkFrame(master=home, fg_color="transparent")
+        welcomeFrame.grid(row=0, column=0, sticky="nsew")
+        welcomeFrame.grid_rowconfigure((0, 1), weight=1)
+        welcomeFrame.grid_rowconfigure(2, weight=0)
+        welcomeFrame.grid_columnconfigure(1, weight=0)
+        welcome_label = customtkinter.CTkLabel(master=welcomeFrame, text="Welcome To Pychain!",
+                                               font=customtkinter.CTkFont(size=40, family="Montserrat", weight="bold"))
+        welcome_label.grid(row=0, column=0, sticky="nw", padx=5, pady=(5, 0))
+        self.balance_label = customtkinter.CTkLabel(master=welcomeFrame, text="Balance: ",
+                                                    font=customtkinter.CTkFont(size=20, family="Montserrat"))
+        self.balance_label.grid(row=1, column=0, sticky="nw", padx=10)
+
+        # The account image will be displayed next to the welcome, this will be a button to allow you to change
+        # accounts.
+        path_to_image = self.account["iconPath"]
+        Icon_img = Image.open(path_to_image)
+        Icon = customtkinter.CTkImage(dark_image=Icon_img, size=(125, 125))
+        Icon_button = customtkinter.CTkButton(master=home, image=Icon, fg_color="transparent", text="", width=75,
+                                              height=75, hover_color="grey", command=self.Login)
+        Icon_button.grid(row=0, column=1, sticky="e", padx=10, pady=10)
+
+        # A transactions button will also be on the home menu, below the button will be the three latest transactions,
+        # but you can also click the button to go to the transaction tab
+        transaction_label = customtkinter.CTkButton(master=home, text="Latest Transactions:", fg_color="transparent",
+                                                    font=customtkinter.CTkFont(size=20, family="Montserrat"),
+                                                    hover_color="grey")
+        transaction_label.grid(row=1, column=0, sticky="nw", padx=5)
+
+        # There will also be a frame for the three latest transactions, just below the transaction button
+        transactions_frame = customtkinter.CTkFrame(master=home, fg_color="grey")
+        transactions_frame.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
+
+        # There will be three frames inside the frame indicate the transactions. inside those frames we will have a
+        # button and the label for the transaction details, we could also have an image to the left of the frame
+        # indicating if the transaction was incoming or outgoing.
+
+
+
+
+
+
+        # A 'Latest Blocks' button, once clicked will go to the blocks tab.
+        latest_blocks_label = customtkinter.CTkButton(master=home, text="Latest Blocks:", fg_color="transparent",
+                                                      font=customtkinter.CTkFont(size=20, family="Montserrat"),
+                                                      hover_color="grey")
+        latest_blocks_label.grid(row=3, column=0, sticky="nw", padx=5)
+
+        # There will be a frame holding tha last three blocks.
+        latest_blocks_frame = customtkinter.CTkFrame(master=home, fg_color="grey")
+        latest_blocks_frame.grid(row=4, column=0, sticky="nsew", padx=5, pady=5)
+
 
         # The sidebar has 5 user buttons: Home, Settings, CLI, Create Address, Logout
         home_button_image = Image.open("icons/homeIcon.png")
@@ -448,13 +525,14 @@ class App(customtkinter.CTk):
         CreateAccount_button_image = Image.open("icons/createUserIcon.png")
         CreateAccount_button_img = customtkinter.CTkImage(dark_image=CreateAccount_button_image, size=(40, 40))
         CreateAccount_button = customtkinter.CTkButton(master=sidebar_frame, image=CreateAccount_button_img, width=40,
-                                                       height=40, text="", fg_color="transparent", hover_color="grey")
+                                                       height=40, text="", fg_color="transparent", hover_color="grey",
+                                                       command=self.CreateNewAccount)
         CreateAccount_button.grid(row=3, sticky="nsew")
 
         Exit_button_image = Image.open("icons/logoutIcon.png")
         Exit_button_img = customtkinter.CTkImage(dark_image=Exit_button_image, size=(40, 40))
         Exit_button = customtkinter.CTkButton(master=sidebar_frame, image=Exit_button_img, width=40, height=40, text="",
-                                              fg_color="transparent", hover_color="grey")
+                                              fg_color="transparent", hover_color="grey", command=self.start)
         Exit_button.grid(row=4, sticky="nsew")
 
 if __name__ == "__main__":
