@@ -8,6 +8,7 @@ import requests
 from PIL import Image
 import shutil
 from node import Peer
+from datetime import datetime
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -121,8 +122,8 @@ class App(customtkinter.CTk):
             private_key = int(account["privateKey"])
             pychain_address = address.createAddress(address.ECmultiplication(private_key, address.Gx, address.Gy))
 
-            # We need to create a index, so we can loop through all the accounts.
-            self.account_index= 0
+            # We need to create an index, so we can loop through all the accounts.
+            self.account_index = 0
 
             # We also need a 2x1 frame to hold the image and the pychain address.
             frame = customtkinter.CTkFrame(master=self, fg_color="transparent")
@@ -187,9 +188,8 @@ class App(customtkinter.CTk):
         hash_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
         if account['passwordHash'] == hash_password:
             self.account = account
-            self.peer = Peer("blockchain.txt", "192.168.0.201", 50000, 50500, 10, self.account['privateKey'])
+            self.peer = Peer("blockchain.txt", "192.168.0.111", 50000, 50500, 10, self.account['privateKey'])
             self.gui()
-
 
     def CreateNewAccount(self):
 
@@ -542,43 +542,109 @@ class App(customtkinter.CTk):
         blocks_label = customtkinter.CTkLabel(master=blocks, text="These are the current blocks, that are loaded in. "
                                                                   "The latest blocks are at the top.",
                                               font=customtkinter.CTkFont(size=20, family="Montserrat"))
-        blocks_label.grid(row=0)
+        blocks_label.grid(row=0, column=0, sticky="nsew")
 
         # Frame to hold all other blocks.
         blocks_frame = customtkinter.CTkScrollableFrame(master=blocks)
         blocks_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        blocks_frame.grid_rowconfigure(0, weight=1)
+        blocks_frame.grid_columnconfigure(0, weight=1)
+        blocks_frame.grid_columnconfigure(1, weight=0)
 
-        count=0
-        for block in self.peer.blockchain.blocks.reverse():
-            blockid = customtkinter.CTkLabel(master=blocks_frame, text=block.blockid)
-            blockid.grid(row=count)
-            count += 1
+        # Here we are going through our list of blocks and then adding them to the respective row, this way we can put
+        # the blocks in order.
+        count = len(self.peer.blockchain.blocks)
 
+        for block in self.peer.blockchain.blocks:
+            # We create a frame for each of these blocks, inside each frame we will put a button, and the miner who
+            # mined it
 
+            # The frame grid configuration
+            block_frame = customtkinter.CTkFrame(master=blocks_frame, fg_color="black")
+            block_frame.grid(row=count, padx=5, pady=5, sticky="nsew")
+            block_frame.grid_rowconfigure((0, 1, 2, 3, 4, 5), weight=1)
+            block_frame.grid_rowconfigure(6, weight=0)
+            block_frame.grid_columnconfigure(0, weight=1)
+            block_frame.grid_columnconfigure(1, weight=0)
 
+            # We decrement count at every block to go from the end of the list to the start of the list
+            count -= 1
 
+            # We have a label that says the block height for each block
+            block_height_label = customtkinter.CTkLabel(master=block_frame, text=f"Block Height: {block.height}",
+                                                        fg_color="transparent",
+                                                        font=customtkinter.CTkFont(size=20, family="Montserrat", weight="bold"))
+            block_height_label.grid(row=0, column=0, sticky="nw", padx=10, pady=5)
 
+            # We have a label that says 'Block Details' this is for clarity.
+            block_details_label = customtkinter.CTkLabel(master=block_frame, text="Block Details",
+                                                         fg_color="transparent",
+                                                         font=customtkinter.CTkFont(size=15, family="Montserrat",
+                                                                                    weight="bold"))
+            block_details_label.grid(row=1, column=0, sticky="w", padx=10, pady=5)
 
+            # Here we turn the blocks block-time into a date format, turn the nonce into a readable format by giving it
+            # commas, and we are also formatting the transactions into a readable format
+            date = int(block.blocktime)
+            date = datetime.utcfromtimestamp(date).strftime('%Y-%m-%d %H:%M:%S')
+            blockNonce = int(block.nonce)
+            blockNonce = "{:,}".format(blockNonce)
+            transactions_text = ""
+            for transaction in block.transactions:
+                print(json.dumps(transaction.tx, indent=3))
+                transactions_text += json.dumps(transaction.tx, indent=2)
+
+            # This is a label containing many of the descriptors of the block.
+            block_label = customtkinter.CTkLabel(master=block_frame, text=f"Block ID: {block.blockid}\n"
+                                                                          f"Previous Block ID: {block.previousblockhash}\n"
+                                                                          f"Merkle Hash: {block.merkle}\n"
+                                                                          f"Block Miner: {block.miner}\n"
+                                                                          f"Block Nonce: {blockNonce}\n",
+                                                 font=customtkinter.CTkFont(size=12, family="Montserrat"), justify="left")
+            block_label.grid(row=2, column=0, sticky="nsew")
+
+            # This is the label to indicate the next texts are transactions, this is used for clarity
+            transaction_details_label = customtkinter.CTkLabel(master=block_frame, text="Transactions",
+                                                               font=customtkinter.CTkFont(size=15, family="Montserrat",
+                                                                                          weight="bold"))
+            transaction_details_label.grid(row=3, column=0, sticky="w", padx=10, pady=5)
+
+            # This is the label that states all the transactions in their dictionary format.
+            transactions_label = customtkinter.CTkLabel(master=block_frame, text=transactions_text,
+                                                        font=customtkinter.CTkFont(size=12, family="Montserrat"),
+                                                        anchor="center", justify="left")
+            transactions_label.grid(row=4, column=0, sticky="nsew")
+
+            # This is the final label which indicates the time the block was mined.
+            block_time_label = customtkinter.CTkLabel(master=block_frame, text=date,
+                                                      font=customtkinter.CTkFont(size=14, family="Montserrat",
+                                                                                 weight="bold"))
+            block_time_label.grid(row=5, sticky="nsew")
 
         # The sidebar has 5 user buttons: Home, Settings, CLI, Create Address, Logout
+
+        # Home button.
         home_button_image = Image.open("icons/homeIcon.png")
         home_button_img = customtkinter.CTkImage(dark_image=home_button_image, size=(40, 40))
         home_button = customtkinter.CTkButton(master=sidebar_frame, image=home_button_img, width=40, height=40, text="",
                                               fg_color="transparent", hover_color="grey")
         home_button.grid(row=0, sticky="nsew")
 
+        # Settings Button
         settings_button_image = Image.open("icons/settingsIcon.png")
         settings_button_img = customtkinter.CTkImage(dark_image=settings_button_image, size=(40, 40))
         settings_button = customtkinter.CTkButton(master=sidebar_frame, image=settings_button_img, width=40, height=40,
                                                   text="", fg_color="transparent", hover_color="grey")
         settings_button.grid(row=1, sticky="nsew")
 
+        # CLI button
         CLI_button_image = Image.open("icons/cliIcon.png")
         CLI_button_img = customtkinter.CTkImage(dark_image=CLI_button_image, size=(40, 40))
         CLI_button = customtkinter.CTkButton(master=sidebar_frame, image=CLI_button_img, width=40, height=40, text="",
                                              fg_color="transparent", hover_color="grey")
         CLI_button.grid(row=2, sticky="nsew")
 
+        # Create account button
         CreateAccount_button_image = Image.open("icons/createUserIcon.png")
         CreateAccount_button_img = customtkinter.CTkImage(dark_image=CreateAccount_button_image, size=(40, 40))
         CreateAccount_button = customtkinter.CTkButton(master=sidebar_frame, image=CreateAccount_button_img, width=40,
@@ -586,11 +652,13 @@ class App(customtkinter.CTk):
                                                        command=self.CreateNewAccount)
         CreateAccount_button.grid(row=3, sticky="nsew")
 
+        # Exit button
         Exit_button_image = Image.open("icons/logoutIcon.png")
         Exit_button_img = customtkinter.CTkImage(dark_image=Exit_button_image, size=(40, 40))
         Exit_button = customtkinter.CTkButton(master=sidebar_frame, image=Exit_button_img, width=40, height=40, text="",
                                               fg_color="transparent", hover_color="grey", command=self.start)
         Exit_button.grid(row=4, sticky="nsew")
+
 
 if __name__ == "__main__":
     app = App()
