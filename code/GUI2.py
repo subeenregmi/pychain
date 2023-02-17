@@ -41,17 +41,24 @@ class App(customtkinter.CTk):
         Title.grid(row=0)
 
         # Settings for the labels inside the frame
-        Label = customtkinter.CTkLabel(master=Title, bg_color="transparent", text="Pychain", font=customtkinter.CTkFont(size=40, weight="bold"), width=130, height=40)
+        Label = customtkinter.CTkLabel(master=Title, bg_color="transparent", text="Pychain",
+                                       font=customtkinter.CTkFont(size=40, weight="bold"), width=130, height=40)
+
         Label.grid(row = 0, column = 0, padx=10)
         SubTitle = customtkinter.CTkLabel(master=Title, text="A blockchain sandbox")
         SubTitle.grid(row=1, padx=10, pady=(10, 0), sticky="s")
 
         # Settings for the login button
-        self.LoginButton = customtkinter.CTkButton(master=self, width=180, height=50, text="Login", font=customtkinter.CTkFont(size=15, weight="bold"), fg_color="#533FD3", hover_color="#2c1346", command=self.Login)
+        self.LoginButton = customtkinter.CTkButton(master=self, width=180, height=50, text="Login",
+                                                   font=customtkinter.CTkFont(size=15, weight="bold"), fg_color="#533FD3",
+                                                   hover_color="#2c1346", command=self.Login)
+
         self.LoginButton.grid(row=1, column=0, padx=0, pady=0, sticky="s")
 
         # Settings for the create account button
-        CreateButton = customtkinter.CTkButton(master=self, width=180, height=50, text="Create New Account", font=customtkinter.CTkFont(size=15, weight="bold"), fg_color="#533FD3", hover_color="#2c1346", anchor="center", command=self.CreateNewAccount)
+        CreateButton = customtkinter.CTkButton(master=self, width=180, height=50, text="Create New Account",
+                                               font=customtkinter.CTkFont(size=15, weight="bold"), fg_color="#533FD3",
+                                               hover_color="#2c1346", anchor="center", command=self.CreateNewAccount)
         CreateButton.grid(row=2, column=0, padx=0, pady=0)
 
         # Settings for the bottom tile
@@ -126,12 +133,20 @@ class App(customtkinter.CTk):
             # This is the text box that holds the pychain address.
             self.pychain_address_label = customtkinter.CTkLabel(master=frame, text=pychain_address,
                                                                 font=customtkinter.CTkFont(weight="bold", size=18))
-            self.pychain_address_label.grid(row=1)
+            self.pychain_address_label.grid(row=1, column=0)
 
             # This is the entry that holds the password, this will be hashed and checked in order for a successful login
-            password_entry = customtkinter.CTkEntry(master=self, placeholder_text="Password",
+            self.password_entry = customtkinter.CTkEntry(master=self, placeholder_text="Password",
                                                     font=customtkinter.CTkFont(size=30))
-            password_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
+            self.password_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
+
+            login_image = Image.open('icons/loginIcon.png')
+            Login_icon = customtkinter.CTkImage(dark_image=login_image, size=(35, 35))
+
+            # This is the button to log in to the account.
+            login_button = customtkinter.CTkButton(master=self, text="", image=Login_icon, width=35, fg_color="#533FD3",
+                                                   hover_color="#2c1346", command=self.loginToAccount)
+            login_button.grid(row=1, column=2, sticky="w")
 
     def switchAccounts(self):
         # This function handles the account cycling mechanism in the login screen.
@@ -153,6 +168,21 @@ class App(customtkinter.CTk):
         self.icon_button.configure(image=Icon)
         self.pychain_address_label.configure(text=pychain_address)
 
+    def loginToAccount(self):
+        # This function is used in the login screen, to hash the password entered and if the password hash correlates
+        # to the one saved then we go onto the actual GUI.
+
+        # We are loading the keys into a python object.
+        with open('keys.json') as keys:
+            data = json.load(keys)
+
+        # If the password's hash matches with the stored hash then we can move onto the gui
+        account = data[self.account_index]
+        password = self.password_entry.get()
+        hash_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
+        if account['passwordHash'] == hash_password:
+            self.gui()
+
     def CreateNewAccount(self):
 
         # Destroys all previous widgets to clear the screen
@@ -168,6 +198,7 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=3)
         self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(3, weight=0)
         self.grid_columnconfigure(0, weight=1)
 
         # Frame for the top row to separate the title on the left to the description on the right
@@ -185,8 +216,8 @@ class App(customtkinter.CTk):
                                        font=customtkinter.CTkFont(size=20, weight="bold"))
         Label.grid(row=0, column=0, padx=10, pady=10)
         Label2 = customtkinter.CTkLabel(master=frameTitle, text="How To Use: Click the button to generate a "
-                                                                "pseudorandom Address\nStore the account by "
-                                                                "giving it a password and click the Save Button!")
+                                                                "pseudorandom address.\nStore the account by "
+                                                                "giving it a password and clicking the Save Button!")
         Label2.grid(row=0, column=1, padx=10, pady=10)
 
         Button = customtkinter.CTkButton(master=frameTitle, text="Generate Address", font=customtkinter.CTkFont(size=30),
@@ -351,6 +382,13 @@ class App(customtkinter.CTk):
 
             # Then we return back into our login page.
             self.start()
+
+    def gui(self):
+        # This is the GUI for pychain.
+        print("Final Stage!")
+
+
+
 
 if __name__ == "__main__":
     app = App()
