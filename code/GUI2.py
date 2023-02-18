@@ -1,4 +1,5 @@
 import socket
+import threading
 
 import customtkinter
 import tkinter
@@ -547,9 +548,9 @@ class App(customtkinter.CTk):
         # The following code will be about the connect tab this is where you enter an IP address and then trying to
         # connect to an IP, once the ip connection has been made, we can add the peer ip to a json file.
 
-        connect.grid_rowconfigure((0, 1, 2, 3, 4), weight=19)
+        connect.grid_rowconfigure((0, 1, 2, 3), weight=19)
         connect.grid_rowconfigure(1, weight=1)
-        connect.grid_rowconfigure(5, weight=0)
+        connect.grid_rowconfigure(4, weight=0)
         connect.grid_columnconfigure((0, 1), weight=1)
         connect.grid_columnconfigure(2, weight=0)
 
@@ -558,16 +559,34 @@ class App(customtkinter.CTk):
                                                font=customtkinter.CTkFont(size=18, family="Montserrat"))
         connect_label.grid(row=0, column=0, columnspan=2)
 
+        connect_label_details = customtkinter.CTkLabel(master=connect, text="After clicking the button to connect, "
+                                                                            "the app may be unresponsive for around one "
+                                                                            "minute, please give it time to connect to "
+                                                                            "a peer, if the connection is unsuccessful a"
+                                                                            "pop should appear.",
+                                                       font=customtkinter.CTkFont(size=14, family="Montserrat"),
+                                                       wraplength=400, justify="left")
+        connect_label_details.grid(row=1, column=0, sticky="s")
+
         self.connect_entry = customtkinter.CTkEntry(master=connect, placeholder_text="IP Address",
                                                font=customtkinter.CTkFont(size=20, family="Montserrat"),
                                                height=40, width=170)
-        self.connect_entry.grid(row=1, column=0, padx=20, sticky="sw", pady=50)
+        self.connect_entry.grid(row=2, column=0, padx=20, sticky="s", pady=50)
 
         connect_button = customtkinter.CTkButton(master=connect, text="Connect", fg_color="#533fd3",
                                                  hover_color="#2c1346",
                                                  font=customtkinter.CTkFont(size=20, family="Montserrat"),
                                                  command=self.connectToPeer)
-        connect_button.grid(row=2, column=0, sticky="nw", padx=30)
+        connect_button.grid(row=3, column=0, sticky="n", padx=30)
+
+        connections_label = customtkinter.CTkLabel(master=connect, text="Active Connections:",
+                                                   font=customtkinter.CTkFont(size=20, family="Montserrat"))
+        connections_label.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
+
+        self.connections_frame = customtkinter.CTkScrollableFrame(master=connect)
+        self.connections_frame.grid(row=2, column=1, rowspan=2, sticky="nsew", padx=10, pady=10)
+        self.connections_frame.grid_columnconfigure(0, weight=1)
+        self.connections_frame.grid_columnconfigure(1, weight=0)
 
         # The following code will be about the blocks tabs, this will instantiate the blockchain and will display all
         # the current blocks, we can do this by making it into scrollable frame, and inside we will have frames, that
@@ -714,17 +733,71 @@ class App(customtkinter.CTk):
 
         # This creates a peer using the blockchain that got selected.
         self.peer = Peer(f"blockchains/{blockchainfile}", ip, 50000, 50500, 10, self.account['privateKey'])
-        self.peer.listenOnUDP()
+        listenUDPThread = threading.Thread(target=self.peer.listenOnUDP)
+        listenUDPThread.start()
         self.select_blockchain_button.configure(state="disabled")
         self.blockchain_selector.configure(state="disabled")
+        self.gui()
 
     def connectToPeer(self):
         # This function will get what is stored in the entry and then try to connect to that peer.
         ip = self.connect_entry.get()
-        connection_success = self.peer.connectToPeer(ip)
-        self.connect_entry.configure(text="")
-        if connection_success:
-            print("success!")
+        if self.peer:
+            if self.peer.checkIPisPeer(ip) is False:
+                connection_success = self.peer.connectToPeer(ip)
+                self.connect_entry.delete(0, 16)
+                if connection_success:
+                    success_top_level = customtkinter.CTkToplevel(self)
+                    success_top_level.geometry("200x50")
+                    success_top_level.title("Pychain Connect")
+                    success_top_level.resizable(False, False)
+
+                    success_label = customtkinter.CTkLabel(master=success_top_level, text="Peer Connected!",
+                                                           font=customtkinter.CTkFont(size=14, family="Montserrat"))
+                    success_label.pack(anchor="center")
+                    connection_frame = customtkinter.CTkFrame(master=self.connections_frame, fg_color="black")
+                    connection_frame.grid_rowconfigure(0, weight=1)
+                    connection_frame.grid_rowconfigure(1, weight=0)
+                    connection_frame.grid_columnconfigure(0, weight=1)
+                    connection_frame.grid_columnconfigure(1, weight=9)
+                    connection_frame.grid_columnconfigure(2, weight=0)
+                    connection_frame.grid(row=len(self.peer.peers)-1, sticky="nsew")
+                    connection_image = Image.open("images/icons/greenicon.png")
+                    connection_img = customtkinter.CTkImage(dark_image=connection_image, size=(20, 20))
+                    connection_Image_Button = customtkinter.CTkButton(master=connection_frame, image=connection_img,
+                                                                      text="", fg_color="transparent", hover=False)
+                    connection_label = customtkinter.CTkLabel(master=connection_frame, text=f"{ip} is connected!",
+                                                              font=customtkinter.CTkFont(size=14, family="Montserrat",))
+                    connection_label.grid(row=0, column=1, sticky="w")
+                    connection_Image_Button.grid(row=0, column=0, sticky="w", padx=(5, 0))
+
+                else:
+                    error_top_level = customtkinter.CTkToplevel(self)
+                    error_top_level.geometry("200x50")
+                    error_top_level.title("Pychain Connect")
+                    error_top_level.resizable(False, False)
+
+                    error_label = customtkinter.CTkLabel(master=error_top_level, text="Connection is unsuccessful.",
+                                                         font=customtkinter.CTkFont( size=14, family="Montserrat"))
+                    error_label.pack(anchor="center")
+            else:
+                error_top_level = customtkinter.CTkToplevel(self)
+                error_top_level.geometry("200x50")
+                error_top_level.title("Pychain Connect")
+                error_top_level.resizable(False, False)
+
+                error_label = customtkinter.CTkLabel(master=error_top_level, text="Ip is already a peer.",
+                                                     font=customtkinter.CTkFont(size=14, family="Montserrat"))
+                error_label.pack(anchor="center")
+        else:
+            error_top_level = customtkinter.CTkToplevel(self)
+            error_top_level.geometry("200x50")
+            error_top_level.title("Pychain Connect")
+            error_top_level.resizable(False, False)
+
+            error_label = customtkinter.CTkLabel(master=error_top_level, text="Blockchain not selected.",
+                                                 font=customtkinter.CTkFont(size=14, family="Montserrat"))
+            error_label.pack(anchor="center")
 
 
 if __name__ == "__main__":

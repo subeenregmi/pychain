@@ -111,8 +111,18 @@ class Peer:
                 if tries == 5:
                     print(f"<UDP SOCK> Connection with {address[0]} unsuccessful!")
 
+            elif message == "ping":
+                # If the UDP socket receives a ping, we will also send back a pong.
+                message = "pong"
+                message = message.encode('utf-8')
+                self.UDPsocket.sendto(message, address)
+
+            elif message == "pong":
+                # If we receive a pong then we know that the host is alive
+                print(f"<UDP PONG RECEIVE> {address} is alive!")
+
             else:
-                print("<UDP SOCK> Invalid Message Format CR:{PORT}")
+                print("<UDP SOCK> Invalid Message Format CR:{PORT}, or ping/pong.")
 
     def listenOnTCP(self, socket):
         # We need to also start listening to the peer-to-peer connections for transactions and peer list requests.
@@ -369,6 +379,17 @@ class Peer:
                         except:
                             print(f"<ERROr>")
 
+            elif message == "ping":
+                # If we receive a ping message, we need to send a pong back. This is the conformation that this host is
+                # alive. This is relating to the TCP Ping service.
+                message = "pong"
+                message = message.encode('utf-8')
+                socket.send(message)
+
+            elif message == "pong":
+                print(f"<PONG RECEIVED> {socket.getpeername()} is alive!")
+
+
             # The peer only accepts packets that contain certain starting values.
             else:
                 print(message)
@@ -381,11 +402,11 @@ class Peer:
         print(f"<TCP CONNECT> Connecting to {ip}")
 
         # We send the package 5 times and listen 5 times, if not the connection fails
-        while tries != 5:
+        while tries < 5:
 
             # This creates a new socket, hosted on the free port, setting us up to receive a connection
             # we also set a timeout for our socket as otherwise we would be forever waiting for a connection
-
+            tries += 1
             peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             # This allows us to not run into the PORT IS BEING USED errors, by picking the next available port
@@ -404,7 +425,7 @@ class Peer:
 
             message = f"CR:{port}"
 
-            peer_socket.settimeout(150.0)
+            peer_socket.settimeout(10)
             peer_socket.listen()
             print(f"<TCP CREATE>{peer_socket.getsockname()} has been created")
 
@@ -414,7 +435,15 @@ class Peer:
 
             # We now start listening on our socket for any new connections
             print(f"<TCP LISTEN> {peer_socket.getsockname()} is listening")
-            connected_peer, connected_address = peer_socket.accept()
+            try:
+                connected_peer, connected_address = peer_socket.accept()
+            except TimeoutError:
+                print("Unsuccessful connection")
+                if tries == 5:
+                    break
+                continue
+            if tries == 5:
+                break
             self.peers.append(connected_peer)
             thread = threading.Thread(target=self.listenOnTCP, args=(connected_peer,))
             thread.start()
@@ -631,6 +660,23 @@ class Peer:
         else:
             print(f"<VALIDATE DIFFICULTY> Difficulty is invalid.")
             return False
+
+    def sendPingTCP(self, ip):
+        # This function only serves to test that a communication is alive, by sending a ping request, if a ping request
+        # is received and a host is alive it will send a pong, as a confirmation.
+
+        ipsocket = self.checkIPisPeer(ip)
+        if ipsocket is not False:
+            message = "ping"
+            message = message.encode('utf-8')
+            ipsocket.send(message)
+
+    def sendPingUDP(self, ip):
+        # This function is used to send a ping to a the UDP server socket, this way we can establish if a client/host is
+        # alive.
+        message = "ping"
+        message = message.encode('utf-8')
+        self.UDPsocket.sendto(message, (ip, SERVER_UDP_SERVER))
 
     def startMine(self):
         # This function will continuously mine blocks in the mempool, this works even if there are no transactions it
