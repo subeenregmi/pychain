@@ -544,6 +544,31 @@ class App(customtkinter.CTk):
         self.latest_block_three = customtkinter.CTkFrame(master=latest_blocks_frame, height=40)
         self.latest_block_three.grid(row=2, sticky="nsew", pady=(0, 5))
 
+        # The following code will be about the connect tab this is where you enter an IP address and then trying to
+        # connect to an IP, once the ip connection has been made, we can add the peer ip to a json file.
+
+        connect.grid_rowconfigure((0, 1, 2, 3, 4), weight=19)
+        connect.grid_rowconfigure(1, weight=1)
+        connect.grid_rowconfigure(5, weight=0)
+        connect.grid_columnconfigure((0, 1), weight=1)
+        connect.grid_columnconfigure(2, weight=0)
+
+        connect_label = customtkinter.CTkLabel(master=connect, text="Type in a IP address, and click connect a pop up"
+                                                                    " should appear after a successful connection.",
+                                               font=customtkinter.CTkFont(size=18, family="Montserrat"))
+        connect_label.grid(row=0, column=0, columnspan=2)
+
+        self.connect_entry = customtkinter.CTkEntry(master=connect, placeholder_text="IP Address",
+                                               font=customtkinter.CTkFont(size=20, family="Montserrat"),
+                                               height=40, width=170)
+        self.connect_entry.grid(row=1, column=0, padx=20, sticky="sw", pady=50)
+
+        connect_button = customtkinter.CTkButton(master=connect, text="Connect", fg_color="#533fd3",
+                                                 hover_color="#2c1346",
+                                                 font=customtkinter.CTkFont(size=20, family="Montserrat"),
+                                                 command=self.connectToPeer)
+        connect_button.grid(row=2, column=0, sticky="nw", padx=30)
+
         # The following code will be about the blocks tabs, this will instantiate the blockchain and will display all
         # the current blocks, we can do this by making it into scrollable frame, and inside we will have frames, that
         # contain the block details, we will order the blocks by the latest at the top of the tab. The individual block
@@ -603,15 +628,14 @@ class App(customtkinter.CTk):
                                                                                         weight="bold"))
                 block_details_label.grid(row=1, column=0, sticky="w", padx=10, pady=5)
 
-                # Here we turn the blocks block-time into a date format, turn the nonce into a readable format by giving it
-                # commas, and we are also formatting the transactions into a readable format
+                # Here we turn the blocks block-time into a date format, turn the nonce into a readable format by giving
+                # it commas, and we are also formatting the transactions into a readable format
                 date = int(block.blocktime)
                 date = datetime.utcfromtimestamp(date).strftime('%Y-%m-%d %H:%M:%S')
                 blockNonce = int(block.nonce)
                 blockNonce = "{:,}".format(blockNonce)
                 transactions_text = ""
                 for transaction in block.transactions:
-                    print(json.dumps(transaction.tx, indent=3))
                     transactions_text += json.dumps(transaction.tx, indent=2)
 
                 # This is a label containing many of the descriptors of the block.
@@ -644,28 +668,28 @@ class App(customtkinter.CTk):
         # The sidebar has 5 user buttons: Home, Settings, CLI, Create Address, Logout
 
         # Home button.
-        home_button_image = Image.open( "images/icons/homeIcon.png" )
+        home_button_image = Image.open("images/icons/homeIcon.png")
         home_button_img = customtkinter.CTkImage(dark_image=home_button_image, size=(40, 40))
         home_button = customtkinter.CTkButton(master=sidebar_frame, image=home_button_img, width=40, height=40, text="",
                                               fg_color="transparent", hover_color="grey", command=self.gui)
         home_button.grid(row=0, sticky="nsew")
 
         # Settings Button
-        settings_button_image = Image.open( "images/icons/settingsIcon.png" )
+        settings_button_image = Image.open("images/icons/settingsIcon.png")
         settings_button_img = customtkinter.CTkImage(dark_image=settings_button_image, size=(40, 40))
         settings_button = customtkinter.CTkButton(master=sidebar_frame, image=settings_button_img, width=40, height=40,
                                                   text="", fg_color="transparent", hover_color="grey")
         settings_button.grid(row=1, sticky="nsew")
 
         # CLI button
-        CLI_button_image = Image.open( "images/icons/cliIcon.png" )
+        CLI_button_image = Image.open("images/icons/cliIcon.png")
         CLI_button_img = customtkinter.CTkImage(dark_image=CLI_button_image, size=(40, 40))
         CLI_button = customtkinter.CTkButton(master=sidebar_frame, image=CLI_button_img, width=40, height=40, text="",
                                              fg_color="transparent", hover_color="grey")
         CLI_button.grid(row=2, sticky="nsew")
 
         # Create account button
-        CreateAccount_button_image = Image.open( "images/icons/createUserIcon.png" )
+        CreateAccount_button_image = Image.open("images/icons/createUserIcon.png")
         CreateAccount_button_img = customtkinter.CTkImage(dark_image=CreateAccount_button_image, size=(40, 40))
         CreateAccount_button = customtkinter.CTkButton(master=sidebar_frame, image=CreateAccount_button_img, width=40,
                                                        height=40, text="", fg_color="transparent", hover_color="grey",
@@ -673,20 +697,35 @@ class App(customtkinter.CTk):
         CreateAccount_button.grid(row=3, sticky="nsew")
 
         # Exit button
-        Exit_button_image = Image.open( "images/icons/logoutIcon.png" )
+        Exit_button_image = Image.open("images/icons/logoutIcon.png")
         Exit_button_img = customtkinter.CTkImage(dark_image=Exit_button_image, size=(40, 40))
         Exit_button = customtkinter.CTkButton(master=sidebar_frame, image=Exit_button_img, width=40, height=40, text="",
                                               fg_color="transparent", hover_color="grey", command=self.start)
         Exit_button.grid(row=4, sticky="nsew")
 
     def createNode(self):
+        # This grabs the blockchain that is selected.
         blockchainfile = self.blockchain_selector.get()
+
+        # This gets the local ip address, by connecting to google's public domain and seeing what the IP is.
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
+
+        # This creates a peer using the blockchain that got selected.
         self.peer = Peer(f"blockchains/{blockchainfile}", ip, 50000, 50500, 10, self.account['privateKey'])
+        self.peer.listenOnUDP()
         self.select_blockchain_button.configure(state="disabled")
         self.blockchain_selector.configure(state="disabled")
+
+    def connectToPeer(self):
+        # This function will get what is stored in the entry and then try to connect to that peer.
+        ip = self.connect_entry.get()
+        connection_success = self.peer.connectToPeer(ip)
+        self.connect_entry.configure(text="")
+        if connection_success:
+            print("success!")
+
 
 if __name__ == "__main__":
     app = App()
