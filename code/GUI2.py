@@ -22,7 +22,6 @@ class App(customtkinter.CTk):
         self.peer = None
         self.start()
 
-
     def start(self):
 
         # This destroys all previous widgets if switching to the start menu.
@@ -146,7 +145,7 @@ class App(customtkinter.CTk):
                                                     font=customtkinter.CTkFont(size=30))
             self.password_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
 
-            login_image = Image.open('icons/loginIcon.png')
+            login_image = Image.open( 'images/icons/loginIcon.png' )
             Login_icon = customtkinter.CTkImage(dark_image=login_image, size=(35, 35))
 
             # This is the button to log in to the account.
@@ -188,7 +187,6 @@ class App(customtkinter.CTk):
         hash_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
         if account['passwordHash'] == hash_password:
             self.account = account
-            self.peer = Peer("blockchain.txt", "192.168.0.111", 50000, 50500, 10, self.account['privateKey'])
             self.gui()
 
     def CreateNewAccount(self):
@@ -331,7 +329,7 @@ class App(customtkinter.CTk):
         self.text3k.configure(text=pychainAddress)
 
         r = requests.get(f"https://api.dicebear.com/5.x/identicon/png?seed={randomInteger}")
-        with open('icons/test.png', 'rb+') as file:
+        with open('images/icons/test.png', 'rb+') as file:
             file.write(r.content)
             image = Image.open(file)
             previewIcon = customtkinter.CTkImage(light_image=image, dark_image=image, size=(125, 125))
@@ -379,7 +377,7 @@ class App(customtkinter.CTk):
             keyInfo = {
                 "privateKey": private_key,
                 "passwordHash": password_hash,
-                "iconPath": f"icons/account_icon{count}.png"
+                "iconPath": f"images/usericons/account_icon{count}.png"
             }
 
             data.append(keyInfo)
@@ -388,7 +386,7 @@ class App(customtkinter.CTk):
                 json.dump(data, keys, indent=2)
 
             # Here we copy the icon into another file, to be used later.
-            shutil.copyfile('icons/test.png', f'icons/account_icon{count}.png')
+            shutil.copyfile('images/icons/test.png', f'images/usericons/account_icon{count}.png' )
 
             # Then we return back into our login page.
             self.start()
@@ -526,6 +524,9 @@ class App(customtkinter.CTk):
         self.latest_block_three = customtkinter.CTkFrame(master=latest_blocks_frame, height=40)
         self.latest_block_three.grid(row=2, sticky="nsew", pady=(0, 5))
 
+        # The slider you can choose to select which blockchain you can connect to.
+
+
         # The following code will be about the blocks tabs, this will instantiate the blockchain and will display all
         # the current blocks, we can do this by making it into scrollable frame, and inside we will have frames, that
         # contain the block details, we will order the blocks by the latest at the top of the tab. The individual block
@@ -595,11 +596,11 @@ class App(customtkinter.CTk):
                 transactions_text += json.dumps(transaction.tx, indent=2)
 
             # This is a label containing many of the descriptors of the block.
-            block_label = customtkinter.CTkLabel(master=block_frame, text=f"Block ID: {block.blockid}\n"
-                                                                          f"Previous Block ID: {block.previousblockhash}\n"
-                                                                          f"Merkle Hash: {block.merkle}\n"
-                                                                          f"Block Miner: {block.miner}\n"
-                                                                          f"Block Nonce: {blockNonce}\n",
+            block_label = customtkinter.CTkLabel(master=block_frame, text=f"Block ID:                        {block.blockid}\n"
+                                                                          f"Previous Block ID:      {block.previousblockhash}\n"
+                                                                          f"Merkle Hash:                {block.merkle}\n"
+                                                                          f"Block Miner:                 {block.miner}\n"
+                                                                          f"Block Nonce:                {blockNonce}\n",
                                                  font=customtkinter.CTkFont(size=12, family="Montserrat"), justify="left")
             block_label.grid(row=2, column=0, sticky="nsew")
 
@@ -624,28 +625,28 @@ class App(customtkinter.CTk):
         # The sidebar has 5 user buttons: Home, Settings, CLI, Create Address, Logout
 
         # Home button.
-        home_button_image = Image.open("icons/homeIcon.png")
+        home_button_image = Image.open( "images/icons/homeIcon.png" )
         home_button_img = customtkinter.CTkImage(dark_image=home_button_image, size=(40, 40))
         home_button = customtkinter.CTkButton(master=sidebar_frame, image=home_button_img, width=40, height=40, text="",
                                               fg_color="transparent", hover_color="grey")
         home_button.grid(row=0, sticky="nsew")
 
         # Settings Button
-        settings_button_image = Image.open("icons/settingsIcon.png")
+        settings_button_image = Image.open( "images/icons/settingsIcon.png" )
         settings_button_img = customtkinter.CTkImage(dark_image=settings_button_image, size=(40, 40))
         settings_button = customtkinter.CTkButton(master=sidebar_frame, image=settings_button_img, width=40, height=40,
                                                   text="", fg_color="transparent", hover_color="grey")
         settings_button.grid(row=1, sticky="nsew")
 
         # CLI button
-        CLI_button_image = Image.open("icons/cliIcon.png")
+        CLI_button_image = Image.open( "images/icons/cliIcon.png" )
         CLI_button_img = customtkinter.CTkImage(dark_image=CLI_button_image, size=(40, 40))
         CLI_button = customtkinter.CTkButton(master=sidebar_frame, image=CLI_button_img, width=40, height=40, text="",
                                              fg_color="transparent", hover_color="grey")
         CLI_button.grid(row=2, sticky="nsew")
 
         # Create account button
-        CreateAccount_button_image = Image.open("icons/createUserIcon.png")
+        CreateAccount_button_image = Image.open( "images/icons/createUserIcon.png" )
         CreateAccount_button_img = customtkinter.CTkImage(dark_image=CreateAccount_button_image, size=(40, 40))
         CreateAccount_button = customtkinter.CTkButton(master=sidebar_frame, image=CreateAccount_button_img, width=40,
                                                        height=40, text="", fg_color="transparent", hover_color="grey",
@@ -653,7 +654,7 @@ class App(customtkinter.CTk):
         CreateAccount_button.grid(row=3, sticky="nsew")
 
         # Exit button
-        Exit_button_image = Image.open("icons/logoutIcon.png")
+        Exit_button_image = Image.open( "images/icons/logoutIcon.png" )
         Exit_button_img = customtkinter.CTkImage(dark_image=Exit_button_image, size=(40, 40))
         Exit_button = customtkinter.CTkButton(master=sidebar_frame, image=Exit_button_img, width=40, height=40, text="",
                                               fg_color="transparent", hover_color="grey", command=self.start)

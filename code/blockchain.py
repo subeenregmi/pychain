@@ -187,7 +187,7 @@ class Blockchain:
             return True
 
 def main():
-    test = Blockchain("blockchain.txt")
+    test = Blockchain("blockchains/blockchain.txt")
     for block in test.blocks:
         for transaction in block.transactions:
             print(transaction.txid)

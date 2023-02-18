@@ -2,26 +2,26 @@
   {
     "privateKey": 88503280682484637483865437526980413674782656602183928269717767885005722175743,
     "passwordHash": "f09fe84a13098f58acba05a0130249db633f3d825704b674d206854936ab9494",
-    "iconPath": "icons/account_icon0.png"
+    "iconPath": "images/usericons/account_icon0.png"
   },
   {
     "privateKey": 89087378374928066996584779832736145405031152883344738120259126665128823626781,
     "passwordHash": "f09fe84a13098f58acba05a0130249db633f3d825704b674d206854936ab9494",
-    "iconPath": "icons/account_icon1.png"
+    "iconPath": "images/usericons/account_icon1.png"
   },
   {
     "privateKey": 53837968119310042622866470221019409406974139158930185053968790353639629232646,
     "passwordHash": "45d3273a24b41de64439d38557198f325d6530b19a806091a37be863f75d89fd",
-    "iconPath": "icons/account_icon2.png"
+    "iconPath": "images/usericons/account_icon2.png"
   },
   {
     "privateKey": 3205220050592065135810161577865137473438633273939107791153395310745409245589,
     "passwordHash": "4bb7a8b99609b0b8b1d534694bb1f31f129138a2f2a11f8e8702eedbb792922e",
-    "iconPath": "icons/account_icon3.png"
+    "iconPath": "images/usericons/account_icon3.png"
   },
   {
     "privateKey": 61600521030299392637178927065679559528862118280987329417242007918632428600469,
     "passwordHash": "fc02c2640be2d17db5ebb7b2b1f2d9c029102e4d75b341b4dc4f8b2f501fd149",
-    "iconPath": "icons/account_icon4.png"
+    "iconPath": "images/usericons/account_icon4.png"
   }
 ]

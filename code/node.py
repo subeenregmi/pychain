@@ -714,7 +714,7 @@ class Peer:
                 print(f"<MINER> Block {current_height} has been successfully mined!")
 def main():
 
-    p1 = Peer("testchain.txt", "192.168.0.201", 50000, 50500, 10, 8888)
+    p1 = Peer("blockchains/testchain.txt", "192.168.0.111", 50000, 50500, 10, 8888)
 
     for block in p1.blockchain.blocks:
         print(block.height)
