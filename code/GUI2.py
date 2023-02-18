@@ -1,3 +1,5 @@
+import socket
+
 import customtkinter
 import tkinter
 import json
@@ -9,6 +11,7 @@ from PIL import Image
 import shutil
 from node import Peer
 from datetime import datetime
+import os
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -472,11 +475,29 @@ class App(customtkinter.CTk):
                                               height=75, hover_color="grey", command=self.Login)
         Icon_button.grid(row=0, column=1, sticky="e", padx=10, pady=10)
 
+        # The option menu that allows you to select a blockchain, and to connect on that, there will also be a button
+        # under this menu, to connect and then disable the option menu
+
+        # Getting all the file names in the /blockchains directory
+        blockchains = os.listdir("blockchains/")
+
+        self.blockchain_selector = customtkinter.CTkOptionMenu(master=home, values=blockchains, fg_color="#533FD3",
+                                                               button_color="#2c1346", button_hover_color="#2c1346",
+                                                               font=customtkinter.CTkFont(size=14, family="Montserrat"))
+        self.blockchain_selector.grid(row=1, column=1, sticky="se", padx=10, pady=(5, 0))
+        self.select_blockchain_button = customtkinter.CTkButton(master=home, text="Connect", fg_color="#533fd3",
+                                                           hover_color="#2c1346",
+                                                           font=customtkinter.CTkFont(size=14, family="Montserrat"),
+                                                           command=self.createNode)
+        self.select_blockchain_button.grid(row=2, column=1, sticky="ne", pady=5, padx=10)
+
+        if self.peer:
+            self.blockchain_selector.configure(state="disabled")
+            self.select_blockchain_button.configure(state="disabled")
         # A transactions button will also be on the home menu, below the button will be the three latest transactions,
         # but you can also click the button to go to the transaction tab
-        transaction_label = customtkinter.CTkButton(master=home, text="Latest Transactions:", fg_color="transparent",
-                                                    font=customtkinter.CTkFont(size=20, family="Montserrat"),
-                                                    hover_color="grey")
+        transaction_label = customtkinter.CTkLabel(master=home, text="Latest Transactions:", fg_color="transparent",
+                                                   font=customtkinter.CTkFont(size=20, family="Montserrat"))
         transaction_label.grid(row=1, column=0, sticky="nw", padx=5)
 
         # There will also be a frame for the three latest transactions, just below the transaction button
@@ -501,9 +522,8 @@ class App(customtkinter.CTk):
         self.latest_transaction_three.grid(row=2, sticky="nsew")
 
         # A 'Latest Blocks' button, once clicked will go to the blocks tab.
-        latest_blocks_label = customtkinter.CTkButton(master=home, text="Latest Blocks:", fg_color="transparent",
-                                                      font=customtkinter.CTkFont(size=20, family="Montserrat"),
-                                                      hover_color="grey")
+        latest_blocks_label = customtkinter.CTkLabel(master=home, text="Latest Blocks:", fg_color="transparent",
+                                                     font=customtkinter.CTkFont(size=20, family="Montserrat"))
         latest_blocks_label.grid(row=3, column=0, sticky="nw", padx=5, pady=(5, 0))
 
         # There will be a frame holding tha last three blocks. In each frame we will have the last three blocks. That
@@ -523,9 +543,6 @@ class App(customtkinter.CTk):
 
         self.latest_block_three = customtkinter.CTkFrame(master=latest_blocks_frame, height=40)
         self.latest_block_three.grid(row=2, sticky="nsew", pady=(0, 5))
-
-        # The slider you can choose to select which blockchain you can connect to.
-
 
         # The following code will be about the blocks tabs, this will instantiate the blockchain and will display all
         # the current blocks, we can do this by making it into scrollable frame, and inside we will have frames, that
@@ -554,73 +571,75 @@ class App(customtkinter.CTk):
 
         # Here we are going through our list of blocks and then adding them to the respective row, this way we can put
         # the blocks in order.
-        count = len(self.peer.blockchain.blocks)
 
-        for block in self.peer.blockchain.blocks:
-            # We create a frame for each of these blocks, inside each frame we will put a button, and the miner who
-            # mined it
+        if self.peer:
+            count = len(self.peer.blockchain.blocks)
 
-            # The frame grid configuration
-            block_frame = customtkinter.CTkFrame(master=blocks_frame, fg_color="black")
-            block_frame.grid(row=count, padx=5, pady=5, sticky="nsew")
-            block_frame.grid_rowconfigure((0, 1, 2, 3, 4, 5), weight=1)
-            block_frame.grid_rowconfigure(6, weight=0)
-            block_frame.grid_columnconfigure(0, weight=1)
-            block_frame.grid_columnconfigure(1, weight=0)
+            for block in self.peer.blockchain.blocks:
+                # We create a frame for each of these blocks, inside each frame we will put a button, and the miner who
+                # mined it
 
-            # We decrement count at every block to go from the end of the list to the start of the list
-            count -= 1
+                # The frame grid configuration
+                block_frame = customtkinter.CTkFrame(master=blocks_frame, fg_color="black")
+                block_frame.grid(row=count, padx=5, pady=5, sticky="nsew")
+                block_frame.grid_rowconfigure((0, 1, 2, 3, 4, 5), weight=1)
+                block_frame.grid_rowconfigure(6, weight=0)
+                block_frame.grid_columnconfigure(0, weight=1)
+                block_frame.grid_columnconfigure(1, weight=0)
 
-            # We have a label that says the block height for each block
-            block_height_label = customtkinter.CTkLabel(master=block_frame, text=f"Block Height: {block.height}",
-                                                        fg_color="transparent",
-                                                        font=customtkinter.CTkFont(size=20, family="Montserrat", weight="bold"))
-            block_height_label.grid(row=0, column=0, sticky="nw", padx=10, pady=5)
+                # We decrement count at every block to go from the end of the list to the start of the list
+                count -= 1
 
-            # We have a label that says 'Block Details' this is for clarity.
-            block_details_label = customtkinter.CTkLabel(master=block_frame, text="Block Details",
-                                                         fg_color="transparent",
-                                                         font=customtkinter.CTkFont(size=15, family="Montserrat",
-                                                                                    weight="bold"))
-            block_details_label.grid(row=1, column=0, sticky="w", padx=10, pady=5)
+                # We have a label that says the block height for each block
+                block_height_label = customtkinter.CTkLabel(master=block_frame, text=f"Block Height: {block.height}",
+                                                            fg_color="transparent",
+                                                            font=customtkinter.CTkFont(size=20, family="Montserrat", weight="bold"))
+                block_height_label.grid(row=0, column=0, sticky="nw", padx=10, pady=5)
 
-            # Here we turn the blocks block-time into a date format, turn the nonce into a readable format by giving it
-            # commas, and we are also formatting the transactions into a readable format
-            date = int(block.blocktime)
-            date = datetime.utcfromtimestamp(date).strftime('%Y-%m-%d %H:%M:%S')
-            blockNonce = int(block.nonce)
-            blockNonce = "{:,}".format(blockNonce)
-            transactions_text = ""
-            for transaction in block.transactions:
-                print(json.dumps(transaction.tx, indent=3))
-                transactions_text += json.dumps(transaction.tx, indent=2)
+                # We have a label that says 'Block Details' this is for clarity.
+                block_details_label = customtkinter.CTkLabel(master=block_frame, text="Block Details",
+                                                             fg_color="transparent",
+                                                             font=customtkinter.CTkFont(size=15, family="Montserrat",
+                                                                                        weight="bold"))
+                block_details_label.grid(row=1, column=0, sticky="w", padx=10, pady=5)
 
-            # This is a label containing many of the descriptors of the block.
-            block_label = customtkinter.CTkLabel(master=block_frame, text=f"Block ID:                        {block.blockid}\n"
-                                                                          f"Previous Block ID:      {block.previousblockhash}\n"
-                                                                          f"Merkle Hash:                {block.merkle}\n"
-                                                                          f"Block Miner:                 {block.miner}\n"
-                                                                          f"Block Nonce:                {blockNonce}\n",
-                                                 font=customtkinter.CTkFont(size=12, family="Montserrat"), justify="left")
-            block_label.grid(row=2, column=0, sticky="nsew")
+                # Here we turn the blocks block-time into a date format, turn the nonce into a readable format by giving it
+                # commas, and we are also formatting the transactions into a readable format
+                date = int(block.blocktime)
+                date = datetime.utcfromtimestamp(date).strftime('%Y-%m-%d %H:%M:%S')
+                blockNonce = int(block.nonce)
+                blockNonce = "{:,}".format(blockNonce)
+                transactions_text = ""
+                for transaction in block.transactions:
+                    print(json.dumps(transaction.tx, indent=3))
+                    transactions_text += json.dumps(transaction.tx, indent=2)
 
-            # This is the label to indicate the next texts are transactions, this is used for clarity
-            transaction_details_label = customtkinter.CTkLabel(master=block_frame, text="Transactions",
-                                                               font=customtkinter.CTkFont(size=15, family="Montserrat",
-                                                                                          weight="bold"))
-            transaction_details_label.grid(row=3, column=0, sticky="w", padx=10, pady=5)
+                # This is a label containing many of the descriptors of the block.
+                block_label = customtkinter.CTkLabel(master=block_frame, text=f"Block ID:                        {block.blockid}\n"
+                                                                              f"Previous Block ID:      {block.previousblockhash}\n"
+                                                                              f"Merkle Hash:                {block.merkle}\n"
+                                                                              f"Block Miner:                 {block.miner}\n"
+                                                                              f"Block Nonce:                {blockNonce}\n",
+                                                     font=customtkinter.CTkFont(size=12, family="Montserrat"), justify="left")
+                block_label.grid(row=2, column=0, sticky="nsew")
 
-            # This is the label that states all the transactions in their dictionary format.
-            transactions_label = customtkinter.CTkLabel(master=block_frame, text=transactions_text,
-                                                        font=customtkinter.CTkFont(size=12, family="Montserrat"),
-                                                        anchor="center", justify="left")
-            transactions_label.grid(row=4, column=0, sticky="nsew")
+                # This is the label to indicate the next texts are transactions, this is used for clarity
+                transaction_details_label = customtkinter.CTkLabel(master=block_frame, text="Transactions",
+                                                                   font=customtkinter.CTkFont(size=15, family="Montserrat",
+                                                                                              weight="bold"))
+                transaction_details_label.grid(row=3, column=0, sticky="w", padx=10, pady=5)
 
-            # This is the final label which indicates the time the block was mined.
-            block_time_label = customtkinter.CTkLabel(master=block_frame, text=date,
-                                                      font=customtkinter.CTkFont(size=14, family="Montserrat",
-                                                                                 weight="bold"))
-            block_time_label.grid(row=5, sticky="nsew")
+                # This is the label that states all the transactions in their dictionary format.
+                transactions_label = customtkinter.CTkLabel(master=block_frame, text=transactions_text,
+                                                            font=customtkinter.CTkFont(size=12, family="Montserrat"),
+                                                            anchor="center", justify="left")
+                transactions_label.grid(row=4, column=0, sticky="nsew")
+
+                # This is the final label which indicates the time the block was mined.
+                block_time_label = customtkinter.CTkLabel(master=block_frame, text=date,
+                                                          font=customtkinter.CTkFont(size=14, family="Montserrat",
+                                                                                     weight="bold"))
+                block_time_label.grid(row=5, sticky="nsew")
 
         # The sidebar has 5 user buttons: Home, Settings, CLI, Create Address, Logout
 
@@ -628,7 +647,7 @@ class App(customtkinter.CTk):
         home_button_image = Image.open( "images/icons/homeIcon.png" )
         home_button_img = customtkinter.CTkImage(dark_image=home_button_image, size=(40, 40))
         home_button = customtkinter.CTkButton(master=sidebar_frame, image=home_button_img, width=40, height=40, text="",
-                                              fg_color="transparent", hover_color="grey")
+                                              fg_color="transparent", hover_color="grey", command=self.gui)
         home_button.grid(row=0, sticky="nsew")
 
         # Settings Button
@@ -660,6 +679,14 @@ class App(customtkinter.CTk):
                                               fg_color="transparent", hover_color="grey", command=self.start)
         Exit_button.grid(row=4, sticky="nsew")
 
+    def createNode(self):
+        blockchainfile = self.blockchain_selector.get()
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        self.peer = Peer(f"blockchains/{blockchainfile}", ip, 50000, 50500, 10, self.account['privateKey'])
+        self.select_blockchain_button.configure(state="disabled")
+        self.blockchain_selector.configure(state="disabled")
 
 if __name__ == "__main__":
     app = App()

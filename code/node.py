@@ -473,7 +473,7 @@ class Peer:
             if peer is False:
                 print(f"<TCP SEND BLOCK> IP does not correlate to a valid peer.")
                 return False
-            # we need to try and get the block from our blockchain.txt file, as if we specify a height that is too big
+            # we need to try and get the block from our pychain.txt file, as if we specify a height that is too big
             # the block may not exist
             try:
                 raw_block_at_height = self.blockchain.blocks[height].raw
