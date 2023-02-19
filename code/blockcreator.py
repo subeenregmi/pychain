@@ -29,6 +29,7 @@ class Block():
         self.raw = ""
         self.miner = ""
         self.blockchainfile = blockchainfile
+        self.mining = True
 
 
         # This just adds the transactions to the block
@@ -65,6 +66,8 @@ class Block():
         while True:
             # We calculate random hashes by incrementing a nonce value, we do this to try and get a hash value which is
             # less than the difficulty.
+            if self.mining is False:
+                break
 
             self.nonce += 1
             tobehashed2 = str(self.nonce) + tobehashed

@@ -1,0 +1,8 @@
+{
+  "blockchainfile": "",
+  "host":"",
+  "portMin":"",
+  "portMax":"",
+  "maxPeers":"",
+  "privateKey":""
+}

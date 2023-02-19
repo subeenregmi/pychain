@@ -22,7 +22,9 @@ class App(customtkinter.CTk):
         super().__init__()
 
         # We call a method as users may want to go back
-        self.account=None
+        self.count = None
+        self.account = None
+        self.account_pubkey = None
         self.peer = None
         self.start()
 
@@ -191,6 +193,7 @@ class App(customtkinter.CTk):
         hash_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
         if account['passwordHash'] == hash_password:
             self.account = account
+            self.account_pubkey = address.ECmultiplication(self.account['privateKey'], address.Gx, address.Gy)
             self.gui()
 
     def CreateNewAccount(self):
@@ -684,6 +687,37 @@ class App(customtkinter.CTk):
                                                                                      weight="bold"))
                 block_time_label.grid(row=5, sticky="nsew")
 
+        # This is the code for the mining tabview, this will allow the user to mine blocks onto the blockchain. We can
+        # start with a button, that once clicked starts the mining process. This will create a thread that mines the
+        # currency we can also put blocks that they have mined.
+
+        # The mine tabs grid configuration
+        mine.grid_rowconfigure((0, 1), weight=1)
+        mine.grid_rowconfigure(2, weight=3)
+        mine.grid_rowconfigure(3, weight=0)
+        mine.grid_columnconfigure((0, 1, 2), weight=1)
+        mine.grid_columnconfigure(3, weight=0)
+
+        # The title of the tab.
+        mine_label = customtkinter.CTkLabel(master=mine, text="Mine Pycoins by clicking the mine button, this will "
+                                                              "try to find new blocks! \nMining rewards are 100 "
+                                                              "Pycoins.",
+                                            font=customtkinter.CTkFont(size=20, family="Montserrat"), wraplength=1000)
+
+        mine_label.grid(row=0, column=0, sticky="nsew", columnspan=3)
+
+        # Button to mine pycoins.
+        mine_button = customtkinter.CTkButton(master=mine, text="Mine", font=customtkinter.CTkFont(size=18,
+                                                                                                   family="Montserrat"),
+                                              fg_color="#533fd3", hover_color="#2c1346", width=125, height=75,
+                                              command=self.mineBlocks)
+
+        mine_button.grid(row=1, column=1, sticky="n")
+
+        # Stackable frame for blocks that have been mined by user.
+        blocks_mined = customtkinter.CTkScrollableFrame(master=mine)
+        blocks_mined.grid(row=2, column=0, sticky="nsew", columnspan=3, padx=20, pady=(0, 20))
+
         # The sidebar has 5 user buttons: Home, Settings, CLI, Create Address, Logout
 
         # Home button.
@@ -799,7 +833,33 @@ class App(customtkinter.CTk):
                                                  font=customtkinter.CTkFont(size=14, family="Montserrat"))
             error_label.pack(anchor="center")
 
+    def mineBlocks(self):
+        # This function will create two threads: one time mine a block and one other to scan for blocks that
+        # have been mined with the specific user
+        count(self.peer)
 
-if __name__ == "__main__":
+    def blocksListen(self):
+        # This function will look for blocks that have been mined by the user.
+        pyaddress = address.createAddress(self.account_pubkey)
+        mined_blocks = []
+
+        while True:
+            for block in self.peer.blockchain.blocks:
+                if block.miner == pyaddress:
+                    if block not in mined_blocks:
+                       mined_blocks.append(block)
+
+def start():
     app = App()
     app.mainloop()
+
+def count(peer):
+    peer.mining = True
+    t1 = threading.Thread(target=peer.startMine)
+    t1.start()
+
+
+
+if __name__ == "__main__":
+    thread = threading.Thread(target=start)
+    thread.start()

@@ -32,6 +32,7 @@ class Peer:
         # We need a mempool, to hold transactions before mining, we need to access the block
         # We also need to create a server socket on the udp port and for that to always listen
         # For now we need to make nodes just talk to create a connection and send data.
+        self.miningBlock = None
         self.host = host
         self.maxpeers = maxPeers
         self.blockchain = Blockchain(blockchainfile)
@@ -672,7 +673,7 @@ class Peer:
             ipsocket.send(message)
 
     def sendPingUDP(self, ip):
-        # This function is used to send a ping to a the UDP server socket, this way we can establish if a client/host is
+        # This function is used to send a ping to the UDP server socket, this way we can establish if a client/host is
         # alive.
         message = "ping"
         message = message.encode('utf-8')
@@ -683,7 +684,10 @@ class Peer:
         # will continue mine. This function is also responsible to update the difficulty and add to the blockchain. Gas
         # fees will be calculated as the discrepancy for the total sent to the total input in, and this will be added
         # onto the reward: this seems too hard as
-        while self.mining:
+        while True:
+
+            if self.mining is False:
+                break
 
             # So as the difficulty is calculated based on the time difference between of the last two blocks, we need
             # to hard set the difficulty and the previous block id.
@@ -736,13 +740,13 @@ class Peer:
             print(f"CurrentHeight = {current_height}")
             print(f"CurrentDifficulty = {current_difficulty}")
             print(f"prevBlockId = {previous_block_hash}")
-            miningBlock = Block(self.blockchainfile, current_height, current_transactions, current_difficulty, previous_block_hash)
-            miningBlock.mine(self.publickey, fee)
+            self.miningBlock = Block(self.blockchainfile, current_height, current_transactions, current_difficulty, previous_block_hash)
+            self.miningBlock.mine(self.publickey, fee)
 
             # Check if any blocks have been recently mined by anyone else before our block has been mined.
             recentlyMinedBlock = False
             for block in self.recentlyAddedBlocks:
-                if miningBlock.height == block.height:
+                if self.miningBlock.height == block.height:
                     # A block has been mined before ours, so we don't keep our block we just mined.
                     recentlyMinedBlock = True
                     self.recentlyAddedBlocks.remove(block)
@@ -753,8 +757,8 @@ class Peer:
             else:
                 # After successfully mining we need to add the blocks to our blockchain and increment our
                 # blockchains height
-                miningBlock.addBlockToChain()
-                self.blockchain.blocks.append(miningBlock)
+                self.miningBlock.addBlockToChain()
+                self.blockchain.blocks.append(self.miningBlock)
                 self.blockchain.height += 1
                 self.sendBlock(current_height)
                 print(f"<MINER> Block {current_height} has been successfully mined!")
@@ -764,5 +768,6 @@ def main():
 
     for block in p1.blockchain.blocks:
         print(block.height)
+
 if __name__ == "__main__":
     main()
