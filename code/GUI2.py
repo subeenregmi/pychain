@@ -1,8 +1,6 @@
 import socket
 import threading
-
 import customtkinter
-import tkinter
 import json
 import random
 import address
@@ -13,7 +11,9 @@ import shutil
 from node import Peer
 from datetime import datetime
 import os
+import subprocess, sys
 
+# This sets the general color theme to be dark
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
 
@@ -21,11 +21,13 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
-        # We call a method as users may want to go back
+        # Here are some variables that we want to use throughout our program
         self.count = None
         self.account = None
         self.account_pubkey = None
         self.peer = None
+
+        # We call a method as users may want to go back
         self.start()
 
     def start(self):
@@ -33,8 +35,8 @@ class App(customtkinter.CTk):
         # This destroys all previous widgets if switching to the start menu.
         for widget in self.winfo_children():
             widget.destroy()
-        self.grid_rowconfigure((0, 1, 2, 3), weight=0)
-        self.grid_columnconfigure((0, 1, 2, 3), weight=0)
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_columnconfigure(0, weight=0)
 
         # Settings for the window
         self.title("Pychain")
@@ -42,9 +44,9 @@ class App(customtkinter.CTk):
         self.resizable(False, False)
 
         # Settings for a 4x1 grid
-        self.grid_rowconfigure((0), weight=2)
-        self.grid_rowconfigure((1,2), weight=2)
-        self.grid_rowconfigure((3), weight=1)
+        self.grid_rowconfigure(0, weight=2)
+        self.grid_rowconfigure((1, 2), weight=2)
+        self.grid_rowconfigure(3, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         # Settings to create a frame in the first cell
@@ -73,17 +75,17 @@ class App(customtkinter.CTk):
         CreateButton.grid(row=2, column=0, padx=0, pady=0)
 
         # Settings for the bottom tile
-        bottomTitle = customtkinter.CTkLabel(master=self, height=14, anchor="s", corner_radius=0, text="By Subeen Regmi", text_color="grey")
+        bottomTitle = customtkinter.CTkLabel(master=self, height=14, anchor="s", corner_radius=0,
+                                             text="By Subeen Regmi", text_color="grey")
         bottomTitle.grid(row=3)
 
     def Login(self):
-        # This is going to bring up the login page if the keys have been loaded in successfully.
+
+        # This is trying to open a 'keys.json' file
         try:
-            f = open("keys.json")
-            data = json.load(f)
-            print("LOADED")
-            loaded = True
-            f.close()
+            with open('json/keys.json') as file:
+                data = json.load(file)
+                loaded = True
 
         except FileNotFoundError:
             # Settings for window that pops up when the user does not have any keys stored in 'keys.json'
@@ -92,7 +94,8 @@ class App(customtkinter.CTk):
             window.resizable(False, False)
 
             # Label inside the window
-            label = customtkinter.CTkLabel(master=window, text="No account found!\n\nCreate a new account", anchor="center")
+            label = customtkinter.CTkLabel(master=window, text="No account found!\n\nCreate a new account",
+                                           anchor="center")
             label.pack(padx=20, pady=20)
 
             # Greying out the login button after login fails
@@ -100,17 +103,19 @@ class App(customtkinter.CTk):
             loaded = False
 
         if loaded:
+
             # First we need to destroy all the previous widgets to clear the screen
             for widget in self.winfo_children():
                 widget.destroy()
-            self.grid_rowconfigure( (0, 1, 2, 3), weight=0 )
-            self.grid_columnconfigure( (0, 1, 2, 3), weight=0 )
+            self.grid_rowconfigure((0, 1, 2, 3), weight=0)
+            self.grid_columnconfigure((0, 1, 2, 3), weight=0)
+
             # Geometry for the new window.
             self.title("Pycharm Login")
             self.geometry("1200x700")
             self.resizable(False, False)
 
-            # We need to create a login page that contains a slider that displays the image and the pychain address
+            # We need to create a login page that contains a button that displays the image and the pychain address
             # and the image from the path, and then an entry for the password. If the password matches the hash then
             # we can go to the next page, we will also need a slider for multiple accounts, and an enter button.
 
@@ -136,7 +141,7 @@ class App(customtkinter.CTk):
             frame.grid_rowconfigure(0, weight=4)
             frame.grid_rowconfigure(1, weight=1)
 
-            # The button has the image of the icon, and once clicked cycles through the accounts.
+            # The button has the image of the icon, and once clicked cycles through all the accounts.
             self.icon_button = customtkinter.CTkButton(master=frame, image=Icon, fg_color="transparent", text="",
                                                        hover_color="grey", command=self.switchAccounts)
             self.icon_button.grid(row=0, padx=10, pady=10)
@@ -148,10 +153,10 @@ class App(customtkinter.CTk):
 
             # This is the entry that holds the password, this will be hashed and checked in order for a successful login
             self.password_entry = customtkinter.CTkEntry(master=self, placeholder_text="Password",
-                                                    font=customtkinter.CTkFont(size=30))
+                                                         font=customtkinter.CTkFont(size=30))
             self.password_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
 
-            login_image = Image.open( 'images/icons/loginIcon.png' )
+            login_image = Image.open('images/icons/loginIcon.png')
             Login_icon = customtkinter.CTkImage(dark_image=login_image, size=(35, 35))
 
             # This is the button to log in to the account.
@@ -163,7 +168,7 @@ class App(customtkinter.CTk):
         # This function handles the account cycling mechanism in the login screen.
 
         # We load 'keys.json' into a format we can handle.
-        with open('keys.json') as file:
+        with open('json/keys.json') as file:
             data = json.load(file)
 
         # We increment the account index by one and mod it with the amount of the keys, thus will get us the index of
@@ -183,11 +188,11 @@ class App(customtkinter.CTk):
         # This function is used in the login screen, to hash the password entered and if the password hash correlates
         # to the one saved then we go onto the actual GUI.
 
-        # We are loading the keys into a python object.
-        with open('keys.json') as keys:
+        # We are loading the keys into a python dictionary.
+        with open('json/keys.json') as keys:
             data = json.load(keys)
 
-        # If the password's hash matches with the stored hash then we can move onto the gui
+        # If the password's hash matches with the stored hash then we can move onto the gui.
         account = data[self.account_index]
         password = self.password_entry.get()
         hash_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
@@ -242,7 +247,7 @@ class App(customtkinter.CTk):
 
         # Frame for the next section requires, the private address view, the public address view, the pychain address
         # view and the randomly generated image, these need to be in a 3x2, with more weight on the left column and the
-        # right column to be spanned to one column
+        # right column to be spanned down to one row.
 
         frameAddress = customtkinter.CTkFrame(master=self, fg_color="transparent")
         frameAddress.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
@@ -253,7 +258,8 @@ class App(customtkinter.CTk):
         frameAddress.grid_columnconfigure(1, weight=2)
 
         # Some text to describe the icon
-        text = customtkinter.CTkLabel(master=frameAddress, text="This is an image generated based on your private key!", wraplength=125)
+        text = customtkinter.CTkLabel(master=frameAddress, text="This is an image generated based on your private key!",
+                                      wraplength=125)
         text.grid(row=0, column=1)
 
         # Label for the preview icon to go into
@@ -275,7 +281,7 @@ class App(customtkinter.CTk):
         frame2.grid_columnconfigure(0, weight=1)
         frame2.grid_columnconfigure(1, weight=3)
 
-        # THis is the frame for the Pychain Address
+        # This is the frame for the Pychain Address
         frame3 = customtkinter.CTkFrame(master=frameAddress, border_color="#533FD3", border_width=3)
         frame3.grid(row=2, column=0, sticky="nsew", pady=5)
         frame3.grid_rowconfigure(0, weight=1)
@@ -283,26 +289,32 @@ class App(customtkinter.CTk):
         frame3.grid_columnconfigure(1, weight=3)
 
         # This is the text for the Private Key
-        text1 = customtkinter.CTkLabel(master=frame1, text="Private Key :", font=customtkinter.CTkFont(size=15, weight="bold"))
+        text1 = customtkinter.CTkLabel(master=frame1, text="Private Key :",
+                                       font=customtkinter.CTkFont(size=15, weight="bold"))
         text1.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+
         self.text1k = customtkinter.CTkLabel(master=frame1, text="", anchor="center", wraplength=400)
         self.text1k.grid(row=0, column=1, padx=5, pady=5)
 
         # This is the text for the Public Key
-        text2 = customtkinter.CTkLabel(master=frame2, text="Public Key :", font=customtkinter.CTkFont(size=15, weight="bold"))
+        text2 = customtkinter.CTkLabel(master=frame2, text="Public Key :",
+                                       font=customtkinter.CTkFont(size=15, weight="bold"))
         text2.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+
         self.text2k = customtkinter.CTkLabel(master=frame2, text="", wraplength=610, anchor="center")
         self.text2k.grid(row=0, column=1, padx=5, pady=5)
 
         # This is the text for the Pychain Address
-        text3 = customtkinter.CTkLabel(master=frame3, text="Pychain Address :", font=customtkinter.CTkFont(size=15, weight="bold"))
+        text3 = customtkinter.CTkLabel(master=frame3, text="Pychain Address :",
+                                       font=customtkinter.CTkFont(size=15, weight="bold"))
         text3.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+
         self.text3k = customtkinter.CTkLabel(master=frame3, text="")
         self.text3k.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
         # Frame that stores entry for password and the save to json button
         frame4 = customtkinter.CTkFrame(master=self, border_color="grey")
-        frame4.grid(row=2, column=0, sticky="nesw", padx=10, pady=(0,10))
+        frame4.grid(row=2, column=0, sticky="nsew", padx=10, pady=(0, 10))
 
         # Frame Configuration
         frame4.grid_rowconfigure(0, weight=1)
@@ -340,13 +352,13 @@ class App(customtkinter.CTk):
             file.write(r.content)
             image = Image.open(file)
             previewIcon = customtkinter.CTkImage(light_image=image, dark_image=image, size=(125, 125))
-            self.previewIcon.configure(image=previewIcon,)
+            self.previewIcon.configure(image=previewIcon)
 
     def saveAddress(self):
         # This function will get the private key, and the hash of the password. Then will store it into as a json file,
         # named 'keys.json'.
 
-        # We are getting the data from the labels (textboxes) and the entry (inputs)
+        # We are getting the data from the labels and the entry
         private_key = self.text1k.cget("text")
         password = self.passwordEntry.get()
         password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
@@ -361,23 +373,26 @@ class App(customtkinter.CTk):
             # These conditional statements are to check that all appropriate fields have been filled properly. If either
             # one is not filled when trying to save a new window pops up and then indicates the problem.
             if password == '' and private_key != '':
-                label = customtkinter.CTkLabel(master=window, text="Password has not been entered.", anchor="center", wraplength=150)
+                label = customtkinter.CTkLabel(master=window, text="Password has not been entered.", anchor="center",
+                                               wraplength=150)
                 label.pack(padx=20, pady=20)
 
             if password != '' and private_key == '':
-                label = customtkinter.CTkLabel(master=window, text="Private Key has not been generated.", anchor="center", wraplength=150)
+                label = customtkinter.CTkLabel(master=window, text="Private Key has not been generated.",
+                                               anchor="center", wraplength=150)
                 label.pack(padx=20, pady=20)
 
             if password == '' and private_key == '':
-                label = customtkinter.CTkLabel(master=window, text="Password and Private Key fields both are empty.", anchor="center", wraplength=150)
+                label = customtkinter.CTkLabel(master=window, text="Password and Private Key fields both are empty.",
+                                               anchor="center", wraplength=150)
                 label.pack(padx=20, pady=20)
 
         else:
-            # Here we store data about or keys, the password hash and the icon created.
+            # Here we store the key, the password hash and the icon created.
             # We open the keys file, load it into an object, store the data, and then append that into the object and
             # then dump it into a json object.
 
-            with open('keys.json') as keys:
+            with open('json/keys.json') as keys:
                 data = json.load(keys)
 
             count = len(data)
@@ -389,7 +404,7 @@ class App(customtkinter.CTk):
 
             data.append(keyInfo)
 
-            with open('keys.json', 'w') as keys:
+            with open('json/keys.json', 'w') as keys:
                 json.dump(data, keys, indent=2)
 
             # Here we copy the icon into another file, to be used later.
@@ -463,9 +478,11 @@ class App(customtkinter.CTk):
         welcomeFrame.grid_rowconfigure((0, 1), weight=1)
         welcomeFrame.grid_rowconfigure(2, weight=0)
         welcomeFrame.grid_columnconfigure(1, weight=0)
+
         welcome_label = customtkinter.CTkLabel(master=welcomeFrame, text="Welcome To Pychain!",
                                                font=customtkinter.CTkFont(size=40, family="Montserrat", weight="bold"))
         welcome_label.grid(row=0, column=0, sticky="nw", padx=5, pady=(5, 0))
+
         self.balance_label = customtkinter.CTkLabel(master=welcomeFrame, text="Balance: ",
                                                     font=customtkinter.CTkFont(size=20, family="Montserrat"))
         self.balance_label.grid(row=1, column=0, sticky="nw", padx=10)
@@ -475,13 +492,13 @@ class App(customtkinter.CTk):
         path_to_image = self.account["iconPath"]
         Icon_img = Image.open(path_to_image)
         Icon = customtkinter.CTkImage(dark_image=Icon_img, size=(125, 125))
+
         Icon_button = customtkinter.CTkButton(master=home, image=Icon, fg_color="transparent", text="", width=75,
                                               height=75, hover_color="grey", command=self.Login)
         Icon_button.grid(row=0, column=1, sticky="e", padx=10, pady=10)
 
         # The option menu that allows you to select a blockchain, and to connect on that, there will also be a button
         # under this menu, to connect and then disable the option menu
-
         # Getting all the file names in the /blockchains directory
         blockchains = os.listdir("blockchains/")
 
@@ -489,15 +506,17 @@ class App(customtkinter.CTk):
                                                                button_color="#2c1346", button_hover_color="#2c1346",
                                                                font=customtkinter.CTkFont(size=14, family="Montserrat"))
         self.blockchain_selector.grid(row=1, column=1, sticky="se", padx=10, pady=(5, 0))
+
         self.select_blockchain_button = customtkinter.CTkButton(master=home, text="Connect", fg_color="#533fd3",
-                                                           hover_color="#2c1346",
-                                                           font=customtkinter.CTkFont(size=14, family="Montserrat"),
-                                                           command=self.createNode)
+                                                                hover_color="#2c1346",
+                                                                font=customtkinter.CTkFont(size=14, family="Montserrat"),
+                                                                command=self.createNode)
         self.select_blockchain_button.grid(row=2, column=1, sticky="ne", pady=5, padx=10)
 
         if self.peer:
             self.blockchain_selector.configure(state="disabled")
             self.select_blockchain_button.configure(state="disabled")
+
         # A transactions button will also be on the home menu, below the button will be the three latest transactions,
         # but you can also click the button to go to the transaction tab
         transaction_label = customtkinter.CTkLabel(master=home, text="Latest Transactions:", fg_color="transparent",
@@ -551,41 +570,47 @@ class App(customtkinter.CTk):
         # The following code will be about the connect tab this is where you enter an IP address and then trying to
         # connect to an IP, once the ip connection has been made, we can add the peer ip to a json file.
 
+        # The connect tab grid configuration
         connect.grid_rowconfigure((0, 1, 2, 3), weight=19)
         connect.grid_rowconfigure(1, weight=1)
         connect.grid_rowconfigure(4, weight=0)
         connect.grid_columnconfigure((0, 1), weight=1)
         connect.grid_columnconfigure(2, weight=0)
 
+        # Some labels to describe the process of connecting.
         connect_label = customtkinter.CTkLabel(master=connect, text="Type in a IP address, and click connect a pop up"
                                                                     " should appear after a successful connection.",
                                                font=customtkinter.CTkFont(size=18, family="Montserrat"))
         connect_label.grid(row=0, column=0, columnspan=2)
 
         connect_label_details = customtkinter.CTkLabel(master=connect, text="After clicking the button to connect, "
-                                                                            "the app may be unresponsive for around one "
-                                                                            "minute, please give it time to connect to "
-                                                                            "a peer, if the connection is unsuccessful a"
-                                                                            "pop should appear.",
+                                                                            "the app may be unresponsive for around one"
+                                                                            " minute, please give it time to connect to"
+                                                                            " a peer, if the connection is unsuccessful"
+                                                                            " a pop should appear.",
                                                        font=customtkinter.CTkFont(size=14, family="Montserrat"),
                                                        wraplength=400, justify="left")
         connect_label_details.grid(row=1, column=0, sticky="s")
 
+        # The connect entry where you type an ip address.
         self.connect_entry = customtkinter.CTkEntry(master=connect, placeholder_text="IP Address",
-                                               font=customtkinter.CTkFont(size=20, family="Montserrat"),
-                                               height=40, width=170)
+                                                    font=customtkinter.CTkFont(size=20, family="Montserrat"),
+                                                    height=40, width=170)
         self.connect_entry.grid(row=2, column=0, padx=20, sticky="s", pady=50)
 
+        # The connect button which connects to the ip typed in the entry
         connect_button = customtkinter.CTkButton(master=connect, text="Connect", fg_color="#533fd3",
                                                  hover_color="#2c1346",
                                                  font=customtkinter.CTkFont(size=20, family="Montserrat"),
                                                  command=self.connectToPeer)
         connect_button.grid(row=3, column=0, sticky="n", padx=30)
 
+        # Label for active connections
         connections_label = customtkinter.CTkLabel(master=connect, text="Active Connections:",
                                                    font=customtkinter.CTkFont(size=20, family="Montserrat"))
         connections_label.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
 
+        # Scrollable frame for all active connections
         self.connections_frame = customtkinter.CTkScrollableFrame(master=connect)
         self.connections_frame.grid(row=2, column=1, rowspan=2, sticky="nsew", padx=10, pady=10)
         self.connections_frame.grid_columnconfigure(0, weight=1)
@@ -640,7 +665,8 @@ class App(customtkinter.CTk):
                 # We have a label that says the block height for each block
                 block_height_label = customtkinter.CTkLabel(master=block_frame, text=f"Block Height: {block.height}",
                                                             fg_color="transparent",
-                                                            font=customtkinter.CTkFont(size=20, family="Montserrat", weight="bold"))
+                                                            font=customtkinter.CTkFont(size=20, family="Montserrat",
+                                                                                       weight="bold"))
                 block_height_label.grid(row=0, column=0, sticky="nw", padx=10, pady=5)
 
                 # We have a label that says 'Block Details' this is for clarity.
@@ -666,12 +692,14 @@ class App(customtkinter.CTk):
                                                                               f"Merkle Hash:                {block.merkle}\n"
                                                                               f"Block Miner:                 {block.miner}\n"
                                                                               f"Block Nonce:                {blockNonce}\n",
-                                                     font=customtkinter.CTkFont(size=12, family="Montserrat"), justify="left")
+                                                     font=customtkinter.CTkFont(size=12, family="Montserrat"),
+                                                     justify="left")
                 block_label.grid(row=2, column=0, sticky="nsew")
 
                 # This is the label to indicate the next texts are transactions, this is used for clarity
                 transaction_details_label = customtkinter.CTkLabel(master=block_frame, text="Transactions",
-                                                                   font=customtkinter.CTkFont(size=15, family="Montserrat",
+                                                                   font=customtkinter.CTkFont(size=15,
+                                                                                              family="Montserrat",
                                                                                               weight="bold"))
                 transaction_details_label.grid(row=3, column=0, sticky="w", padx=10, pady=5)
 
@@ -687,9 +715,8 @@ class App(customtkinter.CTk):
                                                                                      weight="bold"))
                 block_time_label.grid(row=5, sticky="nsew")
 
-        # This is the code for the mining tabview, this will allow the user to mine blocks onto the blockchain. We can
-        # start with a button, that once clicked starts the mining process. This will create a thread that mines the
-        # currency we can also put blocks that they have mined.
+        # The following code is the mine tab, this shows the recent blocks that the user has mined, this also shows
+        # a description on how to mine some pycoins.
 
         # The mine tabs grid configuration
         mine.grid_rowconfigure((0, 1), weight=1)
@@ -699,24 +726,29 @@ class App(customtkinter.CTk):
         mine.grid_columnconfigure(3, weight=0)
 
         # The title of the tab.
-        mine_label = customtkinter.CTkLabel(master=mine, text="Mine Pycoins by clicking the mine button, this will "
+        mine_label = customtkinter.CTkLabel(master=mine, text="Mine Pycoins by running the mine.py script, this will "
                                                               "try to find new blocks! \nMining rewards are 100 "
-                                                              "Pycoins.",
+                                                              "Pycoins. Below will show blocks you have mined.\n\n"
+                                                              "Note: You cannot use this GUI and the mining script"
+                                                              " at the same time, peers that you have connected here "
+                                                              "will transfer to the mining script.",
                                             font=customtkinter.CTkFont(size=20, family="Montserrat"), wraplength=1000)
 
         mine_label.grid(row=0, column=0, sticky="nsew", columnspan=3)
 
         # Button to mine pycoins.
-        mine_button = customtkinter.CTkButton(master=mine, text="Mine", font=customtkinter.CTkFont(size=18,
-                                                                                                   family="Montserrat"),
+        mine_button = customtkinter.CTkButton(master=mine, text="Refresh",
+                                              font=customtkinter.CTkFont(size=18, family="Montserrat"),
                                               fg_color="#533fd3", hover_color="#2c1346", width=125, height=75,
-                                              command=self.mineBlocks)
+                                              command=self.blocksListen)
 
         mine_button.grid(row=1, column=1, sticky="n")
 
         # Stackable frame for blocks that have been mined by user.
-        blocks_mined = customtkinter.CTkScrollableFrame(master=mine)
-        blocks_mined.grid(row=2, column=0, sticky="nsew", columnspan=3, padx=20, pady=(0, 20))
+        self.blocks_mined = customtkinter.CTkScrollableFrame(master=mine)
+        self.blocks_mined.grid(row=2, column=0, sticky="nsew", columnspan=3, padx=20, pady=(0, 20))
+        self.blocks_mined.grid_columnconfigure(0, weight=1)
+        self.blocks_mined.grid_columnconfigure(1, weight=0)
 
         # The sidebar has 5 user buttons: Home, Settings, CLI, Create Address, Logout
 
@@ -771,41 +803,88 @@ class App(customtkinter.CTk):
         listenUDPThread.start()
         self.select_blockchain_button.configure(state="disabled")
         self.blockchain_selector.configure(state="disabled")
+
+        # As a node is created we want to update our currentAccount.json as this is what will be used in the
+        # mining script.
+
+        data = {
+            "blockchainfile":f"blockchains/{blockchainfile}",
+            "host": ip,
+            "portMin": 50000,
+            "portMax": 50500,
+            "maxPeers": 10,
+            "privateKey": self.account['privateKey'],
+            "peers": []
+        }
+
+        with open('json/currentAccount.json', 'w') as current:
+            json.dump(data, current, indent=2)
+
         self.gui()
 
     def connectToPeer(self):
+
         # This function will get what is stored in the entry and then try to connect to that peer.
         ip = self.connect_entry.get()
+
+        # We first check if there is a peer object, this is created when the blockchain is selected.
         if self.peer:
+
+            # We then check if the IP is not already a peer
             if self.peer.checkIPisPeer(ip) is False:
+
+                # We try to connect to the peer and then clear the entry.
                 connection_success = self.peer.connectToPeer(ip)
                 self.connect_entry.delete(0, 16)
+
+                # If the connection is successful we can add it to our current connections frame and
+                # then add it to our current peers in currentAccount.json
                 if connection_success:
+
+                    # Successful connection top-level
                     success_top_level = customtkinter.CTkToplevel(self)
                     success_top_level.geometry("200x50")
                     success_top_level.title("Pychain Connect")
                     success_top_level.resizable(False, False)
 
+                    # Label saying peer has connected
                     success_label = customtkinter.CTkLabel(master=success_top_level, text="Peer Connected!",
                                                            font=customtkinter.CTkFont(size=14, family="Montserrat"))
                     success_label.pack(anchor="center")
+
+                    # This is the connection frame we create and put into our connections frame
                     connection_frame = customtkinter.CTkFrame(master=self.connections_frame, fg_color="black")
+
+                    # Grid configuration
                     connection_frame.grid_rowconfigure(0, weight=1)
                     connection_frame.grid_rowconfigure(1, weight=0)
                     connection_frame.grid_columnconfigure(0, weight=1)
                     connection_frame.grid_columnconfigure(1, weight=9)
                     connection_frame.grid_columnconfigure(2, weight=0)
+
+                    # We put the connection into the row index of the list of peers-1
                     connection_frame.grid(row=len(self.peer.peers)-1, sticky="nsew")
+
+                    # We also want to put an image of a green dot, signifying a connection
                     connection_image = Image.open("images/icons/greenicon.png")
                     connection_img = customtkinter.CTkImage(dark_image=connection_image, size=(20, 20))
                     connection_Image_Button = customtkinter.CTkButton(master=connection_frame, image=connection_img,
                                                                       text="", fg_color="transparent", hover=False)
+                    connection_Image_Button.grid(row=0, column=0, sticky="w", padx=(5, 0))
+
+                    # This is the label stating the ip has connected.
                     connection_label = customtkinter.CTkLabel(master=connection_frame, text=f"{ip} is connected!",
                                                               font=customtkinter.CTkFont(size=14, family="Montserrat",))
                     connection_label.grid(row=0, column=1, sticky="w")
-                    connection_Image_Button.grid(row=0, column=0, sticky="w", padx=(5, 0))
+
+                    # Here we append the peers list
+                    with open("json/currentAccount.json") as data:
+                        data = json.load(data)
+
+                    data['peers'].append(ip)
 
                 else:
+                    # This is incase the connection is unsuccessful, we display another toplevel.
                     error_top_level = customtkinter.CTkToplevel(self)
                     error_top_level.geometry("200x50")
                     error_top_level.title("Pychain Connect")
@@ -815,6 +894,7 @@ class App(customtkinter.CTk):
                                                          font=customtkinter.CTkFont( size=14, family="Montserrat"))
                     error_label.pack(anchor="center")
             else:
+                # THis is incase the ip we are trying to connect to is already a peer.
                 error_top_level = customtkinter.CTkToplevel(self)
                 error_top_level.geometry("200x50")
                 error_top_level.title("Pychain Connect")
@@ -824,6 +904,7 @@ class App(customtkinter.CTk):
                                                      font=customtkinter.CTkFont(size=14, family="Montserrat"))
                 error_label.pack(anchor="center")
         else:
+            # This is incase the peer object hasn't been created, thus a blockchain has not been selected.
             error_top_level = customtkinter.CTkToplevel(self)
             error_top_level.geometry("200x50")
             error_top_level.title("Pychain Connect")
@@ -833,33 +914,56 @@ class App(customtkinter.CTk):
                                                  font=customtkinter.CTkFont(size=14, family="Montserrat"))
             error_label.pack(anchor="center")
 
-    def mineBlocks(self):
-        # This function will create two threads: one time mine a block and one other to scan for blocks that
-        # have been mined with the specific user
-        count(self.peer)
-
     def blocksListen(self):
-        # This function will look for blocks that have been mined by the user.
-        pyaddress = address.createAddress(self.account_pubkey)
-        mined_blocks = []
+        # This function is used for listening for blocks that are mined by the user and then will append that
+        # block into the frame in the mine tab
+        if self.peer:
+            # We need calculate the users pychain address
+            miner_address = address.createAddress(self.account_pubkey)
+            self.usermined_blocks = []
 
-        while True:
+            # We iterate through each block in our blockchain
             for block in self.peer.blockchain.blocks:
-                if block.miner == pyaddress:
-                    if block not in mined_blocks:
-                       mined_blocks.append(block)
 
-def start():
-    app = App()
-    app.mainloop()
+                # And we check if the blocks miner is the user
+                if block.miner == miner_address:
 
-def count(peer):
-    peer.mining = True
-    t1 = threading.Thread(target=peer.startMine)
-    t1.start()
+                    # We calculate the index of where to place the frame
+                    index = len(self.usermined_blocks)
+
+                    # We create a frame for the user-mined-block
+                    block_mined_frame = customtkinter.CTkFrame(master=self.blocks_mined, fg_color="black")
+                    block_mined_frame.grid(row=index, padx=10, pady=10, sticky="nsew")
+                    block_mined_frame.grid_rowconfigure((0, 1), weight=1)
+                    block_mined_frame.grid_rowconfigure(2, weight=0)
+                    block_mined_frame.grid_columnconfigure(0, weight=1)
+                    block_mined_frame.grid_columnconfigure(1, weight=0)
+
+                    self.usermined_blocks.append(block)
+
+                    # This is the label inside the frame,
+                    label = customtkinter.CTkLabel(master=block_mined_frame, text=f"Block Id = {block.blockid}",
+                                                   font=customtkinter.CTkFont(size=18, family="Montserrat", weight="bold"))
+                    label.grid(row=0, column=0, sticky="w", padx=6)
+
+                    # This is the label for the reward of the block
+                    reward_label = customtkinter.CTkLabel(master=block_mined_frame, text="Reward = 100 pyCoins",
+                                                          font=customtkinter.CTkFont(size=13, family="Montserrat"))
+                    reward_label.grid(row=1, column=0, sticky="nsew", pady=(0, 5))
+        else:
+            # If no blockchain is selected.
+            error_top_level = customtkinter.CTkToplevel(self)
+            error_top_level.geometry("200x50")
+            error_top_level.title("Pychain Mine")
+            error_top_level.resizable(False, False)
+
+            error_label = customtkinter.CTkLabel(master=error_top_level, text="Blockchain not selected.",
+                                                 font=customtkinter.CTkFont(size=14, family="Montserrat"))
+            error_label.pack(anchor="center")
+
 
 
 
 if __name__ == "__main__":
-    thread = threading.Thread(target=start)
-    thread.start()
+    app = App()
+    app.mainloop()
