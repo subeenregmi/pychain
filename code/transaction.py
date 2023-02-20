@@ -75,6 +75,7 @@ def main():
     print(x.inputs)
     print(x.outputs)
     print(f"raw = {x.raw}")
+    print(x.inputTxids())
 
 if __name__ == "__main__":
     main()
