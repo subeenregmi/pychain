@@ -101,6 +101,7 @@ class Blockchain:
                     for i in transaction.inputTxids():
                         if i == input.txid:
                             outputs.append(transaction)
+                            inputs.remove(input)
 
         uniqueOutputs = []
         for output in outputs:

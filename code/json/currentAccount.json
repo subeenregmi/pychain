@@ -1,6 +1,6 @@
 {
   "blockchainfile": "blockchains/pychain.txt",
-  "host": "10.12.48.213",
+  "host": "localhost",
   "portMin": 50000,
   "portMax": 50500,
   "maxPeers": 10,

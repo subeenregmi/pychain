@@ -22,6 +22,7 @@ class App(customtkinter.CTk):
         super().__init__()
 
         # Here are some variables that we want to use throughout our program
+        self.balance = 0
         self.count = None
         self.account = None
         self.account_pubkey = None
@@ -484,7 +485,7 @@ class App(customtkinter.CTk):
                                                font=customtkinter.CTkFont(size=40, family="Montserrat", weight="bold"))
         welcome_label.grid(row=0, column=0, sticky="nw", padx=5, pady=(5, 0))
 
-        self.balance_label = customtkinter.CTkLabel(master=welcomeFrame, text="Balance: ",
+        self.balance_label = customtkinter.CTkLabel(master=welcomeFrame, text=f"Balance: {self.balance}",
                                                     font=customtkinter.CTkFont(size=20, family="Montserrat"))
         self.balance_label.grid(row=1, column=0, sticky="nw", padx=10)
 
@@ -612,30 +613,43 @@ class App(customtkinter.CTk):
 
 
         # The following code will be about the send tab, this is where you can send a transaction to another user.
-        send.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
-        send.grid_columnconfigure((0, 1, 2), weight=1)
-        send.grid_rowconfigure(5, weight=0)
-        send.grid_columnconfigure(3, weight=0)
+        send.grid_rowconfigure((0, 1, 2, 3), weight=1)
+        send.grid_columnconfigure((0, 1), weight=1)
+        send.grid_rowconfigure(4, weight=0)
+        send.grid_columnconfigure(2, weight=0)
 
         send_label = customtkinter.CTkLabel(master=send, text="Here you can send pyCoins to another address, just type in"
-                                                              "an address and select an amount within your balance and click"
+                                                              " an address and select an amount within your balance and click"
                                                               " send!",
                                             font=customtkinter.CTkFont(size=20, family="Montserrat"), wraplength=800)
-        send_label.grid(row=0, columnspan=3, sticky="n", pady=5, padx=5)
+        send_label.grid(row=0, columnspan=3, pady=5, padx=5)
 
-        send_to_entry = customtkinter.CTkEntry(master=send, placeholder_text="To Address",
-                                               font=customtkinter.CTkFont(size=18, family="Montserrat"),
-                                               height=72)
+        if self.peer:
+            # This only shows when a balance other than 0 exists
+            send_to_entry = customtkinter.CTkEntry(master=send, placeholder_text="To Address",
+                                                   font=customtkinter.CTkFont(size=18, family="Montserrat"),
+                                                   height=72)
+            send_to_entry.grid(row=1, column=0, sticky="ew", padx=20, columnspan=2)
 
-        add_address_image = Image.open("images/icons/addressbookIcon.png")
-        add_address_image = customtkinter.CTkImage(dark_image=add_address_image, size=(50, 50))
-        send_to_entry.grid(row=1, column=0, sticky="we", padx=20, columnspan=2)
-        save_address_button = customtkinter.CTkButton(master=send, text="", fg_color="#533fd3", hover_color="#2c1346",
-                                                      height=72, width=72, image=add_address_image)
-        save_address_button.grid(row=1, column=2, sticky="w")
+            add_address_image = Image.open("images/icons/addressbookIcon.png")
+            add_address_image = customtkinter.CTkImage(dark_image=add_address_image, size=(50, 50))
+            save_address_button = customtkinter.CTkButton(master=send, text="", fg_color="#533fd3", hover_color="#2c1346",
+                                                          height=72, width=72, image=add_address_image)
+            save_address_button.grid(row=1, column=2, sticky="w")
 
-        amount_slider = customtkinter.CTkSlider(master=send, )
+            self.amount_slider = customtkinter.CTkSlider(master=send, from_=0, to=self.balance, button_color="#533fd3",
+                                                         button_hover_color="#2c1346", command=self.getAmount, width=800)
+            self.amount_slider.grid(row=2, column=0, sticky="n", columnspan=2, padx=20)
 
+            self.amount_label = customtkinter.CTkLabel(master=send, text="",
+                                                       font=customtkinter.CTkFont(size=20, family="Montserrat"))
+            self.amount_label.grid(row=2, column=2, padx=5, pady=(0, 20), sticky="nw")
+
+            send_button = customtkinter.CTkButton(master=send, text="Send",
+                                                  font=customtkinter.CTkFont(size=20, family="Montserrat", weight="bold"),
+                                                  fg_color="#533fd3", hover_color="#2c1346", height=75, width=150,
+                                                  command=self.createTransaction)
+            send_button.grid(row=3, column=1, padx=5, pady=5, sticky="nw")
 
         # The following code will be about the transaction tab, this is where you can see all the transactions
         # that you have sent or given.
@@ -691,9 +705,9 @@ class App(customtkinter.CTk):
                 label.grid(row=0, column=0, padx=5, pady=5)
                 total_out += transaction.findTotalValueSent()
 
-            balance = total_in - total_out
-            balance_label.configure(text=f"Balance: {balance} pyCoins")
-            self.balance_label.configure(text=f"Balance: {balance} pyCoins")
+            self.balance = total_in - total_out
+            balance_label.configure(text=f"Balance: {self.balance} pyCoins")
+            self.balance_label.configure(text=f"Balance: {self.balance} pyCoins")
 
         # The following code will be about the connect tab this is where you enter an IP address and then trying to
         # connect to an IP, once the ip connection has been made, we can add the peer ip to a json file.
@@ -921,9 +935,10 @@ class App(customtkinter.CTk):
         blockchainfile = self.blockchain_selector.get()
 
         # This gets the local ip address, by connecting to google's public domain and seeing what the IP is.
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
+        # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # s.connect(("8.8.8.8", 80))
+        # ip = s.getsockname()[0]
+        ip = "localhost"
 
         # This creates a peer using the blockchain that got selected.
         self.peer = Peer(f"blockchains/{blockchainfile}", ip, 50000, 50500, 10, self.account['privateKey'])
@@ -1090,6 +1105,26 @@ class App(customtkinter.CTk):
                                                  font=customtkinter.CTkFont(size=14, family="Montserrat"))
 
             error_label.pack(anchor="center")
+
+    def getAmount(self, value):
+        self.value = round(value)
+        self.amount_label.configure(text=f"{self.value} pyCoins")
+
+    def createTransaction(self):
+        # This function creates a transaction, creating a scriptSig, and scriptPubKey, automatically
+        if self.value:
+            if self.value <= self.balance:
+                # Now we can create a transaction
+                inputs, outputs = self.peer.blockchain.findTxidsRelatingToKey(self.account_pubkey)
+                inputTotal = 0
+                remainder = 0
+                inputTransactionsToUse = []
+                for transaction in inputs:
+                    inputTransactionsToUse.append(transaction)
+                    inputTotal += transaction.findTotalValueSent()
+                    if inputTotal >= self.value:
+                        remainder = inputTotal - self.value
+                        break
 
 
 if __name__ == "__main__":

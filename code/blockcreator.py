@@ -244,10 +244,5 @@ def main():
     print(v.validateBlock())
 
 
-
 if __name__ == "__main__":
     main()
-
-
-
-
