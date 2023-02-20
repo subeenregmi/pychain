@@ -414,6 +414,7 @@ class App(customtkinter.CTk):
             self.start()
 
     def gui(self):
+
         # This is the GUI for pychain.
         for widget in self.winfo_children():
             widget.destroy()
@@ -513,35 +514,31 @@ class App(customtkinter.CTk):
                                                                 command=self.createNode)
         self.select_blockchain_button.grid(row=2, column=1, sticky="ne", pady=5, padx=10)
 
-        if self.peer:
-            self.blockchain_selector.configure(state="disabled")
-            self.select_blockchain_button.configure(state="disabled")
-
         # A transactions button will also be on the home menu, below the button will be the three latest transactions,
         # but you can also click the button to go to the transaction tab
-        transaction_label = customtkinter.CTkLabel(master=home, text="Latest Transactions:", fg_color="transparent",
+        latest_transaction_label = customtkinter.CTkLabel(master=home, text="Latest Transactions:", fg_color="transparent",
                                                    font=customtkinter.CTkFont(size=20, family="Montserrat"))
-        transaction_label.grid(row=1, column=0, sticky="nw", padx=5)
+        latest_transaction_label.grid(row=1, column=0, sticky="nw", padx=5)
 
         # There will also be a frame for the three latest transactions, just below the transaction button
-        transactions_frame = customtkinter.CTkFrame(master=home, fg_color="transparent")
-        transactions_frame.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
-        transactions_frame.grid_rowconfigure((0, 1, 2), weight=1)
-        transactions_frame.grid_rowconfigure(3, weight=0)
-        transactions_frame.grid_columnconfigure(0, weight=1)
-        transactions_frame.grid_columnconfigure(1, weight=0)
+        latest_transactions_frame = customtkinter.CTkFrame(master=home, fg_color="transparent")
+        latest_transactions_frame.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
+        latest_transactions_frame.grid_rowconfigure((0, 1, 2), weight=1)
+        latest_transactions_frame.grid_rowconfigure(3, weight=0)
+        latest_transactions_frame.grid_columnconfigure(0, weight=1)
+        latest_transactions_frame.grid_columnconfigure(1, weight=0)
 
         # There will be three frames inside the frame indicate the transactions. inside those frames we will have a
         # button and the label for the transaction details, we could also have an image to the left of the frame
         # indicating if the transaction was incoming or outgoing.
 
-        self.latest_transaction_one = customtkinter.CTkFrame(master=transactions_frame, height=40)
+        self.latest_transaction_one = customtkinter.CTkFrame(master=latest_transactions_frame, height=40)
         self.latest_transaction_one.grid(row=0, sticky="nsew", pady=(0, 5))
 
-        self.latest_transaction_two = customtkinter.CTkFrame(master=transactions_frame, height=40)
+        self.latest_transaction_two = customtkinter.CTkFrame(master=latest_transactions_frame, height=40)
         self.latest_transaction_two.grid(row=1, sticky="nsew", pady=(0, 5))
 
-        self.latest_transaction_three = customtkinter.CTkFrame(master=transactions_frame, height=40)
+        self.latest_transaction_three = customtkinter.CTkFrame(master=latest_transactions_frame, height=40)
         self.latest_transaction_three.grid(row=2, sticky="nsew")
 
         # A 'Latest Blocks' button, once clicked will go to the blocks tab.
@@ -560,12 +557,122 @@ class App(customtkinter.CTk):
 
         self.latest_block_one = customtkinter.CTkFrame(master=latest_blocks_frame, height=40)
         self.latest_block_one.grid(row=0, sticky="nsew", pady=(0, 5))
+        self.latest_block_one.grid_rowconfigure(0, weight=1)
+        self.latest_block_one.grid_rowconfigure(1, weight=0)
+        self.latest_block_one.grid_columnconfigure(0, weight=1)
+        self.latest_block_one.grid_columnconfigure(1, weight=0)
 
         self.latest_block_two = customtkinter.CTkFrame(master=latest_blocks_frame, height=40)
         self.latest_block_two.grid(row=1, sticky="nsew", pady=(0, 5))
+        self.latest_block_two.grid_rowconfigure(0, weight=1)
+        self.latest_block_two.grid_rowconfigure(1, weight=0)
+        self.latest_block_two.grid_columnconfigure(0, weight=1)
+        self.latest_block_two.grid_columnconfigure(1, weight=0)
 
         self.latest_block_three = customtkinter.CTkFrame(master=latest_blocks_frame, height=40)
         self.latest_block_three.grid(row=2, sticky="nsew", pady=(0, 5))
+        self.latest_block_three.grid_rowconfigure(0, weight=1)
+        self.latest_block_three.grid_rowconfigure(1, weight=0)
+        self.latest_block_three.grid_columnconfigure(0, weight=1)
+        self.latest_block_three.grid_columnconfigure(1, weight=0)
+
+        if self.peer:
+            self.blockchain_selector.configure(state="disabled")
+            self.select_blockchain_button.configure(state="disabled")
+
+            try:
+                block = self.peer.blockchain.blocks[-1]
+                date = int(block.blocktime)
+                date = datetime.utcfromtimestamp(date).strftime('%Y-%m-%d %H:%M:%S')
+                block_one_label = customtkinter.CTkLabel(master=self.latest_block_one, text=f"Block ID = {block.blockid}\n"
+                                                                                            f"Block Height = {block.height}\n"
+                                                                                            f"{date}",
+                                                         font=customtkinter.CTkFont(size=12, family="Montserrat"))
+                block_one_label.grid(row=0, sticky="nsew", pady=(5,0))
+
+                block = self.peer.blockchain.blocks[-2]
+                date = int(block.blocktime)
+                date = datetime.utcfromtimestamp(date).strftime('%Y-%m-%d %H:%M:%S')
+                block_two_label = customtkinter.CTkLabel(master=self.latest_block_two, text=f"Block ID = {block.blockid}\n"
+                                                                                            f"Block Height = {block.height}\n"
+                                                                                            f"{date}",
+                                                         font=customtkinter.CTkFont(size=12, family="Montserrat"))
+                block_two_label.grid(row=0, sticky="nsew", pady=(5, 0))
+
+                block = self.peer.blockchain.blocks[-3]
+                date = int(block.blocktime)
+                date = datetime.utcfromtimestamp(date).strftime( '%Y-%m-%d %H:%M:%S')
+                block_three_label = customtkinter.CTkLabel(master=self.latest_block_three, text=f"Block ID = {block.blockid}\n"
+                                                                                                f"Block Height = {block.height}\n"
+                                                                                                f"{date}",
+                                                           font=customtkinter.CTkFont(size=12, family="Montserrat"))
+                block_three_label.grid(row=0, sticky="nsew", pady=(5, 0))
+            except:
+                pass
+
+
+        # The following code will be about the send tab, this is where you can send a transaction to another user.
+        send.grid_rowconfigure()
+        send.grid_columnconfigure()
+
+
+        # The following code will be about the transaction tab, this is where you can see all the transactions
+        # that you have sent or given.
+
+        transactions.grid_rowconfigure((0, 2), weight=1)
+        transactions.grid_rowconfigure(1, weight=5)
+        transactions.grid_rowconfigure(3, weight=0)
+        transactions.grid_columnconfigure((0, 1), weight=1)
+        transactions.grid_columnconfigure(2, weight=0)
+        transactions_label = customtkinter.CTkLabel(master=transactions, text="This is the transactions tab, this is"
+                                                                              " where you can find all your "
+                                                                              "transactions.",
+                                                    font=customtkinter.CTkFont(size=20, family="Montserrat"))
+        transactions_label.grid(row=0, column=0, sticky="n", pady=(5, 0), columnspan=2)
+
+        input_transactions_frame = customtkinter.CTkScrollableFrame(master=transactions)
+        input_transactions_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        output_transactions_frame = customtkinter.CTkScrollableFrame(master=transactions)
+        output_transactions_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
+
+        balance_label = customtkinter.CTkLabel(master=transactions, text="Balance: ",
+                                               font=customtkinter.CTkFont(size=20, family="Montserrat"))
+        balance_label.grid(row=3, sticky="sw", padx=5, pady=5)
+
+        if self.peer:
+            total_in = 0
+            total_out = 0
+            inputs, outputs = self.peer.blockchain.findTxidsRelatingToKey(self.account_pubkey)
+            count = 0
+            for inputTransaction in inputs:
+                txid = inputTransaction.txid
+                transaction, block = self.peer.blockchain.findBlockIdwithTxid(txid)
+                frame = customtkinter.CTkFrame(master=input_transactions_frame, fg_color="black")
+                frame.grid(row=count, sticky="nsew", padx=5, pady=5)
+                count += 1
+                label = customtkinter.CTkLabel(master=frame, text=f"TXID: {txid}\n"
+                                                                  f"Received {transaction.findTotalValueSent()} pyCoins\n"
+                                                                  f"Block {block.height}",
+                                               font=customtkinter.CTkFont(size=11, family="Montserrat"))
+                label.grid(row=0, column=0, padx=5, pady=5)
+                total_in += transaction.findTotalValueSent()
+            count = 0
+            for outputTransaction in outputs:
+                txid = outputTransaction.txid
+                transaction, block = self.peer.blockchain.findBlockIdwithTxid(txid)
+                frame = customtkinter.CTkFrame(master=output_transactions_frame, fg_color="black")
+                frame.grid(row=count, sticky="nsew", padx=5, pady=5)
+                count += 1
+                label = customtkinter.CTkLabel(master=frame, text=f"TXID: {txid}\n"
+                                                                  f"Received {transaction.findTotalValueSent()} pyCoins\n"
+                                                                  f"Block {block.height}",
+                                               font=customtkinter.CTkFont(size=11, family="Montserrat"))
+                label.grid(row=0, column=0, padx=5, pady=5)
+                total_out += transaction.findTotalValueSent()
+
+            balance = total_in - total_out
+            balance_label.configure(text=f"Balance: {balance} pyCoins")
+            self.balance_label.configure(text=f"Balance: {balance} pyCoins")
 
         # The following code will be about the connect tab this is where you enter an IP address and then trying to
         # connect to an IP, once the ip connection has been made, we can add the peer ip to a json file.
@@ -943,8 +1050,9 @@ class App(customtkinter.CTk):
 
                     # This is the label inside the frame,
                     label = customtkinter.CTkLabel(master=block_mined_frame, text=f"Block Id = {block.blockid}",
-                                                   font=customtkinter.CTkFont(size=18, family="Montserrat", weight="bold"))
-                    label.grid(row=0, column=0, sticky="w", padx=6)
+                                                   font=customtkinter.CTkFont(size=18, family="Montserrat",
+                                                                              weight="bold"))
+                    label.grid(row=0, column=0, sticky="nsew", padx=6)
 
                     # This is the label for the reward of the block
                     reward_label = customtkinter.CTkLabel(master=block_mined_frame, text="Reward = 100 pyCoins",
@@ -960,8 +1068,6 @@ class App(customtkinter.CTk):
             error_label = customtkinter.CTkLabel(master=error_top_level, text="Blockchain not selected.",
                                                  font=customtkinter.CTkFont(size=14, family="Montserrat"))
             error_label.pack(anchor="center")
-
-
 
 
 if __name__ == "__main__":

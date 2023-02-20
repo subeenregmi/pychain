@@ -45,6 +45,18 @@ class Blockchain:
         except:
             pass
 
+    def findBlockIdwithTxid(self, txid):
+
+            for block in self.blocks:
+                for transaction in block.transactions:
+                    if transaction.txid == txid:
+                        print(f"Found {transaction.txid}!\nBlock Height: {block.height}\nTransaction Index :{block.transactions.index( transaction )}" )
+                        print(f"RAW TX: {transaction.raw}")
+                        return transaction, block
+
+            print("TXID not in blockchain")
+            return False
+
     def findTxid(self, txid):
 
         # This finds a txid in the blocks and returns the raw if found, or it returns false if it's not there.
@@ -86,8 +98,8 @@ class Blockchain:
                     pass
 
                 for input in inputs:
-                    if input.txid in transaction.inputTxids():
-                        if input not in outputs:
+                    for i in transaction.inputTxids():
+                        if i == input.txid:
                             outputs.append(transaction)
 
         uniqueOutputs = []
@@ -97,13 +109,7 @@ class Blockchain:
 
         outputs = uniqueOutputs
 
-        print(f"---------INPUTS----------")
-        for txidinput in inputs:
-            print(txidinput.txid)
-
-        print(f"---------OUTPUTS----------")
-        for output in outputs:
-            print(output.txid)
+        return inputs, outputs
 
     def setReward(self, reward):
         self.reward = reward
@@ -188,16 +194,9 @@ class Blockchain:
 
 def main():
     test = Blockchain("blockchains/pychain.txt")
-    for block in test.blocks:
-        for transaction in block.transactions:
-            print(transaction.txid)
-            print(transaction.tx)
 
-    print(test.findTxid("9d62dc5dda5e01d7f9aa919e2f2b9c9e424b7cf1f8092d2fb6138223e6356cc3"))
-    print(test.findTxidsRelatingToKey((63954422509139660694275478881573291931659433822585593108077818434106113196321, 26900081337699559997929288916999997486541154242084777368521628620275013037611)))
-    print(test.findBlockId("0000015cae0a93eb716a443497386b36c1e9675627288a811191157b6aa04e97"))
-    test.calculateDifficulty()
-    test.validateChain()
+    i, o = test.findTxidsRelatingToKey(((44386250375374703656858574918580449503130853936108437099504860299291885670527, 78580972205200290356464348303160518295820229000641155905851920185575012779163)))
 
+    print(o)
 if __name__ == "__main__":
     main()
