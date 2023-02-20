@@ -16,6 +16,7 @@ import spubKeycreator
 import scriptSigCreator
 import rawtxcreator
 from transaction import Transaction
+import rawtxdecoder
 
 # This sets the general color theme to be dark
 customtkinter.set_appearance_mode("dark")
@@ -327,12 +328,12 @@ class App(customtkinter.CTk):
         frame4.grid_columnconfigure(0, weight=1)
         frame4.grid_columnconfigure(1, weight=4)
 
-        # Label for password 
+        # Label for password
         Label3 = customtkinter.CTkLabel(master=frame4, bg_color="#533FD3", text="Password :",
                                         font=customtkinter.CTkFont(size=20))
         Label3.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
-        # Entry for password 
+        # Entry for password
         self.passwordEntry = customtkinter.CTkEntry(master=frame4, font=customtkinter.CTkFont(size=20))
         self.passwordEntry.grid(row=0, column=1, sticky="nsew", padx=(0, 10), pady=10)
 
@@ -1115,16 +1116,37 @@ class App(customtkinter.CTk):
         self.amount_label.configure(text=f"{self.value} pyCoins")
 
     def createTransaction(self):
-        # This function creates a transaction, creating a scriptSig, and scriptPubKey, automatically
+        # This function creates a transaction, by automatically using the UTXO's and creating script signatures and
+        # the script pub keys.
+
+        # Here we calculate the users pycharm address, this will be useful when creating return transactions.
+        account_address = address.createAddress(self.account_pubkey)
+
+        # We need to check if there is a value, this only occurs when the slider has been interacted with
         if self.value:
+
+            # This checks that value we are trying to send does not exceed the balance
             if self.value <= self.balance:
+
+                # Here we get the address that has been entered by the user.
                 sendaddress = self.send_to_entry.get()
+
+                # Here we check that an address has been inputted.
                 if sendaddress != '':
-                    # Now we can create a transaction
+
+                    # We now check for the inputs and output transactions for the specific user key
                     inputs, outputs = self.peer.blockchain.findTxidsRelatingToKey(self.account_pubkey)
+
+                    # We create two variables, inputTotal and remainder these will track total value we are
+                    # trying to send and the difference if we are using transactions that have more value then what
+                    # we are trying to send out.
                     inputTotal = 0
                     remainder = 0
+
                     inputTransactionsToUse = []
+
+                    # We look at all the input transactions and until we have reached the value we are trying to send
+                    # we keep on using more.
                     for transaction in inputs:
                         inputTransactionsToUse.append(transaction)
                         inputTotal += transaction.findTotalValueSent()
@@ -1132,6 +1154,8 @@ class App(customtkinter.CTk):
                             remainder = inputTotal - self.value
                             break
 
+                    # Here we create the script public keys, one for the actual transaction and one for the
+                    # return transaction back to the user.
                     scriptPubkeys = []
                     p2pkh = spubKeycreator.createPayToPubKeyHashwithHash(sendaddress)
                     scriptPubkeys.append((p2pkh, self.value))
@@ -1139,18 +1163,24 @@ class App(customtkinter.CTk):
                         p2pkh = spubKeycreator.createPayToPubKeyHash(self.account_pubkey)
                         scriptPubkeys.append((p2pkh, remainder))
 
+                    # The following code creates a transaction based on the script pub keys, and the input txids.
                     inputcounter = str(len(inputTransactionsToUse)).zfill(2)
                     txDict = {
                         "Version": "01",
                         "InputCount": inputcounter,
                     }
 
+                    # This adds the input txids, and also gets the vout for the input transaction
                     for i in range(len(inputTransactionsToUse)):
+                        vout = inputTransactionsToUse[i].outputAddress().index(account_address)
+                        vout = (hex(vout)[2:]).zfill(4)
                         txDict[f"txid{i}"] = inputTransactionsToUse[i].txid
+                        txDict[f"vout{i}"] = vout
                         txDict[f"sizeSig{i}"] = "0"
                         txDict[f"scriptSig{i}"] = "0"
 
-                    outputcounter = str(len(inputTransactionsToUse)).zfill(2)
+                    # This adds the script pub keys and their value
+                    outputcounter = str(len(scriptPubkeys)).zfill(2)
                     txDict["OutputCount"] = outputcounter
                     for i in range(len(scriptPubkeys)):
                         value = scriptPubkeys[i][1]
@@ -1161,16 +1191,13 @@ class App(customtkinter.CTk):
                         txDict[f"sizePk{i}"] = size
                         txDict[f"scriptPubKey{i}"] = scriptpubkey
 
+                    # We create the signature and then validate the transaction
                     rand = random.randint(0, address.n)
-                    print(txDict)
+                    txDict["locktime"] = "00000000"
                     txDict, rawtx2 = scriptSigCreator.createDictWithSig(txDict, self.account['privateKey'], rand)
                     txraw = rawtxcreator.createTxFromDict(txDict)
-                    print(txDict)
-                    print(rawtx2)
-
                     tx = Transaction(txraw)
-                    print(self.peer.validateTransaction(tx, self.account_pubkey))
-
+                    self.peer.validateTransaction(tx, self.account_pubkey)
 
 
 if __name__ == "__main__":
