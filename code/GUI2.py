@@ -517,7 +517,7 @@ class App(customtkinter.CTk):
         # A transactions button will also be on the home menu, below the button will be the three latest transactions,
         # but you can also click the button to go to the transaction tab
         latest_transaction_label = customtkinter.CTkLabel(master=home, text="Latest Transactions:", fg_color="transparent",
-                                                   font=customtkinter.CTkFont(size=20, family="Montserrat"))
+                                                          font=customtkinter.CTkFont(size=20, family="Montserrat"))
         latest_transaction_label.grid(row=1, column=0, sticky="nw", padx=5)
 
         # There will also be a frame for the three latest transactions, just below the transaction button
@@ -601,7 +601,7 @@ class App(customtkinter.CTk):
 
                 block = self.peer.blockchain.blocks[-3]
                 date = int(block.blocktime)
-                date = datetime.utcfromtimestamp(date).strftime( '%Y-%m-%d %H:%M:%S')
+                date = datetime.utcfromtimestamp(date).strftime('%Y-%m-%d %H:%M:%S')
                 block_three_label = customtkinter.CTkLabel(master=self.latest_block_three, text=f"Block ID = {block.blockid}\n"
                                                                                                 f"Block Height = {block.height}\n"
                                                                                                 f"{date}",
@@ -612,8 +612,29 @@ class App(customtkinter.CTk):
 
 
         # The following code will be about the send tab, this is where you can send a transaction to another user.
-        send.grid_rowconfigure()
-        send.grid_columnconfigure()
+        send.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
+        send.grid_columnconfigure((0, 1, 2), weight=1)
+        send.grid_rowconfigure(5, weight=0)
+        send.grid_columnconfigure(3, weight=0)
+
+        send_label = customtkinter.CTkLabel(master=send, text="Here you can send pyCoins to another address, just type in"
+                                                              "an address and select an amount within your balance and click"
+                                                              " send!",
+                                            font=customtkinter.CTkFont(size=20, family="Montserrat"), wraplength=800)
+        send_label.grid(row=0, columnspan=3, sticky="n", pady=5, padx=5)
+
+        send_to_entry = customtkinter.CTkEntry(master=send, placeholder_text="To Address",
+                                               font=customtkinter.CTkFont(size=18, family="Montserrat"),
+                                               height=72)
+
+        add_address_image = Image.open("images/icons/addressbookIcon.png")
+        add_address_image = customtkinter.CTkImage(dark_image=add_address_image, size=(50, 50))
+        send_to_entry.grid(row=1, column=0, sticky="we", padx=20, columnspan=2)
+        save_address_button = customtkinter.CTkButton(master=send, text="", fg_color="#533fd3", hover_color="#2c1346",
+                                                      height=72, width=72, image=add_address_image)
+        save_address_button.grid(row=1, column=2, sticky="w")
+
+        amount_slider = customtkinter.CTkSlider(master=send, )
 
 
         # The following code will be about the transaction tab, this is where you can see all the transactions
@@ -1067,6 +1088,7 @@ class App(customtkinter.CTk):
 
             error_label = customtkinter.CTkLabel(master=error_top_level, text="Blockchain not selected.",
                                                  font=customtkinter.CTkFont(size=14, family="Montserrat"))
+
             error_label.pack(anchor="center")
 
 
