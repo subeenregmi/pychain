@@ -24,6 +24,13 @@ def createPayToPubKeyHash(public_Key):
     raw = "76" + "a9" + str(hex(bytes)[2:]) + str(hashadd) + "88" + "ac"
     return raw
 
+def createPayToPubKeyHashwithHash(hash):
+    hashadd = hash
+    bytes = len(hashadd) // 2
+    raw = "76" + "a9" + str(hex(bytes)[2:]) + str(hashadd) + "88" + "ac"
+    return raw
+
+
 def createPayToMultiSig(pk1, pk2, pk3=None):
 
     if pk3 != None:

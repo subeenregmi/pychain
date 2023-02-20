@@ -86,7 +86,7 @@ def main():
     print("--------------------Uncompressed Public Key--------------------")
     print("04 " + str(hex(pubKey[0])[2:]) + " " + str(hex(pubKey[1]))[2:])
     print("--------------------PyChain Address--------------------")
-    pyaddress = createAddress(pubKey)
+    pyaddress = createAddress((109202608928186078798810435615768733302210942101644208012371426004931197383580, 71410754864688073695457690215266571394339322412556530640671956032708356876659))
     print(pyaddress)
     r, s = signatureGeneration(privKey, randNumber, HashOfMessage)
     print("--------------------Signature Generation--------------------")

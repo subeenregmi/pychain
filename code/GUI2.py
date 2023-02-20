@@ -12,6 +12,10 @@ from node import Peer
 from datetime import datetime
 import os
 import subprocess, sys
+import spubKeycreator
+import scriptSigCreator
+import rawtxcreator
+from transaction import Transaction
 
 # This sets the general color theme to be dark
 customtkinter.set_appearance_mode("dark")
@@ -626,10 +630,10 @@ class App(customtkinter.CTk):
 
         if self.peer:
             # This only shows when a balance other than 0 exists
-            send_to_entry = customtkinter.CTkEntry(master=send, placeholder_text="To Address",
+            self.send_to_entry = customtkinter.CTkEntry(master=send, placeholder_text="To Address",
                                                    font=customtkinter.CTkFont(size=18, family="Montserrat"),
                                                    height=72)
-            send_to_entry.grid(row=1, column=0, sticky="ew", padx=20, columnspan=2)
+            self.send_to_entry.grid(row=1, column=0, sticky="ew", padx=20, columnspan=2)
 
             add_address_image = Image.open("images/icons/addressbookIcon.png")
             add_address_image = customtkinter.CTkImage(dark_image=add_address_image, size=(50, 50))
@@ -1114,17 +1118,59 @@ class App(customtkinter.CTk):
         # This function creates a transaction, creating a scriptSig, and scriptPubKey, automatically
         if self.value:
             if self.value <= self.balance:
-                # Now we can create a transaction
-                inputs, outputs = self.peer.blockchain.findTxidsRelatingToKey(self.account_pubkey)
-                inputTotal = 0
-                remainder = 0
-                inputTransactionsToUse = []
-                for transaction in inputs:
-                    inputTransactionsToUse.append(transaction)
-                    inputTotal += transaction.findTotalValueSent()
-                    if inputTotal >= self.value:
-                        remainder = inputTotal - self.value
-                        break
+                sendaddress = self.send_to_entry.get()
+                if sendaddress != '':
+                    # Now we can create a transaction
+                    inputs, outputs = self.peer.blockchain.findTxidsRelatingToKey(self.account_pubkey)
+                    inputTotal = 0
+                    remainder = 0
+                    inputTransactionsToUse = []
+                    for transaction in inputs:
+                        inputTransactionsToUse.append(transaction)
+                        inputTotal += transaction.findTotalValueSent()
+                        if inputTotal >= self.value:
+                            remainder = inputTotal - self.value
+                            break
+
+                    scriptPubkeys = []
+                    p2pkh = spubKeycreator.createPayToPubKeyHashwithHash(sendaddress)
+                    scriptPubkeys.append((p2pkh, self.value))
+                    if remainder != 0:
+                        p2pkh = spubKeycreator.createPayToPubKeyHash(self.account_pubkey)
+                        scriptPubkeys.append((p2pkh, remainder))
+
+                    inputcounter = str(len(inputTransactionsToUse)).zfill(2)
+                    txDict = {
+                        "Version": "01",
+                        "InputCount": inputcounter,
+                    }
+
+                    for i in range(len(inputTransactionsToUse)):
+                        txDict[f"txid{i}"] = inputTransactionsToUse[i].txid
+                        txDict[f"sizeSig{i}"] = "0"
+                        txDict[f"scriptSig{i}"] = "0"
+
+                    outputcounter = str(len(inputTransactionsToUse)).zfill(2)
+                    txDict["OutputCount"] = outputcounter
+                    for i in range(len(scriptPubkeys)):
+                        value = scriptPubkeys[i][1]
+                        value = str(hex(int(value))[2:]).zfill(16)
+                        scriptpubkey = scriptPubkeys[i][0]
+                        size = (hex(len(scriptpubkey)//2)[2:]).zfill(4)
+                        txDict[f"value{i}"] = value
+                        txDict[f"sizePk{i}"] = size
+                        txDict[f"scriptPubKey{i}"] = scriptpubkey
+
+                    rand = random.randint(0, address.n)
+                    print(txDict)
+                    txDict, rawtx2 = scriptSigCreator.createDictWithSig(txDict, self.account['privateKey'], rand)
+                    txraw = rawtxcreator.createTxFromDict(txDict)
+                    print(txDict)
+                    print(rawtx2)
+
+                    tx = Transaction(txraw)
+                    print(self.peer.validateTransaction(tx, self.account_pubkey))
+
 
 
 if __name__ == "__main__":

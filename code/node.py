@@ -575,6 +575,7 @@ class Peer:
         print(f"<IP CHECK> {ip} is NOT a peer.")
         return False
 
+
     def validateTransaction(self, transaction, public_key):
         # This function will validate a transaction when we receive it, and this determines if the transactions reach
         # our mempool, to be mined.
@@ -642,6 +643,7 @@ class Peer:
         except:
             print("<TX VALIDATE> Transaction is invalid.")
 
+        print(transaction)
         transaction_value = transaction.findTotalValueSent()
         if transaction_value > total_value:
             print(f"<TX VALIDATE> Transaction is invalid.")
