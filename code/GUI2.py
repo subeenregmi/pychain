@@ -155,6 +155,10 @@ class App(customtkinter.CTk):
                                                                 font=customtkinter.CTkFont(weight="bold", size=18))
             self.pychain_address_label.grid(row=1, column=0)
 
+            # If there is a name stored we can show it.
+            if account['name'] != "":
+                self.pychain_address_label.configure(text=f"{pychain_address}\n{account['name']}")
+
             # This is the entry that holds the password, this will be hashed and checked in order for a successful login
             self.password_entry = customtkinter.CTkEntry(master=self, placeholder_text="Password",
                                                          font=customtkinter.CTkFont(size=30))
@@ -187,6 +191,9 @@ class App(customtkinter.CTk):
         # We now configure the buttons with the next account.
         self.icon_button.configure(image=Icon)
         self.pychain_address_label.configure(text=pychain_address)
+
+        if next_account['name'] != "":
+            self.pychain_address_label.configure(text=f"{pychain_address}\n{next_account['name']}")
 
     def loginToAccount(self):
         # This function is used in the login screen, to hash the password entered and if the password hash correlates
@@ -403,7 +410,8 @@ class App(customtkinter.CTk):
             keyInfo = {
                 "privateKey": private_key,
                 "passwordHash": password_hash,
-                "iconPath": f"images/usericons/account_icon{count}.png"
+                "iconPath": f"images/usericons/account_icon{count}.png",
+                "name": ""
             }
 
             data.append(keyInfo)
@@ -487,6 +495,10 @@ class App(customtkinter.CTk):
         welcome_label = customtkinter.CTkLabel(master=welcomeFrame, text="Welcome To Pychain!",
                                                font=customtkinter.CTkFont(size=40, family="Montserrat", weight="bold"))
         welcome_label.grid(row=0, column=0, sticky="nw", padx=5, pady=(5, 0))
+
+        if self.account['name'] != "":
+            print(self.account['name'])
+            welcome_label.configure(text=f"Welcome to Pychain, {self.account['name']}!")
 
         self.balance_label = customtkinter.CTkLabel(master=welcomeFrame, text=f"Balance: {self.balance}",
                                                     font=customtkinter.CTkFont(size=20, family="Montserrat"))
@@ -1328,11 +1340,11 @@ class App(customtkinter.CTk):
         # Settings for the tab
         settings_tab = customtkinter.CTkToplevel(self)
         settings_tab.geometry("800x600")
-        settings_tab.title("Pycharm Settings")
+        settings_tab.title("Pychain Settings")
         settings_tab.resizable(False, False)
 
         # Grid config
-        settings_tab.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
+        settings_tab.grid_rowconfigure((0, 1, 2, 3, 4, 5, 6, 7), weight=1)
         settings_tab.grid_columnconfigure((0, 1), weight=1)
         settings_tab.grid_columnconfigure(2, weight=0)
 
@@ -1340,13 +1352,13 @@ class App(customtkinter.CTk):
         settings_label = customtkinter.CTkLabel(master=settings_tab, text="Settings Tab",
                                                 font=customtkinter.CTkFont(size=20, family="Montserrat",
                                                                            weight="bold"))
-        settings_label.grid(row=0, sticky="n", pady=(10, 0))
+        settings_label.grid(row=0, sticky="n", pady=(10, 0), columnspan=2)
 
         # Label for changing names for accounts
         name_change_label = customtkinter.CTkLabel(master=settings_tab,
                                                    text="Here you can add or change names for saved accounts.",
                                                    font=customtkinter.CTkFont(size=14, family="Montserrat"))
-        name_change_label.grid(row=1, sticky="nw", padx=20)
+        name_change_label.grid(row=0, sticky="w", padx=20)
 
         # Frame for all the accounts
         with open('json/keys.json') as file:
@@ -1364,34 +1376,134 @@ class App(customtkinter.CTk):
         addresses.remove(user_address)
         addresses.insert(0, user_address)
 
+        # This is the address box used to select which address to modify.
+        self.address_option_box = customtkinter.CTkOptionMenu(master=settings_tab, values=addresses,
+                                                         command=self.changeImage, fg_color="#533fd3",
+                                                         dropdown_hover_color="#533fd3", button_color="#2c1346")
+        self.address_option_box.grid(row=0, column=0, sticky="sw", padx=20)
 
-
-
-
-        address_option_box = customtkinter.CTkOptionMenu(master=settings_tab, values=addresses,
-                                                         command=self.changeImage)
-        address_option_box.grid(row=2, column=0, sticky="nw", padx=20)
-
+        # We should put an image so it's much easier to see what account to modify
         image = Image.open(self.account['iconPath'])
-        new_image = customtkinter.CTkImage(dark_image=image, light_image=image, size=(75, 75))
+        new_image = customtkinter.CTkImage(dark_image=image, light_image=image, size=(100, 100))
         self.address_image_button = customtkinter.CTkButton(master=settings_tab, text="", fg_color="transparent",
                                                             image=new_image, anchor="center", hover=False)
-        self.address_image_button.grid(row=2, column=1, sticky="nsew")
+        self.address_image_button.grid(row=0, column=1, sticky="e", padx=10)
+
+        # A frame to hold an entry and a button for changing a name and saving it to the json files.
+        address_config_frame = customtkinter.CTkFrame(master=settings_tab, height=125)
+        address_config_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=10, columnspan=2)
+
+        address_config_frame.grid_rowconfigure(0, weight=1)
+        address_config_frame.grid_rowconfigure((0, 1, 2, 3), weight=0)
+        address_config_frame.grid_columnconfigure(0, weight=1)
+        address_config_frame.grid_columnconfigure(1, weight=0)
+
+        # This will be the button to change the name
+        change_name_button = customtkinter.CTkButton(master=address_config_frame, text="Change name", fg_color="#533fd3"
+                                                     , hover_color="#2c1346",
+                                                     font=customtkinter.CTkFont(size=20, family="Montserrat"),
+                                                     command=self.changeName)
+        change_name_button.grid(row=0, sticky="w", padx=200, pady=(50, 0))
+
+        # This is the button to delete the account.
+        delete_account_button = customtkinter.CTkButton(master=address_config_frame, text="Delete Account",
+                                                        fg_color="#ff4747", hover_color="#5e0000",
+                                                        font=customtkinter.CTkFont(size=20, family="Montserrat"),
+                                                        command=self.deleteAccount)
+        delete_account_button.grid(row=0, sticky="e", padx=200, pady=(50, 0))
 
     def changeImage(self, text):
-        print(text)
+        # This function changes the account image, based on what you select on the option box.
+
+        # We first need to open the file
         with open('json/keys.json') as file:
             data = json.load(file)
 
+        # We look at each key in the json file
         for key in data:
+
+            # and find the pychain address.
             public_key = address.ECmultiplication(key['privateKey'], address.Gx, address.Gy)
             py_address = address.createAddress(public_key)
+
+            # once the account the user has selected in the entry box is found, we can update the image
             if py_address == text:
+
                 filepath = key['iconPath']
                 image = Image.open(filepath)
                 newimage = customtkinter.CTkImage(dark_image=image, light_image=image, size=(100, 100))
                 self.address_image_button.configure(image=newimage)
 
+    def changeName(self):
+        # This function serves to change the name for the account selected by the user.
+        name = customtkinter.CTkInputDialog(text="Enter Name", title="Pychain Name Change", button_fg_color="#533fd3",
+                                            button_hover_color="#2c1346")
+        user_entered = name.get_input()
+        if user_entered == "":
+            return False
+
+        with open('json/keys.json') as file:
+            data = json.load(file)
+
+        text = self.address_option_box.get()
+
+        # We again find the specific key in our 'json/keys.json' file, and then update the name
+        for key in data:
+
+            public_key = address.ECmultiplication(key['privateKey'], address.Gx, address.Gy)
+            py_address = address.createAddress(public_key)
+
+            if py_address == text:
+                key['name'] = user_entered
+
+                # We write it into our file and into our account object
+                with open('json/keys.json', 'w') as file:
+                    json.dump(data, file, indent=2)
+
+                self.account['name'] = user_entered
+                break
+
+    def deleteAccount(self):
+        # This function will prompt the user with a password entry and then if the password matches the hash then, we
+        # can delete the account, and then return them to the login page.
+
+        # The input for the password.
+        password_input = customtkinter.CTkInputDialog(text="Enter that accounts password\nNote after deletion the "
+                                                           "account is not restorable.", title="Pychain Delete Change",
+                                                      button_fg_color="#533fd3", button_hover_color="#2c1346")
+
+        # The following gets the password and hashes it, and also gets the pychain address of the account that is going
+        # to be deleted
+        password = password_input.get_input()
+        hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+        text = self.address_option_box.get()
+
+        with open('json/keys.json') as file:
+            data = json.load(file)
+
+        # We again find the specific key in our 'json/keys.json' file, and then update the name
+        for key in data:
+
+            public_key = address.ECmultiplication( key['privateKey'], address.Gx, address.Gy )
+            py_address = address.createAddress( public_key )
+
+            # Once, we have found the address, we can check if the hashes match
+            if py_address == text:
+                if hash == key['passwordHash']:
+                    # We remove it from the json file and the icon.
+                    data.remove(key)
+
+                    filepath = key['iconPath']
+                    os.remove(filepath)
+
+                    with open('json/keys.json', 'w') as file:
+                        json.dump(data, file, indent=2)
+
+                    # The user will also return to the login page.
+                    self.Login()
+                    break
+                else:
+                    self.generateErrorLabel("Pychain Delete Account", "Password does not correlate with hash.")
 
 
 
