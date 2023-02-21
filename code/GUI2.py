@@ -19,7 +19,6 @@ from transaction import Transaction
 import rawtxdecoder
 
 #TODO: Add settings tab, autorefresh, account naming, peer pinging
-#TODO: Add peer block requesting in initial connection
 #TODO: Construct transaction based on time using merge sort
 #TODO: Add latest blocks
 
@@ -1033,7 +1032,7 @@ class App(customtkinter.CTk):
         settings_button_image = Image.open("images/icons/settingsIcon.png")
         settings_button_img = customtkinter.CTkImage(dark_image=settings_button_image, size=(40, 40))
         settings_button = customtkinter.CTkButton(master=sidebar_frame, image=settings_button_img, width=40, height=40,
-                                                  text="", fg_color="transparent", hover_color="grey")
+                                                  text="", fg_color="transparent", hover_color="grey", command=self.settings)
         settings_button.grid(row=1, sticky="nsew")
 
         # CLI button
@@ -1157,6 +1156,8 @@ class App(customtkinter.CTk):
                         json.dump(data, file, indent=2)
 
                     self.listOfPeers.append(ip)
+
+                    self.peer.RequestBlockCount()
 
                 else:
                     # This is incase the connection is unsuccessful, we display another toplevel.
@@ -1317,6 +1318,82 @@ class App(customtkinter.CTk):
                                              font=customtkinter.CTkFont(size=14, family="Montserrat"), wraplength=190)
 
         error_label.pack(anchor="center")
+
+    def settings(self):
+        # This opens a new settings tab, which shows some settings such as
+        #   - Auto Refresh
+        #   - Account naming
+        #   - Deleting Accounts with password
+
+        # Settings for the tab
+        settings_tab = customtkinter.CTkToplevel(self)
+        settings_tab.geometry("800x600")
+        settings_tab.title("Pycharm Settings")
+        settings_tab.resizable(False, False)
+
+        # Grid config
+        settings_tab.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
+        settings_tab.grid_columnconfigure((0, 1), weight=1)
+        settings_tab.grid_columnconfigure(2, weight=0)
+
+        # Settings label
+        settings_label = customtkinter.CTkLabel(master=settings_tab, text="Settings Tab",
+                                                font=customtkinter.CTkFont(size=20, family="Montserrat",
+                                                                           weight="bold"))
+        settings_label.grid(row=0, sticky="n", pady=(10, 0))
+
+        # Label for changing names for accounts
+        name_change_label = customtkinter.CTkLabel(master=settings_tab,
+                                                   text="Here you can add or change names for saved accounts.",
+                                                   font=customtkinter.CTkFont(size=14, family="Montserrat"))
+        name_change_label.grid(row=1, sticky="nw", padx=20)
+
+        # Frame for all the accounts
+        with open('json/keys.json') as file:
+            data = json.load(file)
+
+        # We add the all pychain addresses into a list
+        addresses = []
+        for account in data:
+            pubkey = address.ECmultiplication(account['privateKey'], address.Gx, address.Gy)
+            miner = address.createAddress(pubkey)
+            addresses.append(miner)
+
+        # We remove the users address from the list and added
+        user_address = address.createAddress(self.account_pubkey)
+        addresses.remove(user_address)
+        addresses.insert(0, user_address)
+
+
+
+
+
+        address_option_box = customtkinter.CTkOptionMenu(master=settings_tab, values=addresses,
+                                                         command=self.changeImage)
+        address_option_box.grid(row=2, column=0, sticky="nw", padx=20)
+
+        image = Image.open(self.account['iconPath'])
+        new_image = customtkinter.CTkImage(dark_image=image, light_image=image, size=(75, 75))
+        self.address_image_button = customtkinter.CTkButton(master=settings_tab, text="", fg_color="transparent",
+                                                            image=new_image, anchor="center", hover=False)
+        self.address_image_button.grid(row=2, column=1, sticky="nsew")
+
+    def changeImage(self, text):
+        print(text)
+        with open('json/keys.json') as file:
+            data = json.load(file)
+
+        for key in data:
+            public_key = address.ECmultiplication(key['privateKey'], address.Gx, address.Gy)
+            py_address = address.createAddress(public_key)
+            if py_address == text:
+                filepath = key['iconPath']
+                image = Image.open(filepath)
+                newimage = customtkinter.CTkImage(dark_image=image, light_image=image, size=(100, 100))
+                self.address_image_button.configure(image=newimage)
+
+
+
 
 
 if __name__ == "__main__":
