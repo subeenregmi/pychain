@@ -95,14 +95,7 @@ class App(customtkinter.CTk):
 
         except FileNotFoundError:
             # Settings for window that pops up when the user does not have any keys stored in 'keys.json'
-            window = customtkinter.CTkToplevel(self)
-            window.geometry("200x100")
-            window.resizable(False, False)
-
-            # Label inside the window
-            label = customtkinter.CTkLabel(master=window, text="No account found!\n\nCreate a new account",
-                                           anchor="center")
-            label.pack(padx=20, pady=20)
+            self.generateErrorLabel("Pychain Login", "Keys.json cannot be found in 'json/keys.json'.")
 
             # Greying out the login button after login fails
             self.LoginButton.configure(state="disabled", fg_color="grey")
@@ -940,10 +933,9 @@ class App(customtkinter.CTk):
         blockchainfile = self.blockchain_selector.get()
 
         # This gets the local ip address, by connecting to google's public domain and seeing what the IP is.
-        # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # s.connect(("8.8.8.8", 80))
-        # ip = s.getsockname()[0]
-        ip = "localhost"
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
 
         # This creates a peer using the blockchain that got selected.
         self.peer = Peer(f"blockchains/{blockchainfile}", ip, 50000, 50500, 10, self.account['privateKey'])
@@ -1033,34 +1025,13 @@ class App(customtkinter.CTk):
 
                 else:
                     # This is incase the connection is unsuccessful, we display another toplevel.
-                    error_top_level = customtkinter.CTkToplevel(self)
-                    error_top_level.geometry("200x50")
-                    error_top_level.title("Pychain Connect")
-                    error_top_level.resizable(False, False)
-
-                    error_label = customtkinter.CTkLabel(master=error_top_level, text="Connection is unsuccessful.",
-                                                         font=customtkinter.CTkFont( size=14, family="Montserrat"))
-                    error_label.pack(anchor="center")
+                    self.generateErrorLabel("Pychain Connect", "Connection was unsuccessful.")
             else:
                 # THis is incase the ip we are trying to connect to is already a peer.
-                error_top_level = customtkinter.CTkToplevel(self)
-                error_top_level.geometry("200x50")
-                error_top_level.title("Pychain Connect")
-                error_top_level.resizable(False, False)
-
-                error_label = customtkinter.CTkLabel(master=error_top_level, text="Ip is already a peer.",
-                                                     font=customtkinter.CTkFont(size=14, family="Montserrat"))
-                error_label.pack(anchor="center")
+                self.generateErrorLabel("Pychain Connect", "Ip is already a peer.")
         else:
             # This is incase the peer object hasn't been created, thus a blockchain has not been selected.
-            error_top_level = customtkinter.CTkToplevel(self)
-            error_top_level.geometry("200x50")
-            error_top_level.title("Pychain Connect")
-            error_top_level.resizable(False, False)
-
-            error_label = customtkinter.CTkLabel(master=error_top_level, text="Blockchain not selected.",
-                                                 font=customtkinter.CTkFont(size=14, family="Montserrat"))
-            error_label.pack(anchor="center")
+            self.generateErrorLabel("Pychain Connect", "Node has not connected to a blockchain.")
 
     def blocksListen(self):
         # This function is used for listening for blocks that are mined by the user and then will append that
@@ -1101,15 +1072,7 @@ class App(customtkinter.CTk):
                     reward_label.grid(row=1, column=0, sticky="nsew", pady=(0, 5))
         else:
             # If no blockchain is selected.
-            error_top_level = customtkinter.CTkToplevel(self)
-            error_top_level.geometry("200x50")
-            error_top_level.title("Pychain Mine")
-            error_top_level.resizable(False, False)
-
-            error_label = customtkinter.CTkLabel(master=error_top_level, text="Blockchain not selected.",
-                                                 font=customtkinter.CTkFont(size=14, family="Montserrat"))
-
-            error_label.pack(anchor="center")
+            self.generateErrorLabel("Pychain Mine", "Blockchain not selected.")
 
     def getAmount(self, value):
         self.value = round(value)
@@ -1198,6 +1161,27 @@ class App(customtkinter.CTk):
                     txraw = rawtxcreator.createTxFromDict(txDict)
                     tx = Transaction(txraw)
                     self.peer.validateTransaction(tx, self.account_pubkey)
+                    self.peer.sendTransaction(tx.raw, self.account_pubkey)
+
+                else:
+                    self.generateErrorLabel("Pychain Send", "Account has not been entered.")
+            else:
+                self.generateErrorLabel("Pychain Send", "Value selected is more than balance.")
+        else:
+            self.generateErrorLabel("Pychain Send", "Value has not been selected.")
+
+    def generateErrorLabel(self, title, message):
+        # This generates a simple customizable error message, using this saves lots of copy and pasting.
+
+        error_top_level = customtkinter.CTkToplevel(self)
+        error_top_level.geometry("200x50")
+        error_top_level.title(title)
+        error_top_level.resizable(False, False)
+
+        error_label = customtkinter.CTkLabel(master=error_top_level, text=message,
+                                             font=customtkinter.CTkFont(size=14, family="Montserrat"), wraplength=190)
+
+        error_label.pack(anchor="center")
 
 
 if __name__ == "__main__":

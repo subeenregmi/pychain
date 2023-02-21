@@ -575,7 +575,6 @@ class Peer:
         print(f"<IP CHECK> {ip} is NOT a peer.")
         return False
 
-
     def validateTransaction(self, transaction, public_key):
         # This function will validate a transaction when we receive it, and this determines if the transactions reach
         # our mempool, to be mined.
@@ -585,17 +584,17 @@ class Peer:
         total_value = 0
 
         try:
-                # We first decode our raw transaction into a dictionary
+            # We first decode our raw transaction into a dictionary
             transactionDict = rawtxdecoder.decodeRawTx(transaction.raw)
             inputs = int(transactionDict["InputCount"])
             for i in range(inputs):
-                    # For each input we get the txid, vout and the sig
+                # For each input we get the txid, vout and the sig
                 txid = transactionDict[f"txid{i}"]
                 vout = transactionDict[f"vout{i}"]
                 vout = int(vout, 16)
                 sig = transactionDict[f"scriptSig{i}"]
 
-                    # This checks each transaction in the blockchain to see if the same txid and vout is already mentioned
+                # This checks each transaction in the blockchain to see if the same txid and vout is already mentioned
                 for block in self.blockchain.blocks:
                     for tx in block.transactions:
                         decodedtx = rawtxdecoder.decodeRawTx(tx.raw)
@@ -604,7 +603,7 @@ class Peer:
                             if decodedtx[f"txid{z}"] == txid and int(decodedtx[f"vout{z}"], 16) == vout:
                                 return False
 
-                    # This checks if the transactions txid and vout is already in the mempool
+                # This checks if the transactions txid and vout is already in the mempool
                 for tx in self.mempool:
                     decodedtx = rawtxdecoder.decodeRawTx(tx.raw)
                     inputs = int(decodedtx["InputCount"])
@@ -612,23 +611,26 @@ class Peer:
                         if decodedtx[f"txid{z}"] == txid and int(decodedtx[f"vout{z}"], 16) == vout:
                             return False
 
-                    # We find the transaction that is used for an input and take the scriptPubKey
+                # We find the transaction that is used for an input and take the scriptPubKey
                 previousTransaction = self.blockchain.findTxid(txid)
                 previousTransactionDict = rawtxdecoder.decodeRawTx(previousTransaction)
 
-                    # Finding the values of the previous transaction totalled
+                # Finding the values of the previous transaction totalled
                 previous_value = previousTransactionDict[f"value{vout}"]
                 previous_value = int(previous_value, 16)
                 total_value += previous_value
 
-                    # This picks the specific locking script that the vout refers to
+                # This picks the specific locking script that the vout refers to
                 scriptPubKey = previousTransactionDict[f"scriptPubKey{vout}"]
                 script = breakDownLockScript(scriptPubKey)
                 sig = decoder(sig)
                 stack = [sig, public_key]
 
+                # We have to use a copy as otherwise the original transaction will change, this isn't a problem with
+                # transactions that only have one input, but breaks the validation for transactions with multiple inputs
                 copy = transactionDict.copy()
-                    # This creates the hash of the message the signature is used on.
+
+                # This creates the hash of the message the signature is used on.
                 rawtx2 = createEmptyTxForSign(copy)
 
                 truth = runScript(stack, script, rawtx2)
@@ -642,6 +644,7 @@ class Peer:
         except:
             print("<TX VALIDATE> Transaction is invalid.")
 
+        # The last check to see if the transaction is not sending more than the total of the input transactions
         transaction_value = transaction.findTotalValueSent()
         if transaction_value > total_value:
             print(f"<TX VALIDATE> Transaction is invalid.")
