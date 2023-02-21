@@ -18,6 +18,11 @@ import rawtxcreator
 from transaction import Transaction
 import rawtxdecoder
 
+#TODO: Add settings tab, autorefresh, account naming, peer pinging
+#TODO: Add peer block requesting in initial connection
+#TODO: Construct transaction based on time using merge sort
+#TODO: Add latest blocks
+
 # This sets the general color theme to be dark
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -32,6 +37,7 @@ class App(customtkinter.CTk):
         self.account = None
         self.account_pubkey = None
         self.peer = None
+        self.listOfPeers = []
 
         # We call a method as users may want to go back
         self.start()
@@ -756,6 +762,130 @@ class App(customtkinter.CTk):
         self.connections_frame.grid_columnconfigure(0, weight=1)
         self.connections_frame.grid_columnconfigure(1, weight=0)
 
+        # Here we check if all the connections have been displayed we do this by, after we connect to a user we add the
+        # frame and state they have been connected, but we don't check if anyone else has connected to us.
+        # To update the frame we have another list, and when we connect with anyone, we add them to our list. But then
+        # to check if anyone has joined us, we check for peers that are in self.peer.peers but not in list of peers.
+
+        if self.peer:
+            # We need to iterate through each peer in self.peer.peers, and check if any of those peers are not in
+            # self.listOfPeers thus we need to add another frame for the new peer that connected to us.
+            for peer in self.peer.peers:
+                if peer.getpeername() not in self.listOfPeers:
+
+                    # If there is a peer that is not in listOfPeers we add it to the list
+                    self.listOfPeers.append(peer)
+
+                    # We can also create another top level showing a peer has connected.
+                    connection_top_level = customtkinter.CTkToplevel(self)
+                    connection_top_level.geometry("200x50")
+                    connection_top_level.title("Pychain Connect")
+                    connection_top_level.resizable(False, False)
+
+                    # Label saying peer has connected
+                    peer_connection_label = customtkinter.CTkLabel(master=connection_top_level,
+                                                                   text=f"{peer.getpeername()} has connected!",
+                                                                   font=customtkinter.CTkFont(size=14,
+                                                                                              family="Montserrat"))
+                    peer_connection_label.pack(anchor="center")
+
+                    # This is the connection frame we create and put into our connections frame
+                    connection_frame = customtkinter.CTkFrame(master=self.connections_frame, fg_color="black")
+
+                    # Grid configuration
+                    connection_frame.grid_rowconfigure(0, weight=1)
+                    connection_frame.grid_rowconfigure(1, weight=0)
+                    connection_frame.grid_columnconfigure(0, weight=1)
+                    connection_frame.grid_columnconfigure(1, weight=9)
+                    connection_frame.grid_columnconfigure(2, weight=0)
+
+                    # We put the connection into the row index of the list of peers-1
+                    connection_frame.grid(row=len(self.peer.peers) - 1, sticky="nsew")
+
+                    # We also want to put an image of a green dot, signifying a connection
+                    connection_image = Image.open("images/icons/greenicon.png")
+                    connection_img = customtkinter.CTkImage(dark_image=connection_image, size=(20, 20))
+                    connection_Image_Button = customtkinter.CTkButton(master=connection_frame, image=connection_img,
+                                                                      text="", fg_color="transparent", hover=False)
+                    connection_Image_Button.grid(row=0, column=0, sticky="w", padx=(5, 0))
+
+                    # This is the label stating that an ip is connected.
+                    connection_label = customtkinter.CTkLabel(master=connection_frame,
+                                                              text=f"{peer.getpeername()[0]} is connected!",
+                                                              font=customtkinter.CTkFont(size=14,
+                                                                                         family="Montserrat"))
+                    connection_label.grid(row=0, column=1, sticky="w")
+
+                    # Here we append the peers list
+                    with open("json/currentAccount.json") as data:
+                        data = json.load(data)
+
+                    data['peers'].append(peer.getpeername()[0])
+
+                    with open("json/currentAccount.json", "w") as f:
+                        json.dump(data, f)
+
+            # If the lists are not equal meaning that someone left us, we will basically rebuild the whole frame based
+            # on the peers in self.peer.peers
+            if self.listOfPeers != self.peer.peers:
+                self.listOfPeers = []
+
+                # We also need to clear the current connected peers in 'currentAccount.json'
+                with open("json/currentAccount.json") as file:
+                    data = json.load(file)
+
+                data["peers"] = []
+
+                with open("json/currentAccount.json", "w") as file:
+                    json.dump(data, file, indent=2)
+
+                # Here we remove the whole frame that contains all the connections
+                for widgets in self.connections_frame.winfo_children():
+                    widgets.destroy()
+
+                # We now iterate through the peers in self.peer.peers
+                for peer in self.peer.peers:
+
+                    # We also need to append the peer into listOfPeers basically copying self.peer.peers into
+                    # self.listOfPeers
+                    self.listOfPeers.append(peer)
+
+                    # This is the connection frame we create and put into our connections frame
+                    connection_frame = customtkinter.CTkFrame(master=self.connections_frame, fg_color="black")
+
+                    # Grid configuration
+                    connection_frame.grid_rowconfigure(0, weight=1)
+                    connection_frame.grid_rowconfigure(1, weight=0)
+                    connection_frame.grid_columnconfigure(0, weight=1)
+                    connection_frame.grid_columnconfigure(1, weight=9)
+                    connection_frame.grid_columnconfigure(2, weight=0)
+
+                    # We put the connection into the row index of the list of peers-1
+                    connection_frame.grid(row=len(self.peer.peers) - 1, sticky="nsew")
+
+                    # We also want to put an image of a green dot, signifying a connection
+                    connection_image = Image.open("images/icons/greenicon.png")
+                    connection_img = customtkinter.CTkImage(dark_image=connection_image, size=(20, 20))
+                    connection_Image_Button = customtkinter.CTkButton(master=connection_frame, image=connection_img,
+                                                                      text="", fg_color="transparent", hover=False)
+                    connection_Image_Button.grid(row=0, column=0, sticky="w", padx=(5, 0))
+
+                    # This is the label stating that an ip is connected.
+                    connection_label = customtkinter.CTkLabel(master=connection_frame,
+                                                              text=f"{peer.getpeername()[0]} is connected!",
+                                                              font=customtkinter.CTkFont(size=14,
+                                                                                         family="Montserrat"))
+                    connection_label.grid(row=0, column=1, sticky="w")
+
+                    # Here we append the peers list
+                    with open("json/currentAccount.json") as data:
+                        data = json.load(data)
+
+                    data['peers'].append(peer.getpeername()[0])
+
+                    with open("json/currentAccount.json", "w") as f:
+                        json.dump(data, f, indent=2)
+
         # The following code will be about the blocks tabs, this will instantiate the blockchain and will display all
         # the current blocks, we can do this by making it into scrollable frame, and inside we will have frames, that
         # contain the block details, we will order the blocks by the latest at the top of the tab. The individual block
@@ -1018,10 +1148,15 @@ class App(customtkinter.CTk):
                     connection_label.grid(row=0, column=1, sticky="w")
 
                     # Here we append the peers list
-                    with open("json/currentAccount.json") as data:
-                        data = json.load(data)
+                    with open("json/currentAccount.json") as file:
+                        data = json.load(file)
 
                     data['peers'].append(ip)
+
+                    with open("json/currentAccount.json", "w") as file:
+                        json.dump(data, file, indent=2)
+
+                    self.listOfPeers.append(ip)
 
                 else:
                     # This is incase the connection is unsuccessful, we display another toplevel.
