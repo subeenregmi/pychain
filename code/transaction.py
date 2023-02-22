@@ -38,9 +38,14 @@ class Transaction:
 
     # This function goes through the outputs to find the total value being sent
 
-    def findTotalValueSent(self):
+    def findTotalValueSent(self, address=None):
         totalValue = 0
         for key in self.outputs:
+            if address is not None:
+                spk = key[1]
+                spk = breakDownLockScript(spk)
+                if address in spk:
+                    continue
             totalValue += int(key, 16)
         return totalValue
     

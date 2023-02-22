@@ -18,9 +18,8 @@ import rawtxcreator
 from transaction import Transaction
 import rawtxdecoder
 
-#TODO: Add settings tab, autorefresh, account naming, peer pinging
-#TODO: Construct transaction based on time using merge sort
-#TODO: Add latest blocks
+#TODO: Add autorefresh
+#TODO: Finish up transactions
 
 # This sets the general color theme to be dark
 customtkinter.set_appearance_mode("dark")
@@ -46,8 +45,8 @@ class App(customtkinter.CTk):
         # This destroys all previous widgets if switching to the start menu.
         for widget in self.winfo_children():
             widget.destroy()
-        self.grid_rowconfigure(0, weight=0)
-        self.grid_columnconfigure(0, weight=0)
+        self.grid_rowconfigure( (0, 1, 2, 3), weight=0 )
+        self.grid_columnconfigure( (0, 1, 2, 3), weight=0 )
 
         # Settings for the window
         self.title("Pychain")
@@ -211,6 +210,8 @@ class App(customtkinter.CTk):
             self.account = account
             self.account_pubkey = address.ECmultiplication(self.account['privateKey'], address.Gx, address.Gy)
             self.gui()
+        else:
+            self.generateErrorLabel("Pychain Login", "Wrong Password.")
 
     def CreateNewAccount(self):
 
@@ -626,7 +627,6 @@ class App(customtkinter.CTk):
             except:
                 pass
 
-
         # The following code will be about the send tab, this is where you can send a transaction to another user.
         send.grid_rowconfigure((0, 1, 2, 3), weight=1)
         send.grid_columnconfigure((0, 1), weight=1)
@@ -680,49 +680,118 @@ class App(customtkinter.CTk):
                                                     font=customtkinter.CTkFont(size=20, family="Montserrat"))
         transactions_label.grid(row=0, column=0, sticky="n", pady=(5, 0), columnspan=2)
 
-        input_transactions_frame = customtkinter.CTkScrollableFrame(master=transactions)
-        input_transactions_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
-        output_transactions_frame = customtkinter.CTkScrollableFrame(master=transactions)
-        output_transactions_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
+        # input_transactions_frame = customtkinter.CTkScrollableFrame(master=transactions)
+        # input_transactions_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        # output_transactions_frame = customtkinter.CTkScrollableFrame(master=transactions)
+        # output_transactions_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
+
+        transactions_frame = customtkinter.CTkScrollableFrame(master=transactions)
+        transactions_frame.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+        transactions_frame.grid_columnconfigure(0, weight=1)
+        transactions_frame.grid_columnconfigure(1, weight=0)
 
         balance_label = customtkinter.CTkLabel(master=transactions, text="Balance: ",
                                                font=customtkinter.CTkFont(size=20, family="Montserrat"))
         balance_label.grid(row=3, sticky="sw", padx=5, pady=5)
 
         if self.peer:
+            pyaddress = address.createAddress(self.account_pubkey)
             total_in = 0
             total_out = 0
-            inputs, outputs = self.peer.blockchain.findTxidsRelatingToKey(self.account_pubkey)
-            count = 0
-            for inputTransaction in inputs:
-                txid = inputTransaction.txid
-                transaction, block = self.peer.blockchain.findBlockIdwithTxid(txid)
-                frame = customtkinter.CTkFrame(master=input_transactions_frame, fg_color="black")
-                frame.grid(row=count, sticky="nsew", padx=5, pady=5)
-                count += 1
-                label = customtkinter.CTkLabel(master=frame, text=f"TXID: {txid}\n"
-                                                                  f"Received {transaction.findTotalValueSent()} pyCoins\n"
-                                                                  f"Block {block.height}",
-                                               font=customtkinter.CTkFont(size=11, family="Montserrat"))
-                label.grid(row=0, column=0, padx=5, pady=5)
-                total_in += transaction.findTotalValueSent()
-            count = 0
-            for outputTransaction in outputs:
-                txid = outputTransaction.txid
-                transaction, block = self.peer.blockchain.findBlockIdwithTxid(txid)
-                frame = customtkinter.CTkFrame(master=output_transactions_frame, fg_color="black")
-                frame.grid(row=count, sticky="nsew", padx=5, pady=5)
-                count += 1
-                label = customtkinter.CTkLabel(master=frame, text=f"TXID: {txid}\n"
-                                                                  f"Received {transaction.findTotalValueSent()} pyCoins\n"
-                                                                  f"Block {block.height}",
-                                               font=customtkinter.CTkFont(size=11, family="Montserrat"))
-                label.grid(row=0, column=0, padx=5, pady=5)
-                total_out += transaction.findTotalValueSent()
+            txs = self.peer.blockchain.findALLTxidsRelatingToKey(self.account_pubkey)
+            count = len(txs)
+            for tx in txs:
+                transaction_frame = customtkinter.CTkFrame(master=transactions_frame, fg_color="black")
+                transaction_frame.grid_rowconfigure((0, 1, 2), weight=1)
+                transaction_frame.grid_rowconfigure(3, weight=0)
+                transaction_frame.grid_columnconfigure(0, weight=19)
+                transaction_frame.grid_columnconfigure(1, weight=1)
+                transaction_frame.grid_columnconfigure(2, weight=0)
+                transaction_frame.grid(row=count, sticky="nsew", padx=5, pady=5)
+                count -= 1
 
-            self.balance = total_in - total_out
-            balance_label.configure(text=f"Balance: {self.balance} pyCoins")
-            self.balance_label.configure(text=f"Balance: {self.balance} pyCoins")
+                transaction_txid_label = customtkinter.CTkLabel(master=transaction_frame, text=f"TXID: {tx.txid}",
+                                                                font=customtkinter.CTkFont(size=16, family="Montserrat",
+                                                                                           weight="bold"))
+                transaction_txid_label.grid(row=0, column=0, sticky="w", padx=5, pady=5)
+
+                trx, block_got = self.peer.blockchain.findBlockIdwithTxid(tx.txid)
+                transaction_time = block_got.blocktime
+                transaction_time = int(transaction_time)
+                transaction_time = datetime.utcfromtimestamp(transaction_time).strftime('%Y-%m-%d %H:%M:%S')
+
+                transaction_time_label = customtkinter.CTkLabel(master=transaction_frame, text=transaction_time,
+                                                                font=customtkinter.CTkFont(size=14, family="Montserrat",
+                                                                                           weight="bold"),
+                                                                wraplength=80)
+                transaction_time_label.grid(row=0, column=0, sticky="ne", padx=5, pady=5)
+
+                addressWho = self.peer.blockchain.findWhoSentTransaction(tx)
+
+                if addressWho == "Coinbase Transaction":
+                    transaction_value = customtkinter.CTkLabel(master=transaction_frame, text="Value: 100 pyCoins",
+                                                               font=customtkinter.CTkFont(size=14, family="Montserrat"))
+                    total_in += 100
+                    transaction_value.grid(row=1, column=0, sticky="w", padx=5, pady=5)
+                    transaction_from = customtkinter.CTkLabel(master=transaction_frame, text=f"Sent From: {addressWho}",
+                                                              font=customtkinter.CTkFont(size=14, family="Montserrat"))
+                    transaction_from.grid(row=2, column=0, sticky="w", padx=5, pady=5)
+
+                    transaction_colour_frame = customtkinter.CTkFrame(master=transaction_frame, fg_color="#6bde57")
+                    transaction_colour_frame.grid_rowconfigure(0, weight=1)
+                    transaction_colour_frame.grid_rowconfigure(1, weight=0)
+                    transaction_colour_frame.grid_columnconfigure(0, weight=1)
+                    transaction_colour_frame.grid_columnconfigure(1, weight=0)
+                    transaction_colour_frame.grid(row=0, column=1, rowspan=3, sticky="nsew")
+
+                    image = Image.open('images/icons/plusIcon.png')
+                    new_image = customtkinter.CTkImage(dark_image=image, size=(50, 50))
+                    image_button = customtkinter.CTkButton(master=transaction_colour_frame, text="", hover=False,
+                                                           fg_color="transparent", image=new_image)
+                    image_button.grid(row=0, column=0)
+
+                # elif addressWho
+
+
+
+
+
+
+
+        # if self.peer:
+        #     total_in = 0
+        #     total_out = 0
+        #     inputs, outputs = self.peer.blockchain.findTxidsRelatingToKey(self.account_pubkey)
+        #     count = 0
+        #     for inputTransaction in inputs:
+        #         txid = inputTransaction.txid
+        #         transaction, block = self.peer.blockchain.findBlockIdwithTxid(txid)
+        #         frame = customtkinter.CTkFrame(master=input_transactions_frame, fg_color="black")
+        #         frame.grid(row=count, sticky="nsew", padx=5, pady=5)
+        #         count += 1
+        #         label = customtkinter.CTkLabel(master=frame, text=f"TXID: {txid}\n"
+        #                                                           f"Received {transaction.findTotalValueSent()} pyCoins\n"
+        #                                                           f"Block {block.height}",
+        #                                        font=customtkinter.CTkFont(size=11, family="Montserrat"))
+        #         label.grid(row=0, column=0, padx=5, pady=5)
+        #         total_in += transaction.findTotalValueSent()
+        #     count = 0
+        #     for outputTransaction in outputs:
+        #         txid = outputTransaction.txid
+        #         transaction, block = self.peer.blockchain.findBlockIdwithTxid(txid)
+        #         frame = customtkinter.CTkFrame(master=output_transactions_frame, fg_color="black")
+        #         frame.grid(row=count, sticky="nsew", padx=5, pady=5)
+        #         count += 1
+        #         label = customtkinter.CTkLabel(master=frame, text=f"TXID: {txid}\n"
+        #                                                           f"Received {transaction.findTotalValueSent()} pyCoins\n"
+        #                                                           f"Block {block.height}",
+        #                                        font=customtkinter.CTkFont(size=11, family="Montserrat"))
+        #         label.grid(row=0, column=0, padx=5, pady=5)
+        #         total_out += transaction.findTotalValueSent()
+        #
+        #     self.balance = total_in - total_out
+        #     balance_label.configure(text=f"Balance: {self.balance} pyCoins")
+        #     self.balance_label.configure(text=f"Balance: {self.balance} pyCoins")
 
         # The following code will be about the connect tab this is where you enter an IP address and then trying to
         # connect to an IP, once the ip connection has been made, we can add the peer ip to a json file.
@@ -1089,7 +1158,7 @@ class App(customtkinter.CTk):
         # mining script.
 
         data = {
-            "blockchainfile":f"blockchains/{blockchainfile}",
+            "blockchainfile": f"blockchains/{blockchainfile}",
             "host": ip,
             "portMin": 50000,
             "portMax": 50500,
@@ -1378,8 +1447,8 @@ class App(customtkinter.CTk):
 
         # This is the address box used to select which address to modify.
         self.address_option_box = customtkinter.CTkOptionMenu(master=settings_tab, values=addresses,
-                                                         command=self.changeImage, fg_color="#533fd3",
-                                                         dropdown_hover_color="#533fd3", button_color="#2c1346")
+                                                              command=self.changeImage, fg_color="#533fd3",
+                                                              dropdown_hover_color="#533fd3", button_color="#2c1346")
         self.address_option_box.grid(row=0, column=0, sticky="sw", padx=20)
 
         # We should put an image so it's much easier to see what account to modify
@@ -1440,7 +1509,7 @@ class App(customtkinter.CTk):
                                             button_hover_color="#2c1346")
         user_entered = name.get_input()
         if user_entered == "":
-            return False
+            return
 
         with open('json/keys.json') as file:
             data = json.load(file)
@@ -1490,7 +1559,7 @@ class App(customtkinter.CTk):
             # Once, we have found the address, we can check if the hashes match
             if py_address == text:
                 if hash == key['passwordHash']:
-                    # We remove it from the json file and the icon.
+                    # We remove it from the json file and we remove the icon.
                     data.remove(key)
 
                     filepath = key['iconPath']
@@ -1504,8 +1573,6 @@ class App(customtkinter.CTk):
                     break
                 else:
                     self.generateErrorLabel("Pychain Delete Account", "Password does not correlate with hash.")
-
-
 
 
 if __name__ == "__main__":

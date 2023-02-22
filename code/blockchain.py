@@ -1,5 +1,7 @@
 from blockcreator import Block
 import address
+import rawtxdecoder
+import spubKeydecoder
 
 
 '''
@@ -85,7 +87,6 @@ class Blockchain:
     def findTxidsRelatingToKey(self, publicKey):
 
         pyAddress = address.createAddress(publicKey)
-        uncompressedAddress = "04 " + str(hex(publicKey[0])[2:]) + str(hex(publicKey[1]))[2:]
         inputs = []
         outputs = []
 
@@ -111,6 +112,48 @@ class Blockchain:
         outputs = uniqueOutputs
 
         return inputs, outputs
+
+    def findALLTxidsRelatingToKey(self, publicKey):
+
+        pyAddress = address.createAddress(publicKey)
+        transactions = []
+
+        for block in self.blocks:
+            for transaction in block.transactions:
+                try:
+                    if pyAddress in transaction.outputAddress():
+                        transactions.append(transaction)
+                except:
+                    pass
+
+                for input in transactions:
+                    for i in transaction.inputTxids():
+                        if i == input.txid:
+                            transactions.append(transaction)
+
+        return transactions
+
+    def findWhoSentTransaction(self, tx):
+        # This will look at the transactions inputs and try to find them in the blockchain if found we can return the
+        # address of script public key
+        decodedTx = rawtxdecoder.decodeRawTx(tx.raw)
+        for i in range(tx.inputcount):
+            txidSearch = decodedTx[f'txid{i}']
+            txidVout = decodedTx[f'vout{i}']
+
+            # Check if a transaction is a coinbase
+            if txidSearch == "8266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb44":
+                return "Coinbase Transaction"
+
+            # Break down the scriptPubKey of the input tx, to find the address.
+            searchedTxRaw = self.findTxid(txidSearch)
+            if searchedTxRaw:
+                searchedTxDict = rawtxdecoder.decodeRawTx(searchedTxRaw)
+                scriptPubKey = searchedTxDict[f"scriptPubKey{txidVout}"]
+                opcodes = spubKeydecoder.breakDownLockScript(scriptPubKey)
+                for opcode in opcodes:
+                    if opcode[:2] == "69":
+                        return opcode
 
     def setReward(self, reward):
         self.reward = reward
