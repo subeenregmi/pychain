@@ -649,7 +649,9 @@ class App(customtkinter.CTk):
             add_address_image = Image.open("images/icons/addressbookIcon.png")
             add_address_image = customtkinter.CTkImage(dark_image=add_address_image, size=(50, 50))
             save_address_button = customtkinter.CTkButton(master=send, text="", fg_color="#533fd3", hover_color="#2c1346",
-                                                          height=72, width=72, image=add_address_image)
+                                                          height=72, width=72, image=add_address_image,
+                                                          command=self.saveSendAddress)
+
             save_address_button.grid(row=1, column=2, sticky="w")
 
             self.amount_slider = customtkinter.CTkSlider(master=send, from_=0, to=self.balance, button_color="#533fd3",
@@ -1400,9 +1402,19 @@ class App(customtkinter.CTk):
                 # Here we get the address that has been entered by the user.
                 sendaddress = self.send_to_entry.get()
 
+                if sendaddress[:2] != "69":
+                    # We try to find an address saved as whats in the entry if its not in the correct format
+                    with open('json/addressbook.json') as file:
+                        data = json.load(file)
+                    try:
+                        sendaddress = data[sendaddress]
+                    except:
+                        self.generateErrorLabel("Pychain Send", "Address in incorrect format, or not in address book.")
+                        return
+
                 # Here we check that an address has been inputted.
                 if sendaddress != '':
-
+                    print("Sending to : " + sendaddress)
                     # We now check for the inputs and output transactions for the specific user key
                     inputs, outputs = self.peer.blockchain.findTxidsRelatingToKey(self.account_pubkey)
 
@@ -1662,6 +1674,56 @@ class App(customtkinter.CTk):
                     break
                 else:
                     self.generateErrorLabel("Pychain Delete Account", "Password does not correlate with hash.")
+
+    def saveSendAddress(self):
+        # This function saves an address with a name, so that they can refer to a name instead of the address for future
+        # transactions.
+
+        # This gets the address in the entry
+        addressEntry = self.send_to_entry.get()
+
+        if addressEntry[:2] == "69":
+            name_input = customtkinter.CTkInputDialog(text=f"Give a name for {addressEntry}",title="Pychain Address Book",
+                                                      button_fg_color="#533fd3", button_hover_color="#2c1346")
+            # Gets the input from the input dialog
+            name = name_input.get_input()
+
+            if name != "":
+
+                # We store in 'addressbook.json'
+                with open('json/addressbook.json') as file:
+                    data = json.load(file)
+
+                data[name] = address
+                print(data)
+
+                with open('json/addressbook.json', "w") as file:
+                    json.dump(data, file, indent=2)
+
+                self.generateErrorLabel("Pychain Address Book", "Address added successfully")
+            else:
+                self.generateErrorLabel("Pychain Address Book", "Name is empty.")
+        elif addressEntry == "":
+            # If the user has not input any address we can show them a top level that shows the address book.
+            address_book_top_level = customtkinter.CTkToplevel(self)
+            address_book_top_level.geometry("600x800")
+            address_book_top_level.title("Pychain Address Book")
+            address_book_top_level.resizable(False, False)
+
+            label = customtkinter.CTkLabel(master=address_book_top_level, text="Addresses Saved: ")
+            label.pack()
+
+            # This allows all of the saved address to be displayed in a nicer format.
+            with open('json/addressbook.json') as file:
+                data = json.load(file)
+
+            label = customtkinter.CTkLabel(master=address_book_top_level, text=json.dumps(data, indent=2),
+                                           font=customtkinter.CTkFont(size=14, family="Montserrat", weight="bold"),
+                                           wraplength=575, anchor="w", justify="left")
+            label.pack()
+
+        else:
+            self.generateErrorLabel("Pychain Address Book", "Invalid name format.")
 
 
 if __name__ == "__main__":
