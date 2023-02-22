@@ -639,7 +639,7 @@ class App(customtkinter.CTk):
                                             font=customtkinter.CTkFont(size=20, family="Montserrat"), wraplength=800)
         send_label.grid(row=0, columnspan=3, pady=5, padx=5)
 
-        if self.peer:
+        if self.peer and self.balance != 0:
             # This only shows when a balance other than 0 exists
             self.send_to_entry = customtkinter.CTkEntry(master=send, placeholder_text="To Address",
                                                    font=customtkinter.CTkFont(size=18, family="Montserrat"),
@@ -669,38 +669,50 @@ class App(customtkinter.CTk):
         # The following code will be about the transaction tab, this is where you can see all the transactions
         # that you have sent or given.
 
+        # Grid configurations for transactions tab.
         transactions.grid_rowconfigure((0, 2), weight=1)
         transactions.grid_rowconfigure(1, weight=5)
         transactions.grid_rowconfigure(3, weight=0)
         transactions.grid_columnconfigure((0, 1), weight=1)
         transactions.grid_columnconfigure(2, weight=0)
+
+        # Label describing the transactions tab
         transactions_label = customtkinter.CTkLabel(master=transactions, text="This is the transactions tab, this is"
                                                                               " where you can find all your "
                                                                               "transactions.",
                                                     font=customtkinter.CTkFont(size=20, family="Montserrat"))
         transactions_label.grid(row=0, column=0, sticky="n", pady=(5, 0), columnspan=2)
 
-        # input_transactions_frame = customtkinter.CTkScrollableFrame(master=transactions)
-        # input_transactions_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
-        # output_transactions_frame = customtkinter.CTkScrollableFrame(master=transactions)
-        # output_transactions_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
-
+        # Frame that holds all the transactions
         transactions_frame = customtkinter.CTkScrollableFrame(master=transactions)
         transactions_frame.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+
+        # Frames Grid Configuration
         transactions_frame.grid_columnconfigure(0, weight=1)
         transactions_frame.grid_columnconfigure(1, weight=0)
 
+        # Balance Label to display the amount of pyCoins the user has.
         balance_label = customtkinter.CTkLabel(master=transactions, text="Balance: ",
                                                font=customtkinter.CTkFont(size=20, family="Montserrat"))
         balance_label.grid(row=3, sticky="sw", padx=5, pady=5)
 
+        # We start getting transactions if a node is created
         if self.peer:
+
+            # We setup three variables, the pyaddress of the current user. The total currency in and out.
             pyaddress = address.createAddress(self.account_pubkey)
             total_in = 0
             total_out = 0
+
+            # All transactions relating to the user
             txs = self.peer.blockchain.findALLTxidsRelatingToKey(self.account_pubkey)
             count = len(txs)
+
+            # We are going to loop through all these transactions and identify if they are either coinbase transactions
+            # normal transactions or return transactions.
             for tx in txs:
+
+                # Here we create another frame to display a transaction
                 transaction_frame = customtkinter.CTkFrame(master=transactions_frame, fg_color="black")
                 transaction_frame.grid_rowconfigure((0, 1, 2), weight=1)
                 transaction_frame.grid_rowconfigure(3, weight=0)
@@ -710,29 +722,67 @@ class App(customtkinter.CTk):
                 transaction_frame.grid(row=count, sticky="nsew", padx=5, pady=5)
                 count -= 1
 
+                # Label for the transactions txid
                 transaction_txid_label = customtkinter.CTkLabel(master=transaction_frame, text=f"TXID: {tx.txid}",
                                                                 font=customtkinter.CTkFont(size=16, family="Montserrat",
                                                                                            weight="bold"))
                 transaction_txid_label.grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
+                # Here we get the block time for that transaction
                 trx, block_got = self.peer.blockchain.findBlockIdwithTxid(tx.txid)
                 transaction_time = block_got.blocktime
                 transaction_time = int(transaction_time)
                 transaction_time = datetime.utcfromtimestamp(transaction_time).strftime('%Y-%m-%d %H:%M:%S')
 
+                # Label we are going to put the time information of the transaction
                 transaction_time_label = customtkinter.CTkLabel(master=transaction_frame, text=transaction_time,
                                                                 font=customtkinter.CTkFont(size=14, family="Montserrat",
                                                                                            weight="bold"),
                                                                 wraplength=80)
                 transaction_time_label.grid(row=0, column=0, sticky="ne", padx=5, pady=5)
 
+                # Here we find who sent the transaction
                 addressWho = self.peer.blockchain.findWhoSentTransaction(tx)
 
+                # If the transaction is a coinbase, the total in increments by 100
                 if addressWho == "Coinbase Transaction":
+                    # Label for the value of the transaction
                     transaction_value = customtkinter.CTkLabel(master=transaction_frame, text="Value: 100 pyCoins",
                                                                font=customtkinter.CTkFont(size=14, family="Montserrat"))
-                    total_in += 100
                     transaction_value.grid(row=1, column=0, sticky="w", padx=5, pady=5)
+                    total_in += 100
+
+                    # The label for who sent the transactions, this instance it would be 'Coinbase Transaction'
+                    transaction_from = customtkinter.CTkLabel(master=transaction_frame, text=f"Sent From: {addressWho}",
+                                                              font=customtkinter.CTkFont(size=14, family="Montserrat"))
+                    transaction_from.grid(row=2, column=0, sticky="w", padx=5, pady=5)
+
+                    # This indicates whether we are sending money or receiving, green if receiving and red if sending
+                    transaction_colour_frame = customtkinter.CTkFrame(master=transaction_frame, fg_color="#6bde57")
+                    transaction_colour_frame.grid_rowconfigure(0, weight=1)
+                    transaction_colour_frame.grid_rowconfigure(1, weight=0)
+                    transaction_colour_frame.grid_columnconfigure(0, weight=1)
+                    transaction_colour_frame.grid_columnconfigure(1, weight=0)
+                    transaction_colour_frame.grid(row=0, column=1, rowspan=3, sticky="nsew")
+
+                    # An image to clearly show if sending or receiving
+                    image = Image.open('images/icons/plusIcon.png')
+                    new_image = customtkinter.CTkImage(dark_image=image, size=(50, 50))
+                    image_button = customtkinter.CTkButton(master=transaction_colour_frame, text="", hover=False,
+                                                           fg_color="transparent", image=new_image)
+                    image_button.grid(row=0, column=0)
+
+                # If the address of who sent the transaction is not our own address, that means we are receiving
+                elif addressWho != pyaddress:
+
+                    # We find the total value sent that does not include any outputs to that person.
+                    tx_value = tx.findTotalValueSent(addressWho)
+                    transaction_value = customtkinter.CTkLabel(master=transaction_frame, text=f"Value: {tx_value}",
+                                                               font=customtkinter.CTkFont(size=14, family="Montserrat"))
+                    total_in += tx_value
+                    transaction_value.grid(row=1, column=0, sticky="w", padx=5, pady=5)
+
+                    # This will display who sent us this transaction
                     transaction_from = customtkinter.CTkLabel(master=transaction_frame, text=f"Sent From: {addressWho}",
                                                               font=customtkinter.CTkFont(size=14, family="Montserrat"))
                     transaction_from.grid(row=2, column=0, sticky="w", padx=5, pady=5)
@@ -750,48 +800,87 @@ class App(customtkinter.CTk):
                                                            fg_color="transparent", image=new_image)
                     image_button.grid(row=0, column=0)
 
-                # elif addressWho
+                # If the user sent the transaction, we are sending currency to another person
+                elif addressWho == pyaddress:
 
+                    # We find who we are sending the transaction to.
+                    for addr in tx.outputAddress():
+                        if addr == pyaddress:
+                            pass
+                        else:
+                            toaddr = addr
+                            break
 
+                    # Finding the value disregarding any outputs directed to us
+                    tx_value = tx.findTotalValueSent(pyaddress)
+                    transaction_value = customtkinter.CTkLabel(master=transaction_frame, text=f"Value: {tx_value}",
+                                                               font=customtkinter.CTkFont(size=14, family="Montserrat"))
+                    # Incrementing the total out by the value
+                    total_out += tx_value
+                    transaction_value.grid(row=1, column=0, sticky="w", padx=5, pady=5)
+                    transaction_from = customtkinter.CTkLabel(master=transaction_frame, text=f"Sent To: {toaddr}",
+                                                              font=customtkinter.CTkFont(size=14, family="Montserrat"))
+                    transaction_from.grid(row=2, column=0, sticky="w", padx=5, pady=5)
 
+                    # The colour is now red as we are sending.
+                    transaction_colour_frame = customtkinter.CTkFrame(master=transaction_frame, fg_color="#eb4034")
+                    transaction_colour_frame.grid_rowconfigure(0, weight=1)
+                    transaction_colour_frame.grid_rowconfigure(1, weight=0)
+                    transaction_colour_frame.grid_columnconfigure(0, weight=1)
+                    transaction_colour_frame.grid_columnconfigure(1, weight=0)
+                    transaction_colour_frame.grid(row=0, column=1, rowspan=3, sticky="nsew")
 
+                    # We also have another image clearly showing that we are sending
+                    image = Image.open('images/icons/sendingIcon.png')
+                    new_image = customtkinter.CTkImage(dark_image=image, size=(50, 50))
+                    image_button = customtkinter.CTkButton(master=transaction_colour_frame, text="", hover=False,
+                                                           fg_color="transparent", image=new_image)
+                    image_button.grid(row=0, column=0)
 
+                # We also update the balance and corresonding labels
+                self.balance = total_in - total_out
+                balance_label.configure(text=f"Balance: {self.balance} pyCoins")
+                self.balance_label.configure(text=f"Balance: {self.balance} pyCoins")
 
+                # Grid configurations for the latest transactions
+                self.latest_transaction_one.grid_rowconfigure(0, weight=1)
+                self.latest_transaction_one.grid_rowconfigure(1, weight=0)
+                self.latest_transaction_one.grid_columnconfigure(0, weight=1)
+                self.latest_transaction_one.grid_columnconfigure(1, weight=0)
 
-        # if self.peer:
-        #     total_in = 0
-        #     total_out = 0
-        #     inputs, outputs = self.peer.blockchain.findTxidsRelatingToKey(self.account_pubkey)
-        #     count = 0
-        #     for inputTransaction in inputs:
-        #         txid = inputTransaction.txid
-        #         transaction, block = self.peer.blockchain.findBlockIdwithTxid(txid)
-        #         frame = customtkinter.CTkFrame(master=input_transactions_frame, fg_color="black")
-        #         frame.grid(row=count, sticky="nsew", padx=5, pady=5)
-        #         count += 1
-        #         label = customtkinter.CTkLabel(master=frame, text=f"TXID: {txid}\n"
-        #                                                           f"Received {transaction.findTotalValueSent()} pyCoins\n"
-        #                                                           f"Block {block.height}",
-        #                                        font=customtkinter.CTkFont(size=11, family="Montserrat"))
-        #         label.grid(row=0, column=0, padx=5, pady=5)
-        #         total_in += transaction.findTotalValueSent()
-        #     count = 0
-        #     for outputTransaction in outputs:
-        #         txid = outputTransaction.txid
-        #         transaction, block = self.peer.blockchain.findBlockIdwithTxid(txid)
-        #         frame = customtkinter.CTkFrame(master=output_transactions_frame, fg_color="black")
-        #         frame.grid(row=count, sticky="nsew", padx=5, pady=5)
-        #         count += 1
-        #         label = customtkinter.CTkLabel(master=frame, text=f"TXID: {txid}\n"
-        #                                                           f"Received {transaction.findTotalValueSent()} pyCoins\n"
-        #                                                           f"Block {block.height}",
-        #                                        font=customtkinter.CTkFont(size=11, family="Montserrat"))
-        #         label.grid(row=0, column=0, padx=5, pady=5)
-        #         total_out += transaction.findTotalValueSent()
-        #
-        #     self.balance = total_in - total_out
-        #     balance_label.configure(text=f"Balance: {self.balance} pyCoins")
-        #     self.balance_label.configure(text=f"Balance: {self.balance} pyCoins")
+                self.latest_transaction_two.grid_rowconfigure(0, weight=1)
+                self.latest_transaction_two.grid_rowconfigure(1, weight=0)
+                self.latest_transaction_two.grid_columnconfigure(0, weight=1)
+                self.latest_transaction_two.grid_columnconfigure(1, weight=0)
+
+                self.latest_transaction_three.grid_rowconfigure(0, weight=1)
+                self.latest_transaction_three.grid_rowconfigure(1, weight=0)
+                self.latest_transaction_three.grid_columnconfigure(0, weight=1)
+                self.latest_transaction_three.grid_columnconfigure(1, weight=0)
+
+                # We update the labels in a try as in our blockchain we may have less than three transactions
+                # (unlikely but still needs to be looked at)
+                try:
+                    # Label for the latest transaction
+                    label_tx_one = customtkinter.CTkLabel(master=self.latest_transaction_one, text=f"TXID: {txs[-1].txid}",
+                                                          font=customtkinter.CTkFont(size=14, family="Montserrat",
+                                                                                     weight="bold"))
+                    label_tx_one.grid(row=0, column=0, sticky="w", padx=5)
+
+                    # Label for the second latest transaction
+                    label_tx_two = customtkinter.CTkLabel(master=self.latest_transaction_two, text=f"TXID: {txs[-2].txid}",
+                                                          font=customtkinter.CTkFont(size=14, family="Montserrat",
+                                                                                     weight="bold"))
+                    label_tx_two.grid(row=0, column=0, sticky="w", padx=5)
+
+                    # Label for the third latest transacition
+                    label_tx_three = customtkinter.CTkLabel(master=self.latest_transaction_three, text=f"TXID: {txs[-3].txid}",
+                                                            font=customtkinter.CTkFont(size=14, family="Montserrat",
+                                                                                       weight="bold"))
+                    label_tx_three.grid( row=0, column=0, sticky="w", padx=5)
+
+                except:
+                    pass
 
         # The following code will be about the connect tab this is where you enter an IP address and then trying to
         # connect to an IP, once the ip connection has been made, we can add the peer ip to a json file.
