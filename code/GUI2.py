@@ -1503,7 +1503,6 @@ class App(customtkinter.CTk):
 
     def settings(self):
         # This opens a new settings tab, which shows some settings such as
-        #   - Auto Refresh
         #   - Account naming
         #   - Deleting Accounts with password
 
