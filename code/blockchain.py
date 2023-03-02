@@ -121,8 +121,9 @@ class Blockchain:
         for block in self.blocks:
             for transaction in block.transactions:
                 try:
-                    if pyAddress in transaction.outputAddress():
-                        transactions.append(transaction)
+                    for item in transaction.outputAddress():
+                        if item == pyAddress:
+                            transactions.append(transaction)
                 except:
                     pass
 
@@ -246,10 +247,8 @@ class Blockchain:
             return True
 
 def main():
-    test = Blockchain("blockchains/pychain.txt")
-    print(test.blocks[-1].transactions)
-    for tx in test.blocks[-1].transactions:
-        print(tx.raw)
+    test = Blockchain("blockchains/testchain.txt")
+    print(test.findALLTxidsRelatingToKey((52875255160090499962600502200085515209870672698733671811454231759786175086505, 77021655888168226418616742029898192172153608822745762455974704879405256913590)))
 
 if __name__ == "__main__":
     main()

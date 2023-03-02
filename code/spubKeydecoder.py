@@ -19,8 +19,8 @@ def breakDownLockScript(scriptcode):
         byte = int(scriptcode[char:char+2], 16)
         char += 2 
         if byte <= 75:
-            script.put(scriptcode[char : char + 2*byte])
-            char += 2*byte
+            script.put(scriptcode[char: char + byte])
+            char += byte
         else:
             hexbyte = hex(byte)[2:]
             if hexbyte in OPCodeDict:
@@ -29,7 +29,7 @@ def breakDownLockScript(scriptcode):
     return script
 
 def main():
-    result = breakDownLockScript("76a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac")
+    result = breakDownLockScript("76a92069bfe8b0512755539097b01056836c042751803ff2b24c830444de0233fe1b56988ac")
     print(list(result.queue))
 
 if __name__ == "__main__":

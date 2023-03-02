@@ -26,7 +26,7 @@ def createSig(tx, privKey, randNumber):
 
    sig1 = hex(sigU[0])[2:]
    sig2 = hex(sigU[1])[2:]
-   rawsig = hex(len(sig1) // 2)[2:] + sig1 + hex(len(sig2) // 2)[2:] + sig2
+   rawsig = hex(len(sig1))[2:] + sig1 + hex(len(sig2))[2:] + sig2
 
    return rawsig, rawtx2
    
@@ -57,7 +57,7 @@ def createDictWithSig(tx, privKey, randNumber):
 
    for i in range(inputcounter):
       tx[f"scriptSig{i}"] = f"{rawsig}"
-      tx[f"sizeSig{i}"] = str(hex(len(rawsig)//2)[2:]).zfill(4)
+      tx[f"sizeSig{i}"] = str(hex(len(rawsig))[2:]).zfill(4)
 
    return tx, rawtx2
 

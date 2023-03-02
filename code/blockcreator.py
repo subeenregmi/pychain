@@ -31,7 +31,6 @@ class Block():
         self.blockchainfile = blockchainfile
         self.mining = True
 
-
         # This just adds the transactions to the block
         if transactions is not None:
             self.transactions = transactions
@@ -40,8 +39,6 @@ class Block():
             # Calculating the merkle root
             for transaction in self.transactions:
                 list_txids.append(transaction.txid)
-
-            print(list_txids)
 
             merkle = self.calculateMerkleRoot(list_txids)
             self.merkle = merkle
@@ -54,6 +51,11 @@ class Block():
         rawCoinbase = createCoinbaseTx(publicKey, 100 + fee, self.height+1)
         CoinbaseTx = Transaction(rawCoinbase)
         self.transactions.append(CoinbaseTx)
+
+        list = []
+        for transaction in self.transactions:
+            list.append(transaction.txid)
+        self.merkle = self.calculateMerkleRoot(list)
 
         # This calculates the string that needs to be hashed
         timeofmine = int(time.time())
@@ -235,6 +237,9 @@ class Block():
 
     def calculateMerkleRoot(self, list):
         # Function to calculate the merkle root
+        if len(list) == 0:
+            return ""
+
         if len(list) == 1:
             return list[0]
 

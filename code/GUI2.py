@@ -718,6 +718,7 @@ class App(customtkinter.CTk):
             # We are going to loop through all these transactions and identify if they are either coinbase transactions
             # normal transactions or return transactions.
             for tx in txs:
+                print(tx.raw)
 
                 # Here we create another frame to display a transaction
                 transaction_frame = customtkinter.CTkFrame(master=transactions_frame, fg_color="black")
@@ -1241,6 +1242,7 @@ class App(customtkinter.CTk):
         listenUDPThread = threading.Thread(target=self.peer.listenOnUDP)
         listenUDPThread.start()
         self.select_blockchain_button.configure(state="disabled")
+        self.blockchain_selector.configure(values=[blockchainfile])
         self.blockchain_selector.configure(state="disabled")
 
         # As a node is created we want to update our currentAccount.json as this is what will be used in the
@@ -1478,7 +1480,7 @@ class App(customtkinter.CTk):
                         value = str(hex(int(value))[2:]).zfill(16)
                         scriptpubkey = scriptPubkeys[i][0]
                         print(len(scriptpubkey))
-                        size = (hex(len(scriptpubkey)//2)[2:]).zfill(4)
+                        size = (hex(len(scriptpubkey))[2:]).zfill(4)
                         txDict[f"value{i}"] = value
                         txDict[f"sizePk{i}"] = size
                         txDict[f"scriptPubKey{i}"] = scriptpubkey

@@ -19,7 +19,7 @@ def createTxFromUser():
          vout = int(input(f"VOUT{i}: "))
          rawtx += "{0:04x}".format(vout)
          scriptsig = str(input(f"Script Sig{i} : "))
-         size = (len(scriptsig)//2)
+         size = (len(scriptsig))
          rawtx += "{0:04x}".format(size) + scriptsig
       outputcounter = int(input("Outputs : "))
       if inputcounter > 99:
@@ -30,7 +30,7 @@ def createTxFromUser():
          value = int(input(f"Value{z}: "))
          rawtx += "{0:016x}".format(value)
          scriptPubKey = str(input(f"ScriptPubKey{z}: "))
-         size = (len(scriptPubKey)//2)
+         size = (len(scriptPubKey))
          rawtx += "{0:04x}".format(size) + scriptPubKey
 
    else:
@@ -68,7 +68,7 @@ def EmptyRawTxFromUser():
          value = int(input(f"Value{z}: "))
          rawtx += "{0:016x}".format(value)
          scriptPubKey = str(input(f"ScriptPubKey{z}: "))
-         size = (len(scriptPubKey)//2)
+         size = (len(scriptPubKey))
          rawtx += "{0:04x}".format(size) + scriptPubKey
 
    else:
@@ -97,7 +97,7 @@ def createCoinbaseTx(publicKey, reward, blockheight):
       "InputCount":"01",
       "txid0":"8266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb44", #hash of 'COINBASE'
       "vout0":"0001",
-      "sizeSig0":"0005",
+      "sizeSig0":"000a",
       "scriptSig0":"0000000000",
       "OutputCount":"01",
       "value0":"",
@@ -110,7 +110,7 @@ def createCoinbaseTx(publicKey, reward, blockheight):
    value = str(hex(reward)[2:]).zfill(16)
    CoinbaseTemplateDict["scriptSig0"] = str(blockheight).zfill(10)
    CoinbaseTemplateDict["value0"] = value
-   CoinbaseTemplateDict["sizePk0"] = str(hex(len(scriptPubKey) // 2)[2:]).zfill(4)
+   CoinbaseTemplateDict["sizePk0"] = str(hex(len(scriptPubKey))[2:]).zfill(4)
    CoinbaseTemplateDict["scriptPubKey0"] = scriptPubKey
    raw = createTxFromDict(CoinbaseTemplateDict)
    return raw
