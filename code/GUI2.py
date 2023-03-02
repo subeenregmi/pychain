@@ -18,9 +18,6 @@ import rawtxcreator
 from transaction import Transaction
 import rawtxdecoder
 
-#TODO: Add autorefresh
-#TODO: Finish up transactions
-
 # This sets the general color theme to be dark
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -45,8 +42,8 @@ class App(customtkinter.CTk):
         # This destroys all previous widgets if switching to the start menu.
         for widget in self.winfo_children():
             widget.destroy()
-        self.grid_rowconfigure( (0, 1, 2, 3), weight=0 )
-        self.grid_columnconfigure( (0, 1, 2, 3), weight=0 )
+        self.grid_rowconfigure((0, 1, 2, 3), weight=0)
+        self.grid_columnconfigure((0, 1, 2, 3), weight=0)
 
         # Settings for the window
         self.title("Pychain")
@@ -67,7 +64,7 @@ class App(customtkinter.CTk):
         Label = customtkinter.CTkLabel(master=Title, bg_color="transparent", text="Pychain",
                                        font=customtkinter.CTkFont(size=40, weight="bold"), width=130, height=40)
 
-        Label.grid(row = 0, column = 0, padx=10)
+        Label.grid(row=0, column=0, padx=10)
         SubTitle = customtkinter.CTkLabel(master=Title, text="A blockchain sandbox")
         SubTitle.grid(row=1, padx=10, pady=(10, 0), sticky="s")
 
@@ -209,7 +206,15 @@ class App(customtkinter.CTk):
         if account['passwordHash'] == hash_password:
             self.account = account
             self.account_pubkey = address.ECmultiplication(self.account['privateKey'], address.Gx, address.Gy)
+            with open("json/currentAccount.json") as file:
+                data = json.load(file)
+                data["privateKey"] = account['privateKey']
+
+            with open('json/currentAccount.json', 'w') as file:
+                json.dump(data, file, indent=2)
+
             self.gui()
+            self.balance = 0
         else:
             self.generateErrorLabel("Pychain Login", "Wrong Password.")
 
@@ -454,8 +459,8 @@ class App(customtkinter.CTk):
 
         sidebar_frame = customtkinter.CTkFrame(master=self, width=40)
         sidebar_frame.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
-        sidebar_frame.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
-        sidebar_frame.grid_rowconfigure(5, weight=0)
+        sidebar_frame.grid_rowconfigure((0, 1, 2, 3), weight=1)
+        sidebar_frame.grid_rowconfigure(4, weight=0)
         sidebar_frame.grid_columnconfigure(0, weight=1)
         sidebar_frame.grid_columnconfigure(1, weight=0)
 
@@ -1207,27 +1212,20 @@ class App(customtkinter.CTk):
                                                   text="", fg_color="transparent", hover_color="grey", command=self.settings)
         settings_button.grid(row=1, sticky="nsew")
 
-        # CLI button
-        CLI_button_image = Image.open("images/icons/cliIcon.png")
-        CLI_button_img = customtkinter.CTkImage(dark_image=CLI_button_image, size=(40, 40))
-        CLI_button = customtkinter.CTkButton(master=sidebar_frame, image=CLI_button_img, width=40, height=40, text="",
-                                             fg_color="transparent", hover_color="grey")
-        CLI_button.grid(row=2, sticky="nsew")
-
         # Create account button
         CreateAccount_button_image = Image.open("images/icons/createUserIcon.png")
         CreateAccount_button_img = customtkinter.CTkImage(dark_image=CreateAccount_button_image, size=(40, 40))
         CreateAccount_button = customtkinter.CTkButton(master=sidebar_frame, image=CreateAccount_button_img, width=40,
                                                        height=40, text="", fg_color="transparent", hover_color="grey",
                                                        command=self.CreateNewAccount)
-        CreateAccount_button.grid(row=3, sticky="nsew")
+        CreateAccount_button.grid(row=2, sticky="nsew")
 
         # Exit button
         Exit_button_image = Image.open("images/icons/logoutIcon.png")
         Exit_button_img = customtkinter.CTkImage(dark_image=Exit_button_image, size=(40, 40))
         Exit_button = customtkinter.CTkButton(master=sidebar_frame, image=Exit_button_img, width=40, height=40, text="",
                                               fg_color="transparent", hover_color="grey", command=self.start)
-        Exit_button.grid(row=4, sticky="nsew")
+        Exit_button.grid(row=3, sticky="nsew")
 
     def createNode(self):
         # This grabs the blockchain that is selected.
@@ -1255,7 +1253,8 @@ class App(customtkinter.CTk):
             "portMax": 50500,
             "maxPeers": 10,
             "privateKey": self.account['privateKey'],
-            "peers": []
+            "peers": [],
+            "mempool": []
         }
 
         with open('json/currentAccount.json', 'w') as current:
@@ -1406,8 +1405,17 @@ class App(customtkinter.CTk):
                     # We try to find an address saved as whats in the entry if its not in the correct format
                     with open('json/addressbook.json') as file:
                         data = json.load(file)
+
                     try:
-                        sendaddress = data[sendaddress]
+                        index = 0
+                        for value in data.values():
+                            if sendaddress == value:
+                                break
+                            else:
+                                index += 1
+
+                        sendaddress = (list(data.keys())[index])
+
                     except:
                         self.generateErrorLabel("Pychain Send", "Address in incorrect format, or not in address book.")
                         return
@@ -1444,6 +1452,8 @@ class App(customtkinter.CTk):
                         p2pkh = spubKeycreator.createPayToPubKeyHash(self.account_pubkey)
                         scriptPubkeys.append((p2pkh, remainder))
 
+                    print(p2pkh)
+
                     # The following code creates a transaction based on the script pub keys, and the input txids.
                     inputcounter = str(len(inputTransactionsToUse)).zfill(2)
                     txDict = {
@@ -1467,6 +1477,7 @@ class App(customtkinter.CTk):
                         value = scriptPubkeys[i][1]
                         value = str(hex(int(value))[2:]).zfill(16)
                         scriptpubkey = scriptPubkeys[i][0]
+                        print(len(scriptpubkey))
                         size = (hex(len(scriptpubkey)//2)[2:]).zfill(4)
                         txDict[f"value{i}"] = value
                         txDict[f"sizePk{i}"] = size
@@ -1480,6 +1491,13 @@ class App(customtkinter.CTk):
                     tx = Transaction(txraw)
                     self.peer.validateTransaction(tx, self.account_pubkey)
                     self.peer.sendTransaction(tx.raw, self.account_pubkey)
+                    with open('json/currentAccount.json') as file:
+                        data = json.load(file)
+
+                    data['mempool'].append(tx.raw)
+
+                    with open('json/currentAccount.json', 'w') as file:
+                        json.dump(data, file, indent=2)
 
                 else:
                     self.generateErrorLabel("Pychain Send", "Account has not been entered.")
@@ -1653,8 +1671,8 @@ class App(customtkinter.CTk):
         # We again find the specific key in our 'json/keys.json' file, and then update the name
         for key in data:
 
-            public_key = address.ECmultiplication( key['privateKey'], address.Gx, address.Gy )
-            py_address = address.createAddress( public_key )
+            public_key = address.ECmultiplication(key['privateKey'], address.Gx, address.Gy)
+            py_address = address.createAddress(public_key)
 
             # Once, we have found the address, we can check if the hashes match
             if py_address == text:
@@ -1693,8 +1711,7 @@ class App(customtkinter.CTk):
                 with open('json/addressbook.json') as file:
                     data = json.load(file)
 
-                data[name] = address
-                print(data)
+                    data[addressEntry] = name
 
                 with open('json/addressbook.json', "w") as file:
                     json.dump(data, file, indent=2)

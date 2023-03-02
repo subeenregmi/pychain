@@ -128,8 +128,17 @@ class Blockchain:
 
                 for input in transactions:
                     for i in transaction.inputTxids():
+                        if i in transactions:
+                            continue
                         if i == input.txid:
                             transactions.append(transaction)
+
+        uniquetransactions = []
+        for transaction in transactions:
+            if transaction not in uniquetransactions:
+                uniquetransactions.append(transaction)
+
+        transactions = uniquetransactions
 
         return transactions
 
@@ -149,9 +158,9 @@ class Blockchain:
             searchedTxRaw = self.findTxid(txidSearch)
             if searchedTxRaw:
                 searchedTxDict = rawtxdecoder.decodeRawTx(searchedTxRaw)
-                scriptPubKey = searchedTxDict[f"scriptPubKey{txidVout}"]
+                scriptPubKey = searchedTxDict[f"scriptPubKey{int(txidVout, 16)}"]
                 opcodes = spubKeydecoder.breakDownLockScript(scriptPubKey)
-                for opcode in opcodes:
+                for opcode in list(opcodes.queue):
                     if opcode[:2] == "69":
                         return opcode
 
@@ -238,9 +247,9 @@ class Blockchain:
 
 def main():
     test = Blockchain("blockchains/pychain.txt")
+    print(test.blocks[-1].transactions)
+    for tx in test.blocks[-1].transactions:
+        print(tx.raw)
 
-    i, o = test.findTxidsRelatingToKey(((44386250375374703656858574918580449503130853936108437099504860299291885670527, 78580972205200290356464348303160518295820229000641155905851920185575012779163)))
-
-    print(o)
 if __name__ == "__main__":
     main()

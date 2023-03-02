@@ -1,5 +1,6 @@
 from address import *
 import scriptsigdecoder
+import queue
 
 def DUPLICATE(stack):
     stack.append(stack[-1])
@@ -19,13 +20,13 @@ def EQUALVERIFY(stack):
     else:
         stack.append("OP_FALSE")
         return stack
- 
+
 def OPCHECKSIG(stack, tx):
 
     public_address = stack.pop()
     signature = stack.pop()
     result = verifySig(signature[0], signature[1], tx, public_address)
-    if result == True:
+    if result:
         stack.append(1)
     else:
         stack.append(0)
@@ -33,8 +34,12 @@ def OPCHECKSIG(stack, tx):
     print(stack)
 
 def runScript(stack, script, tx):
+    print(script)
 
-    for opcode in script:
+    while not script.empty():
+        opcode = script.get()
+        print(opcode)
+        print(stack)
 
         if opcode == "OP_DUP":
             DUPLICATE(stack)
@@ -44,7 +49,7 @@ def runScript(stack, script, tx):
 
         elif opcode == "OP_EQUALVERIFY":
             EQUALVERIFY(stack)
-        
+
         elif opcode == "OP_CHECKSIG":
             OPCHECKSIG(stack, tx)
 

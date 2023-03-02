@@ -40,14 +40,21 @@ class Transaction:
 
     def findTotalValueSent(self, address=None):
         totalValue = 0
-        for key in self.outputs:
-            if address is not None:
-                spk = key[1]
-                spk = breakDownLockScript(spk)
-                if address in spk:
-                    continue
-            totalValue += int(key, 16)
-        return totalValue
+        if address is None:
+            for key in self.outputs:
+                totalValue += int(key, 16)
+            return totalValue
+        else:
+            index = 0
+            for key in self.outputs:
+                spk = breakDownLockScript(list(self.outputs.values())[index])
+                if address in list(spk.queue):
+                    pass
+                else:
+                    totalValue += int(key, 16)
+                index += 1
+            return totalValue
+
     
     # This function goes through the outputs to find the addresses that our transaction is being sent to. 
 
@@ -56,7 +63,7 @@ class Transaction:
         for key in self.outputs:
             lock_script = self.outputs[key]
             opcodes = breakDownLockScript(lock_script)
-            for item in opcodes:
+            for item in list(opcodes.queue):
                 if item.startswith("69"):
                     addresses.append(item)
         
@@ -81,6 +88,7 @@ def main():
     print(x.outputs)
     print(f"raw = {x.raw}")
     print(x.inputTxids())
+    print(x.findTotalValueSent())
 
 if __name__ == "__main__":
     main()

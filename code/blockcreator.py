@@ -35,12 +35,16 @@ class Block():
         # This just adds the transactions to the block
         if transactions is not None:
             self.transactions = transactions
-            for transaction in self.transactions:
-                self.merkle += transaction.raw
+            list_txids = []
 
-        # The merkle root/hash is the raw transactional.py data hashed together, this creates a unique hash for those
-        # specific transactions
-        self.merkle = hashlib.sha256(self.merkle.encode('utf-8')).hexdigest()
+            # Calculating the merkle root
+            for transaction in self.transactions:
+                list_txids.append(transaction.txid)
+
+            print(list_txids)
+
+            merkle = self.calculateMerkleRoot(list_txids)
+            self.merkle = merkle
 
     def mine(self, publicKey, fee):
         # This is the algorithm to mine a block, which consists of finding a hash of the block with an included nonce
@@ -229,20 +233,28 @@ class Block():
         self.miner = miner
         self.raw = raw
 
+    def calculateMerkleRoot(self, list):
+        # Function to calculate the merkle root
+        if len(list) == 1:
+            return list[0]
+
+        newlist = []
+        for i in range(0, len(list), 2):
+            pair = list[i] + list[i+1]
+            pairHash = hashlib.sha256(pair.encode('utf-8')).hexdigest()
+            newlist.append(pairHash)
+
+        if len(list) % 2 == 1:
+            pair = list[-1] + list[-1]
+            pairHash = hashlib.sha256(pair.encode('utf-8')).hexdigest()
+            newlist.append(pairHash)
+
+        return self.calculateMerkleRoot(newlist)
+
 def main():
 
-    x = Block("blockchains/testchain.txt", 1, [Transaction("01017898db070c4bcc871a55da6c53486421c97d2ec9c6b37d0f36a06ac857c36a50000100050000000001010000000000000064002676a921692a3463a826237019f2e3b8106e955c92ff7dbdaaa34288ae2a6697ee24c3714d88ac00000000")], 1105681728405961314241097251219337798448187965786353468882227275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
-    x.mine((92641855401206585750031304985966472123204240504167073082041014802408154789641, 5320727137213493453320294950656953718594582159943012446202168292331376026727), 0)
-    print(x.validateBlock())
-    print(x.raw)
-    print(x.transactions)
-    for transaction in x.transactions:
-        print(transaction.raw)
-    v = Block("blockchains/testchain.txt")
-
-    v.createBlockFromRaw(x.raw)
-    print(v.validateBlock())
-
+    x = Block("blockchains/testchain.txt", 1, [Transaction("01017898db070c4bcc871a55da6c53486421c97d2ec9c6b37d0f36a06ac857c36a50000100050000000001010000000000000064002676a921692a3463a826237019f2e3b8106e955c92ff7dbdaaa34288ae2a6697ee24c3714d88ac00000000"), Transaction("01017898db070c4bcc871a55da6c53486421c97d2ec9c6b37d0f36a06ac857c36a50000100050000000001010000000000000064002676a921692a3463a826237019f2e3b8106e955c92ff7dbdaaa34288ae2a6697ee24c3714d88ac00000000")], 1105681728405961314241097251219337798448187965786353468882227275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
+    print(x.merkle)
 
 if __name__ == "__main__":
     main()

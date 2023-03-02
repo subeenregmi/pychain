@@ -723,16 +723,17 @@ class Peer:
                     # Here we will calculate the total input to the total output and whatever discrepancy there is we
                     # will use this as an additional fee for the miners.
 
+                    transaction = rawtxdecoder.decodeRawTx(transaction.raw)
                     for i in range(int(transaction['InputCount'])):
                         txid = transaction[f'txid{0}']
                         vout = transaction[f'vout{0}']
                         previous_transaction_raw = self.blockchain.findTxid(txid)
                         previous_transaction_dict = rawtxdecoder.decodeRawTx(previous_transaction_raw)
-                        total_in += previous_transaction_dict[f'value{int(vout, 16)}']
+                        total_in += int(previous_transaction_dict[f'value{int(vout, 16)}'], 16)
 
                     # We also need to calculate total value of the outputs
                     for i in range(int(transaction['OutputCount'])):
-                        total_output += transaction[f'value{i}']
+                        total_output += int(transaction[f'value{i}'], 16)
 
                 fee = total_in - total_output
 
