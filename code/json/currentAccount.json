@@ -1,10 +1,10 @@
 {
-  "blockchainfile": "blockchains/testchain.txt",
+  "blockchainfile": "blockchains/pychain.txt",
   "host": "192.168.0.111",
   "portMin": 50000,
   "portMax": 50500,
   "maxPeers": 10,
-  "privateKey": 54253568401674479531020178872448155320658678135396937552215132251174223491015,
+  "privateKey": 91865318790474171578907765630969544070277788816505973228091873448746859054462,
   "peers": [],
   "mempool": []
 }

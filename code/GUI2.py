@@ -11,12 +11,10 @@ import shutil
 from node import Peer
 from datetime import datetime
 import os
-import subprocess, sys
 import spubKeycreator
 import scriptSigCreator
 import rawtxcreator
 from transaction import Transaction
-import rawtxdecoder
 
 # This sets the general color theme to be dark
 customtkinter.set_appearance_mode("dark")
@@ -93,6 +91,14 @@ class App(customtkinter.CTk):
             with open('json/keys.json') as file:
                 data = json.load(file)
                 loaded = True
+
+                if not data:
+                    # Settings for window that pops up when the user does not have any keys stored in 'keys.json'
+                    self.generateErrorLabel("Pychain Login", "No keys in keys.json")
+
+                    # Greying out the login button after login fails
+                    self.LoginButton.configure(state="disabled", fg_color="grey")
+                    loaded = False
 
         except FileNotFoundError:
             # Settings for window that pops up when the user does not have any keys stored in 'keys.json'
@@ -785,7 +791,7 @@ class App(customtkinter.CTk):
 
                     # We find the total value sent that does not include any outputs to that person.
                     tx_value = tx.findTotalValueSent(addressWho)
-                    transaction_value = customtkinter.CTkLabel(master=transaction_frame, text=f"Value: {tx_value}",
+                    transaction_value = customtkinter.CTkLabel(master=transaction_frame, text=f"Value: {tx_value} pyCoins.",
                                                                font=customtkinter.CTkFont(size=14, family="Montserrat"))
                     total_in += tx_value
                     transaction_value.grid(row=1, column=0, sticky="w", padx=5, pady=5)

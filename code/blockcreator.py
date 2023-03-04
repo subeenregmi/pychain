@@ -1,4 +1,5 @@
 import hashlib
+import json
 import time
 from address import createAddress
 from rawtxcreator import createCoinbaseTx
@@ -96,24 +97,26 @@ class Block():
 
         # This checks if a block is valid, after its being mined, by hashing the data again with the nonce provided
         # this should match the block id and be less than the difficulty
+        try:
+            # This just creates the string we need to hash in the mining algorithm again
+            checkid = str(self.nonce) + str(self.blocktime) + str(self.height) + self.previousblockhash + str(self.difficulty) + self.merkle
 
-        # This just creates the string we need to hash in the mining algorithm again
-        checkid = str(self.nonce) + str(self.blocktime) + str(self.height) + self.previousblockhash + str(self.difficulty) + self.merkle
+            for transaction in self.transactions:
+                TxLength = str(hex(len(transaction.raw))[2:]).zfill(8)
+                checkid += TxLength
+                checkid += transaction.raw
+            checkid += self.miner
 
-        for transaction in self.transactions:
-            TxLength = str(hex(len(transaction.raw))[2:]).zfill(8)
-            checkid += TxLength
-            checkid += transaction.raw
-        checkid += self.miner
+            checkid = hashlib.sha256(checkid.encode('utf-8')).hexdigest()
 
-        checkid = hashlib.sha256(checkid.encode('utf-8')).hexdigest()
-
-        if int(checkid, 16) == int(self.blockid, 16):
-            self.blockmined = True
-            # print("Validated Block")
-        else:
-            self.blockmined = False
-            # print("False!")
+            if int(checkid, 16) == int(self.blockid, 16):
+                self.blockmined = True
+                # print("Validated Block")
+            else:
+                self.blockmined = False
+                # print("False!")
+        except:
+            pass
 
         return self.blockmined
 
@@ -234,6 +237,7 @@ class Block():
         self.merkle = merkle
         self.miner = miner
         self.raw = raw
+        self.blockmined = True
 
     def calculateMerkleRoot(self, list):
         # Function to calculate the merkle root
@@ -244,7 +248,7 @@ class Block():
             return list[0]
 
         newlist = []
-        for i in range(0, len(list), 2):
+        for i in range(0, len(list)-1, 2):
             pair = list[i] + list[i+1]
             pairHash = hashlib.sha256(pair.encode('utf-8')).hexdigest()
             newlist.append(pairHash)
@@ -258,8 +262,8 @@ class Block():
 
 def main():
 
-    x = Block("blockchains/testchain.txt", 1, [Transaction("01017898db070c4bcc871a55da6c53486421c97d2ec9c6b37d0f36a06ac857c36a50000100050000000001010000000000000064002676a921692a3463a826237019f2e3b8106e955c92ff7dbdaaa34288ae2a6697ee24c3714d88ac00000000"), Transaction("01017898db070c4bcc871a55da6c53486421c97d2ec9c6b37d0f36a06ac857c36a50000100050000000001010000000000000064002676a921692a3463a826237019f2e3b8106e955c92ff7dbdaaa34288ae2a6697ee24c3714d88ac00000000")], 1105681728405961314241097251219337798448187965786353468882227275223423263, "1b7990b9fd11da0d24a0f539e3ed3407285538737785acc6b7dcb602b0a68492")
-    print(x.merkle)
+    x = Block('blockchains/testchains.txt')
+    print(x.validateBlock())
 
 if __name__ == "__main__":
     main()

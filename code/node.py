@@ -8,8 +8,6 @@ from scriptsigdecoder import decoder
 from scriptSigCreator import createEmptyTxForSign
 from spubKeydecoder import breakDownLockScript
 from opcodeBlocks import runScript
-import queue
-import select
 import time
 import rawtxdecoder
 
@@ -696,7 +694,7 @@ class Peer:
             # to hard set the difficulty and the previous block id.
             if self.blockchain.height == -1 or self.blockchain.height == 0:
                 current_height = self.blockchain.height + 1
-                current_difficulty = 13560704084551531344379931619614108352879381342049336509327224628459529
+                current_difficulty = 135607040845515313443799316196141083528793813420493365093272246284595297
 
                 try:
                     previous_block_hash = self.blockchain.blocks[-1].blockid
@@ -765,11 +763,27 @@ class Peer:
                 self.blockchain.blocks.append(self.miningBlock)
                 self.blockchain.height += 1
                 self.sendBlock(current_height)
+                self.mempool = []
                 print(f"<MINER> Block {current_height} has been successfully mined!")
 def main():
 
     p1 = Peer("blockchains/pychain.txt", "192.168.0.111", 50000, 50500, 10, 8888)
-
+    thread1 = threading.Thread(target=p1.listenOnUDP)
+    thread1.start()
+    # time.sleep(3)
+    # p1.sendPingUDP('192.168.0.201')
+    # time.sleep(3)
+    p1.connectToPeer('192.168.0.201')
+    # time.sleep(3)
+    # p1.sendPingTCP('192.168.0.201')
+    # time.sleep(3)
+    # p1.sendPeerListRequest()
+    # time.sleep(3)
+    # p1.checkIPisPeer('192.168.0.201')
+    # p1.checkIPisPeer('192.168.0.203')
+    #
+    # time.sleep(3)
+    p1.RequestBlockCount()
 
 if __name__ == "__main__":
     main()

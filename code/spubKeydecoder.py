@@ -29,7 +29,11 @@ def breakDownLockScript(scriptcode):
     return script
 
 def main():
-    result = breakDownLockScript("76a92069bfe8b0512755539097b01056836c042751803ff2b24c830444de0233fe1b56988ac")
+
+    # Pay-to-Pub-Key-Hash (P2PKH)
+    lockscript = "76a94269dfa746b659c0b7d17f3772079dcd70eddec704c1a888a3ef2e71e17cc5fef4e488ac"
+
+    result = breakDownLockScript(lockscript)
     print(list(result.queue))
 
 if __name__ == "__main__":

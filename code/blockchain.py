@@ -2,7 +2,7 @@ from blockcreator import Block
 import address
 import rawtxdecoder
 import spubKeydecoder
-
+from transaction import Transaction
 
 '''
 This will be the blockchain class that will regulate the rewards for the blocks, blockheight and difficulty,
@@ -247,8 +247,16 @@ class Blockchain:
             return True
 
 def main():
-    test = Blockchain("blockchains/testchain.txt")
-    print(test.findALLTxidsRelatingToKey((52875255160090499962600502200085515209870672698733671811454231759786175086505, 77021655888168226418616742029898192172153608822745762455974704879405256913590)))
+    test = Blockchain("blockchains/pychain.txt")
+    public_key = (103106455141897256590050535433311244247821437712848739395258315148311206142216, 35272270782237393198583873716500957634512402507620183512278104868856770902733)
+
+    # Finding a txid
+    print(test.findTxidsRelatingToKey((1, 2)))
+
+
+
+
+
 
 if __name__ == "__main__":
     main()
