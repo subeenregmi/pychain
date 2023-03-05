@@ -9,7 +9,6 @@ def createSig(tx, privKey, randNumber):
 
    inputcounter = int(tx["InputCount"])
    for i in range(inputcounter):
-      tx[f"vout{i}"] = "0000"
       tx[f"scriptSig{i}"] = tx["scriptPubKey0"]
       tx[f"sizeSig{i}"] = tx["sizePk0"]
    
@@ -36,7 +35,6 @@ def createDictWithSig(tx, privKey, randNumber):
 
    inputcounter = int(tx["InputCount"])
    for i in range(inputcounter):
-      tx[f"vout{i}"] = "0000"
       tx[f"scriptSig{i}"] = tx["scriptPubKey0"]
       tx[f"sizeSig{i}"] = tx["sizePk0"]
       
@@ -66,7 +64,6 @@ def createDictWithSig(tx, privKey, randNumber):
 def createEmptyTxForSign(tx):
    inputcounter = int(tx["InputCount"])
    for i in range(inputcounter):
-      tx[f"vout{i}"] = "0000"
       tx[f"scriptSig{i}"] = tx["scriptPubKey0"]
       tx[f"sizeSig{i}"] = tx["sizePk0"]
 

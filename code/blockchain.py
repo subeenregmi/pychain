@@ -92,17 +92,14 @@ class Blockchain:
 
         for block in self.blocks:
             for transaction in block.transactions:
-                try:
-                    if pyAddress in transaction.outputAddress():
-                        inputs.append(transaction)
-                except:
-                    pass
+                if pyAddress in transaction.outputAddress():
+                    inputs.append(transaction)
 
+        for block in self.blocks:
+            for transaction in block.transactions:
                 for input in inputs:
-                    for i in transaction.inputTxids():
-                        if i == input.txid:
-                            outputs.append(transaction)
-                            inputs.remove(input)
+                    if input.txid in transaction.inputTxids():
+                        outputs.append(transaction)
 
         uniqueOutputs = []
         for output in outputs:
@@ -110,6 +107,12 @@ class Blockchain:
                 uniqueOutputs.append(output)
 
         outputs = uniqueOutputs
+
+        for output in outputs:
+            for outputInputTxid in output.inputTxids():
+                for input in inputs:
+                    if input.txid == outputInputTxid:
+                        inputs.remove(input)
 
         return inputs, outputs
 
@@ -196,7 +199,7 @@ class Blockchain:
 
         except IndexError:
             # This is the default difficulty to roughly mine a block every 60 seconds.
-            return 135607040845515931344379931619614108352879381342049336509327220462845952
+            return 1356070408455159313443799316196141083528793813420493365093272204628459527
 
     def validateChain(self):
         # We need to implement alot of features for a valid chain:
@@ -251,7 +254,21 @@ def main():
     public_key = (103106455141897256590050535433311244247821437712848739395258315148311206142216, 35272270782237393198583873716500957634512402507620183512278104868856770902733)
 
     # Finding a txid
-    print(test.findTxidsRelatingToKey((1, 2)))
+    inputs, outputs = test.findTxidsRelatingToKey(public_key)
+    print(inputs)
+    print(outputs)
+
+    print("Inputs")
+    for input in inputs:
+        print(input.txid)
+        print(input.tx)
+
+    print("outputs")
+    for output in outputs:
+        print(output.tx)
+        print(output.txid)
+
+    test.validateChain()
 
 
 

@@ -55,6 +55,17 @@ class Transaction:
                 index += 1
             return totalValue
 
+    def findTotalValueSentTO(self, address):
+        totalValue = 0
+        index = 0
+        for key in self.outputs:
+            spk = breakDownLockScript(list(self.outputs.values())[index])
+            if address in list(spk.queue):
+                totalValue += int(key, 16)
+            else:
+                pass
+            index += 1
+        return totalValue
     
     # This function goes through the outputs to find the addresses that our transaction is being sent to. 
 
@@ -80,13 +91,6 @@ def main():
 
     x = Transaction("0102c487062affb4596846495422be76a83b893b085f1eb8f0dfd794da9130c8c969000000844023f997df77592f36700060d0ad16dd7a29a86ffb263be5161a117e4f49a3ffc5405def57c7b59782f84893be173ef9ff8cbb8ad2b1e1336947e0e47edac2cb2ee840528c7a2fe647f6ecb0ba9e4351092b3addde070c0e3d6d884997e8cc83296b000000844023f997df77592f36700060d0ad16dd7a29a86ffb263be5161a117e4f49a3ffc5405def57c7b59782f84893be173ef9ff8cbb8ad2b1e1336947e0e47edac2cb2ee80200000000000000b9004c76a942690ddda9dc4549494465421bbd400bb1896a0527390701457e7997e80dc4d2841588ac000000000000000f004c76a9426916ad8380a8adea012e9bcf7590e6f86be12a3ce083978c913da56262f833b09b88ac00000000")
 
-    print(json.dumps(x.tx, indent=2))
-    print(x.txid)
-    print(x.inputs)
-    print(x.outputs)
-    print(x.outputAddress())
-    print(x.findTotalValueSent())
-    print(x.findTotalValueSent("690ddda9dc4549494465421bbd400bb1896a0527390701457e7997e80dc4d28415"))
     print(x.inputTxids())
 
 

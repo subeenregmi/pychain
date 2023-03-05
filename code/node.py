@@ -1,6 +1,6 @@
 import socket
 import threading
-from address import ECmultiplication, Gx, Gy
+from address import ECmultiplication, Gx, Gy, createAddress
 from blockchain import Blockchain
 from blockcreator import Block
 from transaction import Transaction
@@ -10,6 +10,7 @@ from spubKeydecoder import breakDownLockScript
 from opcodeBlocks import runScript
 import time
 import rawtxdecoder
+import rawtxcreator
 
 # Our blockchain only works if there is a way of distributing the blockchain(s) files,
 # there are two main ways to implement this. One way would be through centralization,
@@ -373,7 +374,7 @@ class Peer:
                         try:
                             index = int(index)
                             # This sleep is pivotal as mentioned previously the raw blocks will be sent all at once.
-                            time.sleep(1)
+                            time.sleep(2)
                             self.sendBlock(index, socket.getpeername()[0])
                         except:
                             print(f"<ERROr>")
@@ -643,7 +644,8 @@ class Peer:
             print("<TX VALIDATE> Transaction is invalid.")
 
         # The last check to see if the transaction is not sending more than the total of the input transactions
-        transaction_value = transaction.findTotalValueSent()
+        addressForVal = createAddress(public_key)
+        transaction_value = transaction.findTotalValueSent(addressForVal)
         if transaction_value > total_value:
             print(f"<TX VALIDATE> Transaction is invalid.")
             return False
@@ -768,12 +770,12 @@ class Peer:
 def main():
 
     p1 = Peer("blockchains/pychain.txt", "192.168.0.111", 50000, 50500, 10, 8888)
-    thread1 = threading.Thread(target=p1.listenOnUDP)
-    thread1.start()
+    # thread1 = threading.Thread(target=p1.listenOnUDP)
+    # thread1.start()
     # time.sleep(3)
     # p1.sendPingUDP('192.168.0.201')
     # time.sleep(3)
-    p1.connectToPeer('192.168.0.201')
+    # p1.connectToPeer('192.168.0.201')
     # time.sleep(3)
     # p1.sendPingTCP('192.168.0.201')
     # time.sleep(3)
@@ -783,7 +785,11 @@ def main():
     # p1.checkIPisPeer('192.168.0.203')
     #
     # time.sleep(3)
-    p1.RequestBlockCount()
+    # p1.RequestBlockCount()
+
+    raw = Transaction("01037aae21cd95f841e095ae7ae7803267544c7cec9938e75fe6cfae27bf9a53912e00000084408eb222ad6f0ce831887d0ebc9547b0324ca2194734da31261de07b3fd65ceaf640393af59e6f1ed6b4501e66b19252c2ce8bf3301d34ed2ef3c652f48fabf16f9327e877d963da2c3fe5fd2e6617591f87bd8468402ba65dba109f26985c2368bd00010084408eb222ad6f0ce831887d0ebc9547b0324ca2194734da31261de07b3fd65ceaf640393af59e6f1ed6b4501e66b19252c2ce8bf3301d34ed2ef3c652f48fabf16f93f740c45e4a7803e3c12329d92ecda99646b88ee2e2dd93998449e3c767e6dffb00000084408eb222ad6f0ce831887d0ebc9547b0324ca2194734da31261de07b3fd65ceaf640393af59e6f1ed6b4501e66b19252c2ce8bf3301d34ed2ef3c652f48fabf16f930200000000000000ba004c76a942690ddda9dc4549494465421bbd400bb1896a0527390701457e7997e80dc4d2841588ac000000000000001d004c76a9426916ad8380a8adea012e9bcf7590e6f86be12a3ce083978c913da56262f833b09b88ac00000000")
+    public_key = (103106455141897256590050535433311244247821437712848739395258315148311206142216, 35272270782237393198583873716500957634512402507620183512278104868856770902733)
+    print(p1.validateTransaction(raw, public_key))
 
 if __name__ == "__main__":
     main()

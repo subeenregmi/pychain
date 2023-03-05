@@ -1433,6 +1433,9 @@ class App(customtkinter.CTk):
                     print("Sending to : " + sendaddress)
                     # We now check for the inputs and output transactions for the specific user key
                     inputs, outputs = self.peer.blockchain.findTxidsRelatingToKey(self.account_pubkey)
+                    total = 0
+                    for input in inputs:
+                        total += input.findTotalValueSentTO(account_address)
 
                     # We create two variables, inputTotal and remainder these will track total value we are
                     # trying to send and the difference if we are using transactions that have more value then what
@@ -1446,7 +1449,7 @@ class App(customtkinter.CTk):
                     # we keep on using more.
                     for transaction in inputs:
                         inputTransactionsToUse.append(transaction)
-                        inputTotal += transaction.findTotalValueSent()
+                        inputTotal += transaction.findTotalValueSentTO(account_address)
                         if inputTotal >= self.value:
                             remainder = inputTotal - self.value
                             break
@@ -1497,12 +1500,18 @@ class App(customtkinter.CTk):
                     txDict, rawtx2 = scriptSigCreator.createDictWithSig(txDict, self.account['privateKey'], rand)
                     txraw = rawtxcreator.createTxFromDict(txDict)
                     tx = Transaction(txraw)
-                    self.peer.validateTransaction(tx, self.account_pubkey)
+                    if self.peer.validateTransaction(tx, self.account_pubkey):
+                        pass
+                    else:
+                        print("Invalid Transaction")
+                        return False
                     self.peer.sendTransaction(tx.raw, self.account_pubkey)
                     with open('json/currentAccount.json') as file:
                         data = json.load(file)
 
                     data['mempool'].append(tx.raw)
+                    print(tx.raw)
+                    print(self.account_pubkey)
 
                     with open('json/currentAccount.json', 'w') as file:
                         json.dump(data, file, indent=2)
@@ -1737,7 +1746,7 @@ class App(customtkinter.CTk):
             label = customtkinter.CTkLabel(master=address_book_top_level, text="Addresses Saved: ")
             label.pack()
 
-            # This allows all of the saved address to be displayed in a nicer format.
+            # This allows all the saved address to be displayed in a nicer format.
             with open('json/addressbook.json') as file:
                 data = json.load(file)
 
