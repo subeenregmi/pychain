@@ -19,7 +19,7 @@ def createTxFromUser():
          vout = int(input(f"VOUT{i}: "))
          rawtx += "{0:04x}".format(vout)
          scriptsig = str(input(f"Script Sig{i} : "))
-         size = (len(scriptsig)//2)
+         size = (len(scriptsig))
          rawtx += "{0:04x}".format(size) + scriptsig
       outputcounter = int(input("Outputs : "))
       if inputcounter > 99:
@@ -30,7 +30,7 @@ def createTxFromUser():
          value = int(input(f"Value{z}: "))
          rawtx += "{0:016x}".format(value)
          scriptPubKey = str(input(f"ScriptPubKey{z}: "))
-         size = (len(scriptPubKey)//2)
+         size = (len(scriptPubKey))
          rawtx += "{0:04x}".format(size) + scriptPubKey
 
    else:
@@ -68,7 +68,7 @@ def EmptyRawTxFromUser():
          value = int(input(f"Value{z}: "))
          rawtx += "{0:016x}".format(value)
          scriptPubKey = str(input(f"ScriptPubKey{z}: "))
-         size = (len(scriptPubKey)//2)
+         size = (len(scriptPubKey))
          rawtx += "{0:04x}".format(size) + scriptPubKey
 
    else:
@@ -97,7 +97,7 @@ def createCoinbaseTx(publicKey, reward, blockheight):
       "InputCount":"01",
       "txid0":"8266deca6c65b39468e6fb8596869a231b9582ee3818d12ba7240cb126ebfb44", #hash of 'COINBASE'
       "vout0":"0001",
-      "sizeSig0":"0005",
+      "sizeSig0":"000a",
       "scriptSig0":"0000000000",
       "OutputCount":"01",
       "value0":"",
@@ -110,7 +110,7 @@ def createCoinbaseTx(publicKey, reward, blockheight):
    value = str(hex(reward)[2:]).zfill(16)
    CoinbaseTemplateDict["scriptSig0"] = str(blockheight).zfill(10)
    CoinbaseTemplateDict["value0"] = value
-   CoinbaseTemplateDict["sizePk0"] = str(hex(len(scriptPubKey) // 2)[2:]).zfill(4)
+   CoinbaseTemplateDict["sizePk0"] = str(hex(len(scriptPubKey))[2:]).zfill(4)
    CoinbaseTemplateDict["scriptPubKey0"] = scriptPubKey
    raw = createTxFromDict(CoinbaseTemplateDict)
    return raw
@@ -118,8 +118,16 @@ def createCoinbaseTx(publicKey, reward, blockheight):
 
 def main():
 
-   tx1 = createTxFromDict({'Version': '01', 'InputCount': '03', 'txid0': 'c6aa507dfcb1995d6203e094d46f2c6eea2579e7bd153b7b6329fbbbc9c9af1e', 'sizeSig0': '0042', 'scriptSig0': '409cef4aab73080ec94b85921fab7655eb14ef20b9be99efdd1c394d4a4dff8481401e09d666ab546f15e1d0345e35c4e3d074b6e9c4bd6d9d0dccd7d09f308bffba', 'txid1': 'bca065da3279ff78f360f3d0ae70b22fe4bd34b60510bda5b7d4cc6d17970fcb', 'sizeSig1': '0042', 'scriptSig1': '409cef4aab73080ec94b85921fab7655eb14ef20b9be99efdd1c394d4a4dff8481401e09d666ab546f15e1d0345e35c4e3d074b6e9c4bd6d9d0dccd7d09f308bffba', 'txid2': 'ddfb7d53b1d69f534f26ddbb46e0f6cb07cd30a838779c0bc434fee19e33620d', 'sizeSig2': '0042', 'scriptSig2': '409cef4aab73080ec94b85921fab7655eb14ef20b9be99efdd1c394d4a4dff8481401e09d666ab546f15e1d0345e35c4e3d074b6e9c4bd6d9d0dccd7d09f308bffba', 'OutputCount': '03', 'value0': '00000000000000ea', 'sizePk0': '0026', 'scriptPubKey0': '76a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac', 'value1': '0000000000000042', 'sizePk1': '0026', 'scriptPubKey1': '76a92169d0d6247e713098d507bab69a14fe2ae731a1542f881a6cd27e8518dbf18a730688ac', 'vout0': '0000', 'vout1': '0000', 'vout2': '0000'})
-   print(f"Tx1 = {tx1}")
+   tx1 = createTxFromDict({'Version': '01', 'InputCount': '02', 'txid0': 'c487062affb4596846495422be76a83b893b085f1eb8f0dfd794da9130c8c969', 'vout0': '0000', 'sizeSig0': '0084', 'scriptSig0': '4023f997df77592f36700060d0ad16dd7a29a86ffb263be5161a117e4f49a3ffc5405def57c7b59782f84893be173ef9ff8cbb8ad2b1e1336947e0e47edac2cb2ee8', 'txid1': '40528c7a2fe647f6ecb0ba9e4351092b3addde070c0e3d6d884997e8cc83296b', 'vout1': '0000', 'sizeSig1': '0084', 'scriptSig1': '4023f997df77592f36700060d0ad16dd7a29a86ffb263be5161a117e4f49a3ffc5405def57c7b59782f84893be173ef9ff8cbb8ad2b1e1336947e0e47edac2cb2ee8', 'OutputCount': '02', 'value0': '00000000000000b9', 'sizePk0': '004c', 'scriptPubKey0': '76a942690ddda9dc4549494465421bbd400bb1896a0527390701457e7997e80dc4d2841588ac', 'value1': '000000000000000f', 'sizePk1': '004c', 'scriptPubKey1': '76a9426916ad8380a8adea012e9bcf7590e6f86be12a3ce083978c913da56262f833b09b88ac', 'locktime': '00000000'})
+   print(f"Transaction from dictionary = {tx1}")
+
+   txid = createTXID(tx1)
+   print(f"TXID = {txid}")
+
+   public_key = (55066263022277343669578718895168534326250603453777594175500187360389116729240, 32670510020758816978083085130507043184471273380659243275938904335757337482424)
+   coinbaseTransaction = createCoinbaseTx(public_key, 100, 3)
+   print(f"Coinbase Transaction = {coinbaseTransaction}")
+
 
 
 

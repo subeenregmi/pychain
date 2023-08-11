@@ -40,13 +40,31 @@ class Transaction:
 
     def findTotalValueSent(self, address=None):
         totalValue = 0
+        if address is None:
+            for key in self.outputs:
+                totalValue += int(key, 16)
+            return totalValue
+        else:
+            index = 0
+            for key in self.outputs:
+                spk = breakDownLockScript(list(self.outputs.values())[index])
+                if address in list(spk.queue):
+                    pass
+                else:
+                    totalValue += int(key, 16)
+                index += 1
+            return totalValue
+
+    def findTotalValueSentTO(self, address):
+        totalValue = 0
+        index = 0
         for key in self.outputs:
-            if address is not None:
-                spk = key[1]
-                spk = breakDownLockScript(spk)
-                if address in spk:
-                    continue
-            totalValue += int(key, 16)
+            spk = breakDownLockScript(list(self.outputs.values())[index])
+            if address in list(spk.queue):
+                totalValue += int(key, 16)
+            else:
+                pass
+            index += 1
         return totalValue
     
     # This function goes through the outputs to find the addresses that our transaction is being sent to. 
@@ -56,7 +74,7 @@ class Transaction:
         for key in self.outputs:
             lock_script = self.outputs[key]
             opcodes = breakDownLockScript(lock_script)
-            for item in opcodes:
+            for item in list(opcodes.queue):
                 if item.startswith("69"):
                     addresses.append(item)
         
@@ -71,16 +89,10 @@ class Transaction:
 
 def main():
 
-    x = Transaction("01017b6632fce3914fd9b098a10760a995a41dcb260a9a740b7ed6fd0902e2c47ed600000042408b22520c20af4de60e54aa2af78486e661efbffc38286253a54bcf24ab2b79934020d79daebf01adb60a15f87eec4c2f41bf5804eab89a8aa995b6224f15f5782c010000000000000064002676a92169b75cdd59e53f0ced19cbf30efad3ec5ea3026f805d9e1ed6aea18f5a593e29b788ac00000000")
-    print(x.tx)
-    print(x.txid)
-    print(x.version)
-    print(x.inputcount)
-    print(x.outputcount)
-    print(x.inputs)
-    print(x.outputs)
-    print(f"raw = {x.raw}")
+    x = Transaction("0102c487062affb4596846495422be76a83b893b085f1eb8f0dfd794da9130c8c969000000844023f997df77592f36700060d0ad16dd7a29a86ffb263be5161a117e4f49a3ffc5405def57c7b59782f84893be173ef9ff8cbb8ad2b1e1336947e0e47edac2cb2ee840528c7a2fe647f6ecb0ba9e4351092b3addde070c0e3d6d884997e8cc83296b000000844023f997df77592f36700060d0ad16dd7a29a86ffb263be5161a117e4f49a3ffc5405def57c7b59782f84893be173ef9ff8cbb8ad2b1e1336947e0e47edac2cb2ee80200000000000000b9004c76a942690ddda9dc4549494465421bbd400bb1896a0527390701457e7997e80dc4d2841588ac000000000000000f004c76a9426916ad8380a8adea012e9bcf7590e6f86be12a3ce083978c913da56262f833b09b88ac00000000")
+
     print(x.inputTxids())
+
 
 if __name__ == "__main__":
     main()

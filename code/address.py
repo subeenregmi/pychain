@@ -1,14 +1,9 @@
 import hashlib
-import random
 
 Pcurve = 2 ** 256 - 2 ** 32 - 2 ** 9 - 2 ** 8 - 2 ** 7 - 2 ** 6 - 2 ** 4 - 1
 n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
 Gx = 55066263022277343669578718895168534326250603453777594175500187360389116729240
 Gy = 32670510020758816978083085130507043184471273380659243275938904335757337482424
-
-privKey = 8888                  #user will input all of this
-randNumber = 11133343434344344341
-HashOfMessage = 108837615545477071373664658521271175003261457687736552303871501944711637865620 
 
 def ECadd(x1, x2, y1, y2):
 
@@ -78,6 +73,21 @@ def createAddress(publickey):
 
 def main():
 
+    # Digital signatures
+    randNumber = 1989189239293293
+    HashOfMessage = 239823823823283232983982323892893
+
+    # Erroneous Data
+    # privKey = n+1
+    # privKey = 0
+
+    # Normal Data
+    # privKey = 23828932738278372
+
+    # Boundary data
+    # privKey = n-1
+    privKey =91865318790474171578907765630969544070277788816505973228091873448746859054462
+
     print("--------------------Private Key--------------------")
     print(privKey)
     print("--------------------Public Key--------------------")
@@ -86,14 +96,13 @@ def main():
     print("--------------------Uncompressed Public Key--------------------")
     print("04 " + str(hex(pubKey[0])[2:]) + " " + str(hex(pubKey[1]))[2:])
     print("--------------------PyChain Address--------------------")
-    pyaddress = createAddress((109202608928186078798810435615768733302210942101644208012371426004931197383580, 71410754864688073695457690215266571394339322412556530640671956032708356876659))
+    pyaddress = createAddress(pubKey)
     print(pyaddress)
     r, s = signatureGeneration(privKey, randNumber, HashOfMessage)
     print("--------------------Signature Generation--------------------")
     print((r, s))
     print("--------------------Signature Verification--------------------")
     result = verifySig(r, s, HashOfMessage, pubKey)
-    result = verifySig(18024770865104872720769229452323917084554546753792771741846315079997050139083, 22867512753249643072979564170311346581713979184671604589996667599073931639642, 10037537529027807805101128294953053531362950071905592013635380982446285951243, ECmultiplication(2004, Gx, Gy))
     print(result)
     print("--------------------------------------------------------------")
 
